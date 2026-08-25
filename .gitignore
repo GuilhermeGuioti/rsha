@@ -45,3 +45,9 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# skills instaladas pelo prisma init (agentes de IA)
+/.agents
+/.claude
+/.windsurf
+skills-lock.json
