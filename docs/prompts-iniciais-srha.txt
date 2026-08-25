@@ -1,0 +1,226 @@
+================================================================================
+SRHA — SEQUÊNCIA DE PROMPTS INICIAIS PARA O CLAUDE CODE
+================================================================================
+
+Regra geral: um passo por prompt, um critério de verificação, parada explícita no
+fim. Não emende. Se um passo terminar diferente do esperado, conserte antes de
+seguir — erro carregado adiante fica caro.
+
+Sempre que ele propuser algo que contraria o CLAUDE.md, é sinal de que não leu.
+Vale reiniciar a sessão em vez de corrigir no meio.
+
+
+================================================================================
+PASSO 0 — VOCÊ FAZ ISSO ANTES DE ABRIR O CLAUDE CODE
+================================================================================
+
+Estrutura da pasta:
+
+    srha/
+    ├── CLAUDE.md
+    ├── docker-compose.yml
+    └── docs/
+        ├── rsha-docreq.pdf
+        ├── SRHA-especificacao-desenvolvimento.md
+        ├── SRHA-brief-design.md
+        └── layout/          <- seu frontend pronto
+
+docker-compose.yml:
+
+    services:
+      db:
+        image: postgres:16
+        container_name: srha-db
+        environment:
+          POSTGRES_USER: srha
+          POSTGRES_PASSWORD: srha
+          POSTGRES_DB: srha
+        ports:
+          - "5432:5432"
+        volumes:
+          - srha-dados:/var/lib/postgresql/data
+    volumes:
+      srha-dados:
+
+Comandos:
+
+    cd srha
+    docker compose up -d
+    docker exec srha-db psql -U srha -c "CREATE DATABASE srha_test;"
+    docker compose ps
+
+Confirme que o container está de pé antes de continuar. Depois: claude
+
+
+================================================================================
+PROMPT 1 — LEITURA, NENHUM CÓDIGO
+================================================================================
+
+Leia CLAUDE.md e os três arquivos em docs/. Não escreva código, não crie
+arquivo, não instale nada.
+
+Me responda três coisas:
+
+1. Qual é o fluxo completo de um relatório, do rascunho ao arquivamento, e que
+   eventos de auditoria cada transição gera.
+2. Três pontos onde a especificação está ambígua o bastante para você precisar
+   decidir sozinho durante a implementação.
+3. O que existe em docs/layout/ — que telas e componentes já estão prontos, e o
+   que falta.
+
+--------------------------------------------------------------------------------
+CONFERIR: se a resposta 1 estiver errada, o problema está no CLAUDE.md. Corrija
+o arquivo agora, reinicie a sessão e repita este prompt. Não siga adiante.
+--------------------------------------------------------------------------------
+
+
+================================================================================
+PROMPT 2 — BOOTSTRAP, COM PARADA OBRIGATÓRIA
+================================================================================
+
+Passo 1a: montar o projeto. Pare no ponto indicado e não continue sem minha
+aprovação.
+
+O Postgres já está rodando em container na porta 5432, bancos `srha` e
+`srha_test`, usuário e senha `srha`. Não mexa em Docker, não tente subir banco,
+não instale Postgres.
+
+A pasta atual já tem CLAUDE.md, docs/ e docker-compose.yml — o create-next-app
+recusa diretório com arquivos desconhecidos, então:
+
+1. npx create-next-app@latest .bootstrap --yes --typescript --tailwind --app
+   --eslint --no-src-dir --import-alias "@/*"
+2. mova todo o conteúdo de .bootstrap para a raiz, inclusive arquivos ocultos, e
+   apague .bootstrap
+3. instale: prisma @prisma/client zod papaparse next-auth@beta
+4. instale como dev: jest @types/jest jest-environment-node @types/papaparse tsx
+5. npx prisma init
+6. crie o .env com as duas URLs conforme a seção "Ambiente local" do CLAUDE.md,
+   e um .env.example com as mesmas chaves e valores vazios
+7. confirme que .env está no .gitignore
+
+PARE AQUI. Me mostre o package.json inteiro e a versão resolvida de cada
+dependência. Não fixe versão, não configure Jest, não escreva schema, não faça
+commit. Espere minha resposta.
+
+--------------------------------------------------------------------------------
+CONFERIR: olhe as majors e veja se conversam entre si. Confira que .env está no
+.gitignore de verdade.
+--------------------------------------------------------------------------------
+
+
+================================================================================
+PROMPT 3 — TRAVAR VERSÕES E CONFIGURAR TESTE
+================================================================================
+
+Fixe todas as versões exatamente como estão, removendo ^ e ~ de todas.
+
+Configure o Jest com next/jest, ambiente node.
+
+Adicione no package.json:  "prisma": { "seed": "tsx prisma/seed.ts" }
+
+Crie um .env.test com DATABASE_URL e DIRECT_URL apontando para o banco
+srha_test, e garanta que o Jest carregue esse arquivo.
+
+Escreva um teste trivial só para provar que a configuração roda, e rode.
+
+Faça um commit: "bootstrap do projeto". Não escreva schema ainda. PARE.
+
+--------------------------------------------------------------------------------
+CONFERIR: npm test roda e passa. git log tem um commit.
+--------------------------------------------------------------------------------
+
+
+================================================================================
+PROMPT 4 — SCHEMA, MIGRATION, SEED
+================================================================================
+
+Passo 1 da ordem de construção do CLAUDE.md. Só isso.
+
+Copie o schema Prisma de docs/SRHA-especificacao-desenvolvimento.md §4 para
+prisma/schema.prisma, acrescentando o directUrl no datasource conforme a regra 2
+do CLAUDE.md. Não invente campo, não renomeie nada, não "melhore" o modelo.
+
+Crie lib/db.ts com o singleton do Prisma Client.
+
+Rode a migration inicial com prisma migrate dev. Nunca db push.
+
+Escreva prisma/seed.ts com:
+- os 4 usuários de teste do login falso (docente em dois cursos; coordenador de
+  um curso; coordenador que também dá aula no próprio curso, para o RF22;
+  administrador)
+- 3 cursos, um deles com avaliador alternativo cadastrado
+- um período letivo aberto (prazo ainda vigente)
+- os tipos de atividade: Orientação de TCC, Supervisão de Estágio, Participação
+  em NBE
+- os vínculos docente-curso e coordenador-curso que fazem cada usuário de teste
+  ser o que é
+
+O seed precisa ser idempotente — rodar duas vezes sem quebrar. Use upsert.
+
+Rode o seed duas vezes para provar. Termine me dizendo como verificar no
+prisma studio. Commit e PARE.
+
+--------------------------------------------------------------------------------
+CONFERIR: abra o prisma studio e olhe as tabelas. Confira que o docente de teste
+aparece com dois vínculos e que o coordenador-que-dá-aula tem os dois perfis.
+--------------------------------------------------------------------------------
+
+
+================================================================================
+PROMPT 5 — O CORAÇÃO: WORKFLOW, GUARDS E OS OITO TESTES
+================================================================================
+
+Passo 2. Zero interface, zero componente, zero rota, zero Server Action.
+
+Escreva:
+- lib/services/workflow.ts com submeter(), aprovar() e devolver(), cada uma
+  dentro de uma transação, seguindo exatamente a seção "Máquina de estados" do
+  CLAUDE.md
+- lib/auth/guards.ts com exigirSessao(), exigirPerfil() e
+  exigirAcessoAoRelatorio()
+- lib/tipos.ts com o tipo Resultado<T>
+
+Os oito testes obrigatórios do CLAUDE.md, rodando contra o banco srha_test, com
+TRUNCATE CASCADE no beforeEach e o seed reaplicado. Sem mock de banco — quem
+impede alteração em relatório aprovado é a constraint, e mock não prova isso.
+
+Os oito precisam passar antes de você me devolver. Se algum não passar, me diga
+qual e por quê, em vez de simplificar o teste ou relaxar a regra.
+
+Commit e PARE.
+
+--------------------------------------------------------------------------------
+CONFERIR: os oito passam. Leia o teste do RF22 (autoaprovação) e o do RF06 (dois
+cursos) linha por linha — são os dois que mais escondem falso-positivo.
+
+Fechado este passo, o risco do projeto acabou. O resto é encanamento sobre o
+layout que você já tem.
+--------------------------------------------------------------------------------
+
+
+================================================================================
+DEPOIS
+================================================================================
+
+Siga a ordem de construção do CLAUDE.md, do passo 3 em diante:
+
+  3. Auth.js com o provider falso de desenvolvimento
+  4. Formulário do relatório: itens, total, rascunho
+  5. Submissão e roteamento
+  6. Fila do coordenador: aprovar e devolver
+  7. Auditoria e exibição do histórico
+
+Uma rota por prompt, sempre plugando o layout de docs/layout/, sempre com
+parada no fim. Do 1 ao 7 o fluxo principal está fechado ponta a ponta.
+
+Do 8 ao 13 (arquivo, PDF, acompanhamento, extração CSV, Entra ID real,
+notificações) é melhoria, não buraco.
+
+Lembretes que vão te poupar tempo lá na frente:
+- as notificações do RF13 saem pelo Microsoft Graph, mesmo tenant do Entra ID —
+  não contrate serviço externo de e-mail
+- PDF e CSV são as duas únicas rotas GET em /api permitidas, porque Server
+  Action não devolve arquivo para download
+- "não iniciados" no painel do RF18 é vínculos menos relatórios, não contagem de
+  linhas da tabela Relatorio
