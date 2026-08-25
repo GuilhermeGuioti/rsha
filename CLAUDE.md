@@ -158,6 +158,12 @@ Schema completo em `docs/SRHA-especificacao-desenvolvimento.md` §4. Copie de l�
 ### Invariantes que o código precisa garantir
 
 - **Um relatório por docente, curso e período** — garantido pelo `@@unique`.
+- **A linha de `Relatorio` nasce sob demanda.** Só existe a partir da primeira escrita do
+  próprio docente — abrir o formulário do curso e salvar rascunho, ou adicionar o primeiro
+  item. **Não crie relatórios em lote ao cadastrar o período letivo**, nem em nenhum outro
+  momento automático. É o que sustenta o invariante do painel de acompanhamento (RF18):
+  "não iniciados" só existe porque a linha não existe. Criação antecipada no cadastro do
+  período é evolução possível, não desta versão.
 - **`cargaHorariaTotal` sempre igual à soma dos itens.** Recalcule dentro da mesma
   transação que altera itens. O cliente nunca envia o total.
 - **Relatório aprovado e evento de auditoria não sofrem update nem delete.**
@@ -247,7 +253,8 @@ chamada + revalidação.
 | `/acompanhamento` | coord./admin | Situação de entrega por curso no período corrente |
 | `/arquivo` | todos | Navegação Ano › Semestre › Curso (filtro, não pasta) |
 | `/admin/cursos` | admin | CRUD de cursos e avaliador alternativo |
-| `/admin/usuarios` | admin | CRUD de usuários, perfis e vínculos + importação CSV |
+| `/admin/usuarios` | admin | CRUD de usuários, perfis e importação CSV |
+| `/admin/vinculos` | admin | Vínculos docente-curso e coordenador-curso — os dois lados da relação |
 | `/admin/periodos` | admin | Períodos letivos e prazos |
 | `/admin/auditoria/[id]` | admin | Trilha completa de um relatório |
 
