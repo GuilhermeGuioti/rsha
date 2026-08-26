@@ -1,6 +1,9 @@
 import { acaoEntrar, acaoEntrarComEmail } from "./acoes";
 
-export default function LoginPage() {
+export default async function LoginPage(props: PageProps<"/login">) {
+  const searchParams = await props.searchParams;
+  const erro = searchParams.erro === "1";
+
   return (
     <main className="flex flex-1 items-center justify-center bg-papel px-4 py-10 sm:px-6">
       <div className="w-full max-w-[1180px] overflow-hidden rounded-[10px] border border-borda bg-superficie shadow-sm">
@@ -47,6 +50,12 @@ export default function LoginPage() {
               <span className="font-mono font-medium text-tinta">@baraodemaua.br</span>. Não
               existe senha própria neste sistema.
             </p>
+
+            {erro && (
+              <p role="alert" className="mt-4 text-sm font-medium text-estado-devolvido">
+                Não foi possível entrar com esse e-mail. Confira se está cadastrado e ativo.
+              </p>
+            )}
 
             <form action={acaoEntrar}>
               <button
