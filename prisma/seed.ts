@@ -2,7 +2,7 @@ import "dotenv/config";
 import { Perfil } from "../app/generated/prisma/enums";
 import { prisma } from "../lib/db";
 
-async function main() {
+export async function seed() {
   await Promise.all(
     ["Orientação de TCC", "Supervisão de Estágio", "Participação em NBE"].map(
       (descricao) =>
@@ -186,11 +186,13 @@ async function main() {
   console.log("Seed concluído.");
 }
 
-main()
-  .catch((erro) => {
-    console.error(erro);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (require.main === module) {
+  seed()
+    .catch((erro) => {
+      console.error(erro);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
