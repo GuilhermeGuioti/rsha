@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -10,4 +8,163 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // url e directUrl não são mais aceitos aqui na v7 — vivem em prisma.config.ts
+}
+
+enum Perfil {
+  DOCENTE
+  COORDENADOR
+  ADMINISTRADOR
+}
+
+enum SituacaoRelatorio {
+  RASCUNHO
+  AGUARDANDO_AVALIACAO
+  DEVOLVIDO_PARA_AJUSTE
+  APROVADO
+}
+
+enum TipoEvento {
+  CRIACAO
+  SUBMISSAO
+  APROVACAO
+  DEVOLUCAO
+}
+
+enum DiaSemana {
+  SEGUNDA
+  TERCA
+  QUARTA
+  QUINTA
+  SEXTA
+  SABADO
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  entraOid  String?  @unique
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+
+  perfis                UsuarioPerfil[]
+  vinculosDocente       VinculoDocenteCurso[]
+  vinculosCoordenador   VinculoCoordenadorCurso[]
+  relatorios            Relatorio[]
+  eventos               EventoAuditoria[]
+  cursosComoAlternativo Curso[] @relation("AvaliadorAlternativo")
+}
+
+model UsuarioPerfil {
+  id        Int     @id @default(autoincrement())
+  usuarioId Int
+  perfil    Perfil
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@unique([usuarioId, perfil])
+}
+
+model Curso {
+  id                     Int     @id @default(autoincrement())
+  nome                   String  @unique
+  ativo                  Boolean @default(true)
+  avaliadorAlternativoId Int?
+
+  avaliadorAlternativo Usuario? @relation("AvaliadorAlternativo", fields: [avaliadorAlternativoId], references: [id])
+  docentes             VinculoDocenteCurso[]
+  coordenadores        VinculoCoordenadorCurso[]
+  relatorios           Relatorio[]
+}
+
+model PeriodoLetivo {
+  id                    Int      @id @default(autoincrement())
+  ano                   Int
+  semestre              Int
+  aberturaSubmissao     DateTime
+  encerramentoSubmissao DateTime
+
+  relatorios Relatorio[]
+  vinculos   VinculoDocenteCurso[]
+
+  @@unique([ano, semestre])
+}
+
+model VinculoDocenteCurso {
+  id              Int @id @default(autoincrement())
+  docenteId       Int
+  cursoId         Int
+  periodoLetivoId Int
+
+  docente Usuario       @relation(fields: [docenteId], references: [id])
+  curso   Curso         @relation(fields: [cursoId], references: [id])
+  periodo PeriodoLetivo @relation(fields: [periodoLetivoId], references: [id])
+
+  @@unique([docenteId, cursoId, periodoLetivoId])
+}
+
+model VinculoCoordenadorCurso {
+  id            Int @id @default(autoincrement())
+  coordenadorId Int
+  cursoId       Int
+
+  coordenador Usuario @relation(fields: [coordenadorId], references: [id])
+  curso       Curso   @relation(fields: [cursoId], references: [id])
+
+  @@unique([coordenadorId, cursoId])
+}
+
+model TipoAtividade {
+  id        Int     @id @default(autoincrement())
+  descricao String  @unique
+  ativo     Boolean @default(true)
+
+  itens ItemAtividade[]
+}
+
+model Relatorio {
+  id                Int               @id @default(autoincrement())
+  docenteId         Int
+  cursoId           Int
+  periodoLetivoId   Int
+  situacao          SituacaoRelatorio @default(RASCUNHO)
+  cargaHorariaTotal Decimal           @default(0) @db.Decimal(6, 2)
+  criadoEm          DateTime          @default(now())
+  atualizadoEm      DateTime          @updatedAt
+
+  docente Usuario       @relation(fields: [docenteId], references: [id])
+  curso   Curso         @relation(fields: [cursoId], references: [id])
+  periodo PeriodoLetivo @relation(fields: [periodoLetivoId], references: [id])
+  itens   ItemAtividade[]
+  eventos EventoAuditoria[]
+
+  @@unique([docenteId, cursoId, periodoLetivoId])
+  @@index([situacao, cursoId])
+}
+
+model ItemAtividade {
+  id              Int       @id @default(autoincrement())
+  relatorioId     Int
+  tipoAtividadeId Int
+  horas           Decimal   @db.Decimal(5, 2)
+  diaSemana       DiaSemana
+  horario         String
+  descricao       String
+
+  relatorio     Relatorio     @relation(fields: [relatorioId], references: [id], onDelete: Cascade)
+  tipoAtividade TipoAtividade @relation(fields: [tipoAtividadeId], references: [id])
+}
+
+model EventoAuditoria {
+  id            Int        @id @default(autoincrement())
+  relatorioId   Int
+  tipo          TipoEvento
+  usuarioId     Int
+  ocorridoEm    DateTime   @default(now())
+  justificativa String?
+
+  relatorio Relatorio @relation(fields: [relatorioId], references: [id])
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id])
+
+  @@index([relatorioId, ocorridoEm])
 }

@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16
+    container_name: srha-db
+    environment:
+      POSTGRES_USER: srha
+      POSTGRES_PASSWORD: srha
+      POSTGRES_DB: srha
+    ports:
+      - "5432:5432"
+    volumes:
+      - srha-dados:/var/lib/postgresql/data
+volumes:
+  srha-dados:

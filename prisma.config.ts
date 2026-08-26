@@ -7,8 +7,11 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // migrate precisa de conexão direta (DDL + advisory lock, não passa por pooler).
+    // O runtime usa DATABASE_URL separadamente, via adapter em lib/db.ts.
+    url: process.env["DIRECT_URL"],
   },
 });
