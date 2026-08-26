@@ -1,3 +1,5 @@
+import { acaoEntrar, acaoEntrarComEmail } from "./acoes";
+
 export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center bg-papel px-4 py-10 sm:px-6">
@@ -46,12 +48,14 @@ export default function LoginPage() {
               existe senha própria neste sistema.
             </p>
 
-            <button
-              type="button"
-              className="mt-7 flex min-h-[52px] items-center justify-center rounded-md border border-azul-institucional bg-azul-institucional px-6 font-medium text-white transition-colors hover:bg-azul-interativo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo focus-visible:ring-offset-2"
-            >
-              Entrar com a conta institucional
-            </button>
+            <form action={acaoEntrar}>
+              <button
+                type="submit"
+                className="mt-7 flex min-h-[52px] items-center justify-center rounded-md border border-azul-institucional bg-azul-institucional px-6 font-medium text-white transition-colors hover:bg-azul-interativo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo focus-visible:ring-offset-2"
+              >
+                Entrar com a conta institucional
+              </button>
+            </form>
 
             <div className="mt-7 border-t border-borda pt-6">
               <p className="text-sm font-medium text-tinta-suave">
@@ -76,6 +80,32 @@ export default function LoginPage() {
             <p className="mt-6 text-sm text-tinta-suave">
               Sem acesso? Procure a coordenação do seu curso.
             </p>
+
+            {process.env.NODE_ENV === "development" && (
+              <form
+                action={acaoEntrarComEmail}
+                className="mt-6 flex flex-col gap-2 border-t border-dashed border-borda pt-6 sm:flex-row sm:items-end"
+              >
+                <div className="flex-1">
+                  <label htmlFor="email-dev" className="block text-xs font-medium text-tinta-suave">
+                    Dev · entrar com outro e-mail cadastrado
+                  </label>
+                  <input
+                    id="email-dev"
+                    name="email"
+                    type="email"
+                    required
+                    className="mt-1.5 flex min-h-[44px] w-full rounded-md border border-borda bg-superficie px-3 text-sm text-tinta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo focus-visible:ring-offset-2"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="flex min-h-[44px] items-center justify-center rounded-md border border-borda bg-[#f3f5f8] px-4 text-sm font-medium text-tinta transition-colors hover:bg-[#e9ecf1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo focus-visible:ring-offset-2"
+                >
+                  Entrar
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>

@@ -1,33 +1,68 @@
 import { prisma } from "../db";
-import { seed } from "../../prisma/seed";
 import { submeter, aprovar, devolver } from "./workflow";
 import { adicionarItem, removerItem } from "./itens";
-import { DiaSemana, SituacaoRelatorio, TipoEvento } from "../../app/generated/prisma/client";
+import { DiaSemana, Perfil, SituacaoRelatorio, TipoEvento } from "../../app/generated/prisma/client";
 
-async function limparEResemear() {
+async function limpar() {
   await prisma.$executeRawUnsafe(
     `TRUNCATE TABLE "EventoAuditoria", "ItemAtividade", "Relatorio", "VinculoCoordenadorCurso", "VinculoDocenteCurso", "TipoAtividade", "PeriodoLetivo", "Curso", "UsuarioPerfil", "Usuario" RESTART IDENTITY CASCADE`,
   );
-  await seed();
 }
 
+// Cenário próprio da suíte, desacoplado de prisma/seed.ts (que só cria o
+// admin inicial — o resto é cadastrado pelo admin via UI, não pelo seed).
 async function obterAmbiente() {
   const [docente, coordenador, coordenadorDocente] = await Promise.all([
-    prisma.usuario.findUniqueOrThrow({ where: { email: "docente@srha.dev" } }),
-    prisma.usuario.findUniqueOrThrow({ where: { email: "coordenador@srha.dev" } }),
-    prisma.usuario.findUniqueOrThrow({ where: { email: "coordenador.docente@srha.dev" } }),
+    prisma.usuario.create({ data: { nome: "Docente Teste", email: "docente@srha.dev" } }),
+    prisma.usuario.create({ data: { nome: "Coordenador Teste", email: "coordenador@srha.dev" } }),
+    prisma.usuario.create({
+      data: { nome: "Coordenador Docente Teste", email: "coordenador.docente@srha.dev" },
+    }),
   ]);
+
+  await Promise.all([
+    prisma.usuarioPerfil.create({ data: { usuarioId: docente.id, perfil: Perfil.DOCENTE } }),
+    prisma.usuarioPerfil.create({ data: { usuarioId: coordenador.id, perfil: Perfil.COORDENADOR } }),
+    prisma.usuarioPerfil.create({ data: { usuarioId: coordenadorDocente.id, perfil: Perfil.COORDENADOR } }),
+    prisma.usuarioPerfil.create({ data: { usuarioId: coordenadorDocente.id, perfil: Perfil.DOCENTE } }),
+  ]);
+
   const [cursoEngSoftware, cursoCienciaComp, cursoSistemasInfo] = await Promise.all([
-    prisma.curso.findUniqueOrThrow({ where: { nome: "Engenharia de Software" } }),
-    prisma.curso.findUniqueOrThrow({ where: { nome: "Ciência da Computação" } }),
-    prisma.curso.findUniqueOrThrow({ where: { nome: "Sistemas de Informação" } }),
+    prisma.curso.create({
+      data: { nome: "Engenharia de Software", avaliadorAlternativoId: coordenador.id },
+    }),
+    prisma.curso.create({ data: { nome: "Ciência da Computação" } }),
+    prisma.curso.create({ data: { nome: "Sistemas de Informação" } }),
   ]);
-  const periodo = await prisma.periodoLetivo.findUniqueOrThrow({
-    where: { ano_semestre: { ano: 2026, semestre: 2 } },
+
+  const periodo = await prisma.periodoLetivo.create({
+    data: {
+      ano: 2026,
+      semestre: 2,
+      aberturaSubmissao: new Date("2026-08-01T00:00:00Z"),
+      encerramentoSubmissao: new Date("2026-12-15T23:59:59Z"),
+    },
   });
-  const tipoAtividade = await prisma.tipoAtividade.findUniqueOrThrow({
-    where: { descricao: "Orientação de TCC" },
-  });
+
+  const tipoAtividade = await prisma.tipoAtividade.create({ data: { descricao: "Orientação de TCC" } });
+
+  await Promise.all([
+    prisma.vinculoDocenteCurso.create({
+      data: { docenteId: docente.id, cursoId: cursoCienciaComp.id, periodoLetivoId: periodo.id },
+    }),
+    prisma.vinculoDocenteCurso.create({
+      data: { docenteId: docente.id, cursoId: cursoSistemasInfo.id, periodoLetivoId: periodo.id },
+    }),
+    prisma.vinculoDocenteCurso.create({
+      data: { docenteId: coordenadorDocente.id, cursoId: cursoEngSoftware.id, periodoLetivoId: periodo.id },
+    }),
+    prisma.vinculoCoordenadorCurso.create({
+      data: { coordenadorId: coordenador.id, cursoId: cursoCienciaComp.id },
+    }),
+    prisma.vinculoCoordenadorCurso.create({
+      data: { coordenadorId: coordenadorDocente.id, cursoId: cursoEngSoftware.id },
+    }),
+  ]);
 
   return {
     docente,
@@ -42,7 +77,7 @@ async function obterAmbiente() {
 }
 
 beforeEach(async () => {
-  await limparEResemear();
+  await limpar();
 });
 
 afterAll(async () => {

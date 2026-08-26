@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { redirect } from "next/navigation";
 import { auth } from "./config";
 import { prisma } from "../db";
 import { Perfil } from "../../app/generated/prisma/client";
@@ -10,6 +11,16 @@ export async function exigirSessao(): Promise<Sessao> {
   const sessao = await auth();
   if (!sessao?.usuarioId) {
     throw new Error("Sessão não encontrada. Faça login novamente.");
+  }
+  return { usuarioId: sessao.usuarioId };
+}
+
+// Para pages (não Server Actions): sem sessão, manda pro /login em vez de
+// estourar erro na renderização.
+export async function exigirSessaoPagina(): Promise<Sessao> {
+  const sessao = await auth();
+  if (!sessao?.usuarioId) {
+    redirect("/login");
   }
   return { usuarioId: sessao.usuarioId };
 }
