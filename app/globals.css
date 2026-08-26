@@ -1,26 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --azul-institucional: #0086cc;
+  --azul-interativo: #00679e;
+  --acento: #00ba9c;
+  --papel: #f7f8fa;
+  --superficie: #ffffff;
+  --tinta: #14181f;
+  --tinta-suave: #5a6572;
+  --borda: #dde3ea;
+
+  --estado-rascunho: #6b7683;
+  --estado-aguardando: #b26a00;
+  --estado-devolvido: #b3261e;
+  --estado-aprovado: #1e7a46;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-azul-institucional: var(--azul-institucional);
+  --color-azul-interativo: var(--azul-interativo);
+  --color-acento: var(--acento);
+  --color-papel: var(--papel);
+  --color-superficie: var(--superficie);
+  --color-tinta: var(--tinta);
+  --color-tinta-suave: var(--tinta-suave);
+  --color-borda: var(--borda);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-estado-rascunho: var(--estado-rascunho);
+  --color-estado-aguardando: var(--estado-aguardando);
+  --color-estado-devolvido: var(--estado-devolvido);
+  --color-estado-aprovado: var(--estado-aprovado);
+
+  --font-sans: var(--font-plex-sans);
+  --font-serif: var(--font-plex-serif);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--papel);
+  color: var(--tinta);
 }
