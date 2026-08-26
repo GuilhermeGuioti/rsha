@@ -22,6 +22,31 @@ export async function resolverAvaliadorId(
   return curso.avaliadorAlternativoId;
 }
 
+/**
+ * A linha de Relatorio nasce sob demanda: só existe a partir da primeira
+ * escrita do próprio docente (abrir o curso e salvar rascunho, ou adicionar
+ * o primeiro item). Nunca é criada em lote no cadastro do período.
+ */
+export async function obterOuCriarRascunho(
+  docenteId: number,
+  cursoId: number,
+  periodoLetivoId: number,
+): Promise<number> {
+  const vinculo = await prisma.vinculoDocenteCurso.findUnique({
+    where: { docenteId_cursoId_periodoLetivoId: { docenteId, cursoId, periodoLetivoId } },
+  });
+  if (!vinculo) {
+    throw new Error("Docente não está vinculado a este curso neste período.");
+  }
+
+  const relatorio = await prisma.relatorio.upsert({
+    where: { docenteId_cursoId_periodoLetivoId: { docenteId, cursoId, periodoLetivoId } },
+    create: { docenteId, cursoId, periodoLetivoId },
+    update: {},
+  });
+  return relatorio.id;
+}
+
 export async function submeter(relatorioId: number, usuarioId: number): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const relatorio = await tx.relatorio.findUnique({
