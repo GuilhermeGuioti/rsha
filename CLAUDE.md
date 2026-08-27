@@ -97,7 +97,7 @@ São coisas separadas. Confundi-las é o erro mais provável neste projeto.
 - **A Microsoft responde apenas "quem é"**: nome, e-mail institucional e `oid`.
   Não sabe nada sobre cursos, perfis ou vínculos.
 - **O banco responde "o que pode fazer"**: perfis, cursos, vínculos e quem avalia quem
-  são cadastro interno mantido pelo administrador.
+  são cadastro interno mantido pela secretaria acadêmica.
 
 ### Fluxo de login
 
@@ -113,7 +113,7 @@ São coisas separadas. Confundi-las é o erro mais provável neste projeto.
 
 > O passo 5 diverge do que está em `docs/`, que manda colocar vínculos no token.
 > Corrigido de propósito: o token é imutável até o próximo login, e num sistema usado
-> duas vezes por ano a sessão está sempre velha. Vínculo novo cadastrado pelo admin
+> duas vezes por ano a sessão está sempre velha. Vínculo novo cadastrado pela secretaria
 > não apareceria para o docente já logado.
 
 ### Login falso para desenvolvimento
@@ -124,7 +124,7 @@ usuários fixos vindos do seed:
 - um docente vinculado a dois cursos
 - um coordenador de um curso
 - um coordenador que também dá aula no próprio curso (para testar o RF22)
-- um administrador
+- uma pessoa da secretaria acadêmica
 
 Um `if` na configuração decide qual provider sobe. Isso existe para o projeto não ficar
 parado esperando a TI liberar o registro no Entra ID.
@@ -250,13 +250,13 @@ chamada + revalidação.
 | `/relatorios/[id]` | docente | Formulário com itens, total e ações |
 | `/avaliacao` | coordenador | Fila agrupada por curso |
 | `/avaliacao/[id]` | coordenador | Relatório em leitura + aprovar / devolver + histórico |
-| `/acompanhamento` | coord./admin | Situação de entrega por curso no período corrente |
+| `/acompanhamento` | coord./secretaria | Situação de entrega por curso no período corrente |
 | `/arquivo` | todos | Navegação Ano › Semestre › Curso (filtro, não pasta) |
-| `/admin/cursos` | admin | CRUD de cursos e avaliador alternativo |
-| `/admin/usuarios` | admin | CRUD de usuários, perfis e importação CSV |
-| `/admin/vinculos` | admin | Vínculos docente-curso e coordenador-curso — os dois lados da relação |
-| `/admin/periodos` | admin | Períodos letivos e prazos |
-| `/admin/auditoria/[id]` | admin | Trilha completa de um relatório |
+| `/admin/cursos` | secretaria | CRUD de cursos e avaliador alternativo |
+| `/admin/usuarios` | secretaria | CRUD de usuários, perfis e importação CSV |
+| `/admin/vinculos` | secretaria | Vínculos docente-curso e coordenador-curso — os dois lados da relação |
+| `/admin/periodos` | secretaria | Períodos letivos e prazos |
+| `/admin/auditoria/[id]` | secretaria | Trilha completa de um relatório |
 
 ---
 
@@ -366,7 +366,7 @@ Brief completo em `docs/SRHA-brief-design.md`. O que não pode ser violado:
 ## Ordem de construção
 
 1. Projeto, Prisma, migração inicial, seed
-2. Cadastros do admin — comece por **importação CSV**, mais rápida que CRUD completo
+2. Cadastros da secretaria — comece por **importação CSV**, mais rápida que CRUD completo
 3. Auth.js com o provider falso de desenvolvimento
 4. Formulário do relatório: itens, total, rascunho
 5. Submissão e roteamento

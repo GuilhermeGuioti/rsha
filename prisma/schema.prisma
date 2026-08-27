@@ -14,7 +14,7 @@ datasource db {
 enum Perfil {
   DOCENTE
   COORDENADOR
-  ADMINISTRADOR
+  SECRETARIA
 }
 
 enum SituacaoRelatorio {

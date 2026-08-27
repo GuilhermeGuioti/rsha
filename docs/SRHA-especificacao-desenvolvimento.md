@@ -42,7 +42,7 @@ São duas coisas separadas, e confundi-las é o erro mais provável neste projet
 
 **A Microsoft responde apenas "quem é".** Ela devolve nome, e-mail institucional e `oid` (identificador da pessoa no diretório). Ela não sabe nada sobre cursos, perfis ou vínculos.
 
-**O banco responde "o que pode fazer".** Perfis, cursos, vínculos e quem avalia quem são cadastro interno, mantido pelo administrador.
+**O banco responde "o que pode fazer".** Perfis, cursos, vínculos e quem avalia quem são cadastro interno, mantido pela secretaria acadêmica.
 
 ### Fluxo obrigatório no login
 
@@ -56,7 +56,7 @@ São duas coisas separadas, e confundi-las é o erro mais provável neste projet
 
 O registro da aplicação no Entra ID depende da equipe de TI da instituição e pode demorar. **Não deixe o projeto parado.**
 
-Adicione um provider `Credentials` habilitado apenas quando `NODE_ENV === "development"`, com usuários fixos de teste: um docente vinculado a dois cursos, um coordenador de um curso, um coordenador que também dá aula no próprio curso (para testar o RF22) e um administrador. Um `if` na configuração decide qual provider sobe.
+Adicione um provider `Credentials` habilitado apenas quando `NODE_ENV === "development"`, com usuários fixos de teste: um docente vinculado a dois cursos, um coordenador de um curso, um coordenador que também dá aula no próprio curso (para testar o RF22) e uma pessoa da secretaria acadêmica. Um `if` na configuração decide qual provider sobe.
 
 ### Autorização
 
@@ -80,7 +80,7 @@ Chaves primárias **sequenciais** (`autoincrement`), decisão expressa do client
 generator client { provider = "prisma-client-js" }
 datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
 
-enum Perfil { DOCENTE COORDENADOR ADMINISTRADOR }
+enum Perfil { DOCENTE COORDENADOR SECRETARIA }
 enum SituacaoRelatorio { RASCUNHO AGUARDANDO_AVALIACAO DEVOLVIDO_PARA_AJUSTE APROVADO }
 enum TipoEvento { CRIACAO SUBMISSAO APROVACAO DEVOLUCAO }
 enum DiaSemana { SEGUNDA TERCA QUARTA QUINTA SEXTA SABADO }
@@ -269,12 +269,12 @@ Nunca altere `situacao` fora dessas funções.
 | `/relatorios/[id]` | docente | Formulário com itens de atividade, total e ações |
 | `/avaliacao` | coordenador | Fila de relatórios aguardando, agrupada por curso |
 | `/avaliacao/[id]` | coordenador | Relatório em leitura + aprovar / devolver + histórico |
-| `/acompanhamento` | coord./admin | Situação de entrega por curso no período corrente |
+| `/acompanhamento` | coord./secretaria | Situação de entrega por curso no período corrente |
 | `/arquivo` | todos | Navegação Ano › Semestre › Curso (filtro, não pasta) |
-| `/admin/cursos` | admin | CRUD de cursos e avaliador alternativo |
-| `/admin/usuarios` | admin | CRUD de usuários, perfis e vínculos + importação CSV |
-| `/admin/periodos` | admin | Períodos letivos e prazos |
-| `/admin/auditoria/[id]` | admin | Trilha completa de um relatório |
+| `/admin/cursos` | secretaria | CRUD de cursos e avaliador alternativo |
+| `/admin/usuarios` | secretaria | CRUD de usuários, perfis e vínculos + importação CSV |
+| `/admin/periodos` | secretaria | Períodos letivos e prazos |
+| `/admin/auditoria/[id]` | secretaria | Trilha completa de um relatório |
 
 ---
 
@@ -289,7 +289,7 @@ Nunca altere `situacao` fora dessas funções.
 ## 8. Ordem de construção
 
 1. Projeto, Prisma, migração inicial, seed com dados de teste
-2. Cadastros do admin — comece por **importação CSV**, que é mais rápida que telas de CRUD completas
+2. Cadastros da secretaria — comece por **importação CSV**, que é mais rápida que telas de CRUD completas
 3. Auth.js com o provider falso de desenvolvimento
 4. Formulário do relatório: itens, total, rascunho
 5. Submissão e roteamento

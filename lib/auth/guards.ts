@@ -65,7 +65,7 @@ export async function exigirAcessoAoRelatorio(
   }
   if (acao === "visualizar" && !ehAutor && !ehAvaliador) {
     const perfis = await obterPerfis(sessao.usuarioId);
-    if (!perfis.includes(Perfil.ADMINISTRADOR)) {
+    if (!perfis.includes(Perfil.SECRETARIA)) {
       throw new Error("Sem permissão para visualizar este relatório.");
     }
   }

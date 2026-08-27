@@ -115,7 +115,7 @@ A informação que a coordenação realmente quer é **quem não entregou** — 
 Navegação em três níveis: Ano › Semestre › Curso, com trilha de navegação no topo. Visualmente parece pasta, mas é filtro — o usuário não precisa saber disso.
 
 ### 8. Administração
-Telas de cadastro de cursos, usuários, vínculos e períodos letivos. Densidade alta, tabelas compactas: quem usa é um administrador que faz isso com frequência e prefere ver muito de uma vez.
+Telas de cadastro de cursos, usuários, vínculos e períodos letivos. Densidade alta, tabelas compactas: quem usa é a secretaria acadêmica, que faz isso com frequência e prefere ver muito de uma vez.
 
 A tela de vínculos é a mais delicada: precisa deixar claro que **um docente pode estar em vários cursos e um coordenador pode responder por vários cursos**. Mostre os dois lados da relação.
 
