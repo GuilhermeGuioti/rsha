@@ -392,7 +392,7 @@ feito e como verificar.
 Jest configurado com `next/jest` — ele usa o SWC para transpilar TypeScript, o que evita
 a configuração de `ts-jest` e o atrito de ESM. Não instale `ts-jest`.
 
-Todos os testes ficam em `lib/services/`, rodam sem subir tela e sem browser:
+Todos os testes ficam em `lib/services/__tests__/`, rodam sem subir tela e sem browser:
 
 - Docente vinculado a dois cursos gera dois relatórios independentes, roteados a
   coordenadores diferentes
