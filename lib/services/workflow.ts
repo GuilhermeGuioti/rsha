@@ -39,12 +39,21 @@ export async function obterOuCriarRascunho(
     throw new Error("Docente não está vinculado a este curso neste período.");
   }
 
-  const relatorio = await prisma.relatorio.upsert({
-    where: { docenteId_cursoId_periodoLetivoId: { docenteId, cursoId, periodoLetivoId } },
-    create: { docenteId, cursoId, periodoLetivoId },
-    update: {},
+  // ponytail: sem retry — dois cliques simultâneos do mesmo docente fazem o
+  // segundo esbarrar no @@unique. Se virar reclamação, tratar P2002 e reler.
+  return prisma.$transaction(async (tx) => {
+    const existente = await tx.relatorio.findUnique({
+      where: { docenteId_cursoId_periodoLetivoId: { docenteId, cursoId, periodoLetivoId } },
+    });
+    if (existente) {
+      return existente.id;
+    }
+    const criado = await tx.relatorio.create({ data: { docenteId, cursoId, periodoLetivoId } });
+    await tx.eventoAuditoria.create({
+      data: { relatorioId: criado.id, tipo: TipoEvento.CRIACAO, usuarioId: docenteId },
+    });
+    return criado.id;
   });
-  return relatorio.id;
 }
 
 export async function submeter(relatorioId: number, usuarioId: number): Promise<void> {

@@ -1,6 +1,6 @@
 import { prisma } from "../../db";
 import { submeter, aprovar, devolver } from "../workflow";
-import { adicionarItem, removerItem } from "../itens";
+import { salvarItens } from "../itens";
 import { DiaSemana, Perfil, SituacaoRelatorio, TipoEvento } from "../../../generated/prisma/client";
 
 async function limpar() {
@@ -251,14 +251,12 @@ test("cargaHorariaTotal bate com a soma dos itens após adicionar e remover item
     descricao: "Orientação de TCC",
   });
 
-  await adicionarItem(relatorio.id, dadosItem(2));
-  await adicionarItem(relatorio.id, dadosItem(3.5));
+  await salvarItens(relatorio.id, [dadosItem(2), dadosItem(3.5)]);
 
   let atual = await prisma.relatorio.findUniqueOrThrow({ where: { id: relatorio.id } });
   expect(atual.cargaHorariaTotal.toNumber()).toBe(5.5);
 
-  const itens = await prisma.itemAtividade.findMany({ where: { relatorioId: relatorio.id } });
-  await removerItem(relatorio.id, itens[0].id);
+  await salvarItens(relatorio.id, [dadosItem(3.5)]);
 
   atual = await prisma.relatorio.findUniqueOrThrow({ where: { id: relatorio.id } });
   const restantes = await prisma.itemAtividade.findMany({ where: { relatorioId: relatorio.id } });
@@ -275,13 +273,15 @@ test("relatório aprovado não aceita alteração por nenhum caminho", async () 
       periodoLetivoId: ambiente.periodo.id,
     },
   });
-  await adicionarItem(relatorio.id, {
-    tipoAtividadeId: ambiente.tipoAtividade.id,
-    horas: 4,
-    diaSemana: DiaSemana.TERCA,
-    horario: "10:00-12:00",
-    descricao: "Orientação de TCC",
-  });
+  await salvarItens(relatorio.id, [
+    {
+      tipoAtividadeId: ambiente.tipoAtividade.id,
+      horas: 4,
+      diaSemana: DiaSemana.TERCA,
+      horario: "10:00-12:00",
+      descricao: "Orientação de TCC",
+    },
+  ]);
   await submeter(relatorio.id, ambiente.docente.id);
   await aprovar(relatorio.id, ambiente.coordenador.id);
 
@@ -289,17 +289,17 @@ test("relatório aprovado não aceita alteração por nenhum caminho", async () 
   await expect(aprovar(relatorio.id, ambiente.coordenador.id)).rejects.toThrow();
   await expect(devolver(relatorio.id, ambiente.coordenador.id, "tentativa após aprovado")).rejects.toThrow();
   await expect(
-    adicionarItem(relatorio.id, {
-      tipoAtividadeId: ambiente.tipoAtividade.id,
-      horas: 1,
-      diaSemana: DiaSemana.QUARTA,
-      horario: "08:00-09:00",
-      descricao: "Nova tentativa",
-    }),
+    salvarItens(relatorio.id, [
+      {
+        tipoAtividadeId: ambiente.tipoAtividade.id,
+        horas: 1,
+        diaSemana: DiaSemana.QUARTA,
+        horario: "08:00-09:00",
+        descricao: "Nova tentativa",
+      },
+    ]),
   ).rejects.toThrow();
-
-  const itemExistente = await prisma.itemAtividade.findFirstOrThrow({ where: { relatorioId: relatorio.id } });
-  await expect(removerItem(relatorio.id, itemExistente.id)).rejects.toThrow();
+  await expect(salvarItens(relatorio.id, [])).rejects.toThrow();
 
   const final = await prisma.relatorio.findUniqueOrThrow({ where: { id: relatorio.id } });
   expect(final.situacao).toBe(SituacaoRelatorio.APROVADO);

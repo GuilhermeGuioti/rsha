@@ -2,9 +2,16 @@ import "dotenv/config";
 import { Perfil } from "../generated/prisma/enums";
 import { prisma } from "../lib/db";
 
-// Só a secretaria inicial. Cursos, tipos de atividade, período letivo e os
-// demais usuários são cadastrados por ela via UI (app/admin/*), não pelo seed.
+// A secretaria inicial e os tipos de atividade (lista fixa do formulário de
+// papel — docs/prompts-iniciais-srha.txt). Cursos, período letivo e os demais
+// usuários são cadastrados pela secretaria via UI (app/admin/*).
+const TIPOS_ATIVIDADE = ["Orientação de TCC", "Supervisão de Estágio", "Participação em NBE"];
+
 export async function seed() {
+  for (const descricao of TIPOS_ATIVIDADE) {
+    await prisma.tipoAtividade.upsert({ where: { descricao }, update: {}, create: { descricao } });
+  }
+
   const secretaria = await prisma.usuario.upsert({
     where: { email: "admin@srha.dev" },
     update: {},

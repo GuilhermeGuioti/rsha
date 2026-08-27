@@ -14,30 +14,31 @@ async function exigirRelatorioEditavel(cliente: Prisma.TransactionClient, relato
   if (!relatorio) {
     throw new Error("Relatório não encontrado.");
   }
-  if (relatorio.situacao === SituacaoRelatorio.APROVADO) {
-    throw new Error("Relatório aprovado não pode ser alterado.");
+  // A máquina de estados não tem transição de edição a partir de
+  // AGUARDANDO_AVALIACAO: o que o coordenador abre é o que o docente enviou.
+  if (
+    relatorio.situacao !== SituacaoRelatorio.RASCUNHO &&
+    relatorio.situacao !== SituacaoRelatorio.DEVOLVIDO_PARA_AJUSTE
+  ) {
+    throw new Error(`Não é possível alterar os itens de um relatório em situação ${relatorio.situacao}.`);
   }
   return relatorio;
 }
 
-async function recalcularTotal(cliente: Prisma.TransactionClient, relatorioId: number): Promise<void> {
-  const itens = await cliente.itemAtividade.findMany({ where: { relatorioId } });
-  const total = itens.reduce((soma, item) => soma + item.horas.toNumber(), 0);
-  await cliente.relatorio.update({ where: { id: relatorioId }, data: { cargaHorariaTotal: total } });
-}
-
-export async function adicionarItem(relatorioId: number, dados: DadosItem): Promise<void> {
+/**
+ * Grava a lista inteira de itens do relatório: o que o docente vê na tela é o
+ * que fica no banco. Substituir tudo evita rastrear id de linha na interface —
+ * itens não são referenciados por nada além do próprio relatório.
+ * `cargaHorariaTotal` é recalculada na mesma transação (o cliente nunca envia).
+ */
+export async function salvarItens(relatorioId: number, itens: DadosItem[]): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await exigirRelatorioEditavel(tx, relatorioId);
-    await tx.itemAtividade.create({ data: { relatorioId, ...dados } });
-    await recalcularTotal(tx, relatorioId);
-  });
-}
-
-export async function removerItem(relatorioId: number, itemId: number): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    await exigirRelatorioEditavel(tx, relatorioId);
-    await tx.itemAtividade.delete({ where: { id: itemId, relatorioId } });
-    await recalcularTotal(tx, relatorioId);
+    await tx.itemAtividade.deleteMany({ where: { relatorioId } });
+    await tx.itemAtividade.createMany({ data: itens.map((item) => ({ relatorioId, ...item })) });
+    await tx.relatorio.update({
+      where: { id: relatorioId },
+      data: { cargaHorariaTotal: itens.reduce((soma, item) => soma + item.horas, 0) },
+    });
   });
 }
