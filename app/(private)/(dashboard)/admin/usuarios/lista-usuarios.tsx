@@ -1,18 +1,18 @@
 "use client";
 
-import { Fragment, useState, useTransition, type FormEvent } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Pill } from "../../../../../components/Pill";
 import { Modal } from "../../../../../components/Modal";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
 import { Campo, classeCampo } from "../../../../../components/Campo";
-import { TabelaAdmin } from "../../../../../components/TabelaAdmin";
+import { Tabela } from "../../../../../components/Tabela";
 import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
 import { CampoBusca } from "../../../../../components/CampoBusca";
 import { AbasAtivoInativo } from "../../../../../components/AbasAtivoInativo";
-import { LinhaVazia } from "../../../../../components/LinhaVazia";
-import { LinkAcaoTabela } from "../../../../../components/LinkAcaoTabela";
+import { AcaoTabela } from "../../../../../components/AcaoTabela";
+import { IconeEditar } from "../../../../../components/Icones";
 import { CampoCheckbox } from "../../../../../components/CampoCheckbox";
 import { MensagemErro } from "../../../../../components/MensagemErro";
 import { acaoCriarUsuario, acaoAtualizarUsuario } from "./acoes";
@@ -140,91 +140,96 @@ export function ListaUsuarios({ usuarios }: { usuarios: UsuarioLinha[] }) {
         />
       </div>
 
-      <TabelaAdmin minWidthPx={560}>
-        <thead>
-          <tr className="border-b border-borda text-[13px] text-tinta-suave">
-            <th scope="col" className="px-4 py-2.5 font-medium">Pessoa</th>
-            <th scope="col" className="px-4 py-2.5 font-medium">E-mail institucional</th>
-            <th scope="col" className="px-4 py-2.5 font-medium">Situação</th>
-            <th scope="col" className="px-4 py-2.5" />
-          </tr>
-        </thead>
-        <tbody>
-          {visiveis.length === 0 && (
-            <LinhaVazia colSpan={COLUNAS}>
-              {buscaNormalizada
-                ? "Nenhum usuário encontrado."
-                : `Nenhum usuário ${aba === "ativos" ? "ativo" : "inativo"}.`}
-            </LinhaVazia>
-          )}
-          {visiveis.map((usuario) => {
-            const aberto = expandidos.has(usuario.id);
-            return (
-              <Fragment key={usuario.id}>
-                <tr className="border-b border-[#f0f3f6] last:border-0">
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={() => alternarExpandido(usuario.id)}
-                      aria-expanded={aberto}
-                      aria-controls={`detalhes-usuario-${usuario.id}`}
-                      className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
-                    >
-                      <span
-                        aria-hidden
-                        className={`text-xs text-tinta-suave transition-transform ${aberto ? "rotate-90" : ""}`}
-                      >
-                        ▸
-                      </span>
-                      {usuario.nome}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap font-mono text-[13px] font-medium text-tinta-suave">
-                    {usuario.email}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Pill cor={usuario.ativo ? "aprovado" : "neutro"}>{usuario.ativo ? "Ativo" : "Inativo"}</Pill>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <LinkAcaoTabela onClick={() => abrirEdicao(usuario)}>Editar</LinkAcaoTabela>
-                  </td>
-                </tr>
-                {aberto && (
-                  <tr id={`detalhes-usuario-${usuario.id}`} className="border-b border-[#f0f3f6] bg-papel last:border-0">
-                    <td colSpan={COLUNAS} className="px-4 py-3">
-                      <div className="flex flex-wrap gap-x-10 gap-y-3 text-[15px]">
-                        <div>
-                          <div className="text-[13px] font-medium text-tinta-suave">Perfil</div>
-                          <div className="mt-1.5 flex flex-wrap gap-1.5">
-                            {usuario.perfis.length === 0 && <span className="text-tinta-suave">—</span>}
-                            {usuario.perfis.map((perfil) => (
-                              <Pill key={perfil} cor={rotuloPerfil[perfil].cor}>
-                                {rotuloPerfil[perfil].rotulo}
-                              </Pill>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-[13px] font-medium text-tinta-suave">Cursos</div>
-                          {usuario.cursos.length === 0 ? (
-                            <div className="mt-1.5 text-tinta-suave">—</div>
-                          ) : (
-                            <ul className="mt-1.5 flex flex-col gap-1">
-                              {usuario.cursos.map((curso) => (
-                                <li key={curso}>{curso}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
-            );
-          })}
-        </tbody>
-      </TabelaAdmin>
+      <Tabela<UsuarioLinha>
+        minWidthPx={560}
+        linhas={visiveis}
+        chave={(usuario) => usuario.id}
+        vazio={
+          buscaNormalizada
+            ? "Nenhum usuário encontrado."
+            : `Nenhum usuário ${aba === "ativos" ? "ativo" : "inativo"}.`
+        }
+        colunas={[
+          {
+            cabecalho: "Pessoa",
+            classeCelula: "whitespace-nowrap",
+            render: (usuario) => {
+              const aberto = expandidos.has(usuario.id);
+              return (
+                <button
+                  type="button"
+                  onClick={() => alternarExpandido(usuario.id)}
+                  aria-expanded={aberto}
+                  aria-controls={`detalhes-usuario-${usuario.id}`}
+                  className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+                >
+                  <span
+                    aria-hidden
+                    className={`text-xs text-tinta-suave transition-transform ${aberto ? "rotate-90" : ""}`}
+                  >
+                    ▸
+                  </span>
+                  {usuario.nome}
+                </button>
+              );
+            },
+          },
+          {
+            cabecalho: "E-mail institucional",
+            classeCelula: "whitespace-nowrap font-mono text-[13px] font-medium text-tinta-suave",
+            render: (usuario) => usuario.email,
+          },
+          {
+            cabecalho: "Situação",
+            render: (usuario) => (
+              <Pill cor={usuario.ativo ? "aprovado" : "neutro"}>{usuario.ativo ? "Ativo" : "Inativo"}</Pill>
+            ),
+          },
+          {
+            cabecalho: "",
+            alinhado: "direita",
+            render: (usuario) => (
+              <AcaoTabela rotulo={`Editar ${usuario.nome}`} onClick={() => abrirEdicao(usuario)}>
+                <IconeEditar className="h-[18px] w-[18px]" />
+              </AcaoTabela>
+            ),
+          },
+        ]}
+        linhaExtra={(usuario) => {
+          if (!expandidos.has(usuario.id)) return null;
+          return (
+            <tr id={`detalhes-usuario-${usuario.id}`} className="border-b border-[#f0f3f6] bg-papel last:border-0">
+              <td colSpan={COLUNAS} className="px-4 py-3">
+                <div className="flex flex-wrap gap-x-10 gap-y-3 text-[15px]">
+                  <div>
+                    <div className="text-[13px] font-medium text-tinta-suave">Perfil</div>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {usuario.perfis.length === 0 && <span className="text-tinta-suave">—</span>}
+                      {usuario.perfis.map((perfil) => (
+                        <Pill key={perfil} cor={rotuloPerfil[perfil].cor}>
+                          {rotuloPerfil[perfil].rotulo}
+                        </Pill>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-medium text-tinta-suave">Cursos</div>
+                    {usuario.cursos.length === 0 ? (
+                      <div className="mt-1.5 text-tinta-suave">—</div>
+                    ) : (
+                      <ul className="mt-1.5 flex flex-col gap-1">
+                        {usuario.cursos.map((curso) => (
+                          <li key={curso}>{curso}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </td>
+            </tr>
+          );
+        }}
+      />
 
       <Modal
         aberto={modalAberto}

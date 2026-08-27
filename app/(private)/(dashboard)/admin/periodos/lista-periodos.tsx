@@ -7,10 +7,10 @@ import { Modal } from "../../../../../components/Modal";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
 import { Campo, classeCampo, classeCampoSelect } from "../../../../../components/Campo";
-import { TabelaAdmin } from "../../../../../components/TabelaAdmin";
+import { Tabela } from "../../../../../components/Tabela";
 import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
-import { LinhaVazia } from "../../../../../components/LinhaVazia";
-import { LinkAcaoTabela } from "../../../../../components/LinkAcaoTabela";
+import { AcaoTabela } from "../../../../../components/AcaoTabela";
+import { IconeEditar } from "../../../../../components/Icones";
 import { MensagemErro } from "../../../../../components/MensagemErro";
 import { acaoCriarPeriodo, acaoAtualizarPeriodo } from "./acoes";
 
@@ -109,40 +109,48 @@ export function ListaPeriodos({ periodos }: { periodos: PeriodoLinha[] }) {
         }
       />
 
-      <TabelaAdmin minWidthPx={560}>
-        <thead>
-          <tr className="border-b border-borda text-[13px] text-tinta-suave">
-            <th scope="col" className="px-4 py-2.5 font-medium">Período</th>
-            <th scope="col" className="px-4 py-2.5 font-medium">Abertura</th>
-            <th scope="col" className="px-4 py-2.5 font-medium">Encerramento</th>
-            <th scope="col" className="px-4 py-2.5 font-medium">Situação</th>
-            <th scope="col" className="px-4 py-2.5" />
-          </tr>
-        </thead>
-        <tbody>
-          {periodos.length === 0 && <LinhaVazia colSpan={5}>Nenhum período letivo cadastrado.</LinhaVazia>}
-          {periodos.map((periodo) => {
-            const situacao = situacaoPeriodo(periodo);
-            return (
-              <tr key={periodo.id} className="border-b border-[#f0f3f6] last:border-0">
-                <td className="px-4 py-3 font-serif font-semibold">{periodo.ano}/{periodo.semestre}</td>
-                <td className="px-4 py-3 font-mono font-medium tabular-nums text-tinta-suave">
-                  {formatarData(periodo.aberturaSubmissao)}
-                </td>
-                <td className="px-4 py-3 font-mono font-medium tabular-nums">
-                  {formatarData(periodo.encerramentoSubmissao)}
-                </td>
-                <td className="px-4 py-3">
-                  <Pill cor={situacao.cor}>{situacao.rotulo}</Pill>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <LinkAcaoTabela onClick={() => abrirEdicao(periodo)}>Editar</LinkAcaoTabela>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </TabelaAdmin>
+      <Tabela<PeriodoLinha>
+        minWidthPx={560}
+        linhas={periodos}
+        chave={(periodo) => periodo.id}
+        vazio="Nenhum período letivo cadastrado."
+        colunas={[
+          {
+            cabecalho: "Período",
+            classeCelula: "font-serif font-semibold",
+            render: (periodo) => `${periodo.ano}/${periodo.semestre}`,
+          },
+          {
+            cabecalho: "Abertura",
+            classeCelula: "font-mono font-medium tabular-nums text-tinta-suave",
+            render: (periodo) => formatarData(periodo.aberturaSubmissao),
+          },
+          {
+            cabecalho: "Encerramento",
+            classeCelula: "font-mono font-medium tabular-nums",
+            render: (periodo) => formatarData(periodo.encerramentoSubmissao),
+          },
+          {
+            cabecalho: "Situação",
+            render: (periodo) => {
+              const situacao = situacaoPeriodo(periodo);
+              return <Pill cor={situacao.cor}>{situacao.rotulo}</Pill>;
+            },
+          },
+          {
+            cabecalho: "",
+            alinhado: "direita",
+            render: (periodo) => (
+              <AcaoTabela
+                rotulo={`Editar período ${periodo.ano}/${periodo.semestre}`}
+                onClick={() => abrirEdicao(periodo)}
+              >
+                <IconeEditar className="h-[18px] w-[18px]" />
+              </AcaoTabela>
+            ),
+          },
+        ]}
+      />
 
       <Modal
         aberto={modalAberto}

@@ -7,12 +7,12 @@ import { Modal } from "../../../../../components/Modal";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
 import { Campo, classeCampo, classeCampoSelect } from "../../../../../components/Campo";
-import { TabelaAdmin } from "../../../../../components/TabelaAdmin";
+import { Tabela } from "../../../../../components/Tabela";
 import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
 import { CampoBusca } from "../../../../../components/CampoBusca";
 import { AbasAtivoInativo } from "../../../../../components/AbasAtivoInativo";
-import { LinhaVazia } from "../../../../../components/LinhaVazia";
-import { LinkAcaoTabela } from "../../../../../components/LinkAcaoTabela";
+import { AcaoTabela } from "../../../../../components/AcaoTabela";
+import { IconeEditar } from "../../../../../components/Icones";
 import { CampoCheckbox } from "../../../../../components/CampoCheckbox";
 import { MensagemErro } from "../../../../../components/MensagemErro";
 import { acaoCriarCurso, acaoAtualizarCurso } from "./acoes";
@@ -123,41 +123,46 @@ export function ListaCursos({
         />
       </div>
 
-      <TabelaAdmin minWidthPx={620}>
-        <thead>
-          <tr className="border-b border-borda text-[13px] text-tinta-suave">
-            <th scope="col" className="px-4 py-2.5 font-medium">Curso</th>
-            <th scope="col" className="px-4 py-2.5 font-medium">Coordenação</th>
-            <th scope="col" className="px-4 py-2.5 text-right font-medium">Docentes</th>
-            <th scope="col" className="px-4 py-2.5 font-medium">Situação</th>
-            <th scope="col" className="px-4 py-2.5" />
-          </tr>
-        </thead>
-        <tbody>
-          {visiveis.length === 0 && (
-            <LinhaVazia colSpan={5}>
-              {buscaNormalizada
-                ? "Nenhum curso encontrado."
-                : `Nenhum curso ${aba === "ativos" ? "ativo" : "inativo"}.`}
-            </LinhaVazia>
-          )}
-          {visiveis.map((curso) => (
-            <tr key={curso.id} className="border-b border-[#f0f3f6] last:border-0">
-              <td className="px-4 py-3">{curso.nome}</td>
-              <td className="px-4 py-3 text-tinta-suave">
-                {curso.coordenadores.length > 0 ? curso.coordenadores.join(", ") : "sem coordenação definida"}
-              </td>
-              <td className="px-4 py-3 text-right font-mono font-medium tabular-nums">{curso.totalDocentes}</td>
-              <td className="px-4 py-3">
-                <Pill cor={curso.ativo ? "aprovado" : "neutro"}>{curso.ativo ? "Ativo" : "Inativo"}</Pill>
-              </td>
-              <td className="px-4 py-3 text-right">
-                <LinkAcaoTabela onClick={() => abrirEdicao(curso)}>Editar</LinkAcaoTabela>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </TabelaAdmin>
+      <Tabela<CursoLinha>
+        minWidthPx={620}
+        linhas={visiveis}
+        chave={(curso) => curso.id}
+        vazio={
+          buscaNormalizada
+            ? "Nenhum curso encontrado."
+            : `Nenhum curso ${aba === "ativos" ? "ativo" : "inativo"}.`
+        }
+        colunas={[
+          { cabecalho: "Curso", render: (curso) => curso.nome },
+          {
+            cabecalho: "Coordenação",
+            classeCelula: "text-tinta-suave",
+            render: (curso) =>
+              curso.coordenadores.length > 0 ? curso.coordenadores.join(", ") : "sem coordenação definida",
+          },
+          {
+            cabecalho: "Docentes",
+            alinhado: "direita",
+            classeCelula: "font-mono font-medium tabular-nums",
+            render: (curso) => curso.totalDocentes,
+          },
+          {
+            cabecalho: "Situação",
+            render: (curso) => (
+              <Pill cor={curso.ativo ? "aprovado" : "neutro"}>{curso.ativo ? "Ativo" : "Inativo"}</Pill>
+            ),
+          },
+          {
+            cabecalho: "",
+            alinhado: "direita",
+            render: (curso) => (
+              <AcaoTabela rotulo={`Editar ${curso.nome}`} onClick={() => abrirEdicao(curso)}>
+                <IconeEditar className="h-[18px] w-[18px]" />
+              </AcaoTabela>
+            ),
+          },
+        ]}
+      />
 
       <Modal
         aberto={modalAberto}
