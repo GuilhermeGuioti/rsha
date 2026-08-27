@@ -8,14 +8,17 @@ import { Modal } from "./Modal";
 import { BotaoSecundario } from "./BotaoSecundario";
 import { Pill } from "./Pill";
 
-const links = [
-  { href: "/admin/cursos", rotulo: "Cursos" },
-  { href: "/admin/usuarios", rotulo: "Usuários" },
-  { href: "/admin/vinculos", rotulo: "Vínculos" },
-  { href: "/admin/periodos", rotulo: "Períodos" },
-];
+export type LinkNav = { href: string; rotulo: string };
 
-export function NavAdmin({ nomeUsuario }: { nomeUsuario: string }) {
+export function Nav({
+  nomeUsuario,
+  perfilRotulo,
+  links,
+}: {
+  nomeUsuario: string;
+  perfilRotulo: string;
+  links: LinkNav[];
+}) {
   const pathname = usePathname();
   const [contaAberta, setContaAberta] = useState(false);
   const inicial = nomeUsuario.trim().charAt(0).toUpperCase();
@@ -41,7 +44,7 @@ export function NavAdmin({ nomeUsuario }: { nomeUsuario: string }) {
         </div>
         <nav className="flex gap-5 overflow-x-auto text-[15px]">
           {links.map((link) => {
-            const estaAtivo = pathname.startsWith(link.href);
+            const estaAtivo = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
@@ -86,7 +89,7 @@ export function NavAdmin({ nomeUsuario }: { nomeUsuario: string }) {
           </>
         }
       >
-        <Pill cor="neutro">Secretaria acadêmica</Pill>
+        <Pill cor="neutro">{perfilRotulo}</Pill>
       </Modal>
     </header>
   );
