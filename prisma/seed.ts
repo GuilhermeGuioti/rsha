@@ -4,27 +4,133 @@ import { prisma } from "../lib/db";
 
 // A secretaria inicial e os tipos de atividade (lista fixa do formulário de
 // papel — docs/prompts-iniciais-srha.txt). Cursos, período letivo e os demais
-// usuários são cadastrados pela secretaria via UI (app/admin/*).
+// usuários são cadastrados pela secretaria via UI (app/admin/*) — fora de
+// produção, o cenário de desenvolvimento abaixo poupa esse cadastro à mão.
 const TIPOS_ATIVIDADE = ["Orientação de TCC", "Supervisão de Estágio", "Participação em NBE"];
+
+async function criarUsuario(nome: string, email: string) {
+  return prisma.usuario.upsert({ where: { email }, update: { nome }, create: { nome, email } });
+}
+
+async function darPerfil(usuarioId: number, perfil: Perfil) {
+  await prisma.usuarioPerfil.upsert({
+    where: { usuarioId_perfil: { usuarioId, perfil } },
+    update: {},
+    create: { usuarioId, perfil },
+  });
+}
 
 export async function seed() {
   for (const descricao of TIPOS_ATIVIDADE) {
     await prisma.tipoAtividade.upsert({ where: { descricao }, update: {}, create: { descricao } });
   }
 
-  const secretaria = await prisma.usuario.upsert({
-    where: { email: "admin@srha.dev" },
-    update: {},
-    create: { nome: "Secretaria Acadêmica", email: "admin@srha.dev" },
-  });
+  const secretaria = await criarUsuario("Secretaria Acadêmica", "admin@srha.dev");
+  await darPerfil(secretaria.id, Perfil.SECRETARIA);
 
-  await prisma.usuarioPerfil.upsert({
-    where: { usuarioId_perfil: { usuarioId: secretaria.id, perfil: Perfil.SECRETARIA } },
-    update: {},
-    create: { usuarioId: secretaria.id, perfil: Perfil.SECRETARIA },
-  });
+  if (process.env.NODE_ENV !== "production") {
+    await seedDesenvolvimento();
+  }
 
   console.log("Seed concluído.");
+}
+
+/**
+ * Cenário de teste do login falso (CLAUDE.md § Login falso para
+ * desenvolvimento): um docente em dois cursos com coordenadores diferentes,
+ * um coordenador de um curso só, e um coordenador que dá aula no próprio
+ * curso — este último é o caso do RF22, e por isso o curso dele tem avaliador
+ * alternativo cadastrado.
+ *
+ * Não cria nenhum Relatorio: a linha nasce sob demanda, no primeiro clique do
+ * docente. É isso que faz "não iniciado" existir no painel.
+ */
+async function seedDesenvolvimento() {
+  const [helena, claudia, marcos, paulo] = await Promise.all([
+    criarUsuario("Helena Vasconcelos", "helena@baraodemaua.br"),
+    criarUsuario("Cláudia Ferrari", "claudia@baraodemaua.br"),
+    criarUsuario("Marcos Rinaldi", "marcos@baraodemaua.br"),
+    criarUsuario("Paulo Tavares", "paulo@baraodemaua.br"),
+  ]);
+
+  await Promise.all([
+    darPerfil(helena.id, Perfil.DOCENTE),
+    darPerfil(claudia.id, Perfil.COORDENADOR),
+    darPerfil(marcos.id, Perfil.COORDENADOR),
+    darPerfil(paulo.id, Perfil.COORDENADOR),
+    darPerfil(paulo.id, Perfil.DOCENTE),
+  ]);
+
+  const cursos = new Map<string, number>();
+  for (const [nome, avaliadorAlternativoId] of [
+    ["Fisioterapia", null],
+    ["Nutrição", null],
+    // Paulo coordena e dá aula aqui: sem alternativo, a submissão dele
+    // ficaria bloqueada.
+    ["Educação Física", claudia.id],
+  ] as const) {
+    const curso = await prisma.curso.upsert({
+      where: { nome },
+      update: { avaliadorAlternativoId },
+      create: { nome, avaliadorAlternativoId },
+    });
+    cursos.set(nome, curso.id);
+  }
+
+  // Janela sempre aberta a partir do dia em que o seed roda — o prazo mostrado
+  // na home fica a quatro dias, como no mockup.
+  const hoje = new Date();
+  const emDias = (dias: number) => new Date(hoje.getTime() + dias * 86_400_000);
+  const prazos = { aberturaSubmissao: emDias(-30), encerramentoSubmissao: emDias(4) };
+  const ano = hoje.getFullYear();
+  const semestre = hoje.getMonth() < 6 ? 1 : 2;
+
+  const periodo = await prisma.periodoLetivo.upsert({
+    where: { ano_semestre: { ano, semestre } },
+    update: prazos,
+    create: { ano, semestre, ...prazos },
+  });
+
+  const vinculosDocente: [number, string][] = [
+    [helena.id, "Fisioterapia"],
+    [helena.id, "Nutrição"],
+    [paulo.id, "Educação Física"],
+  ];
+  for (const [docenteId, nomeCurso] of vinculosDocente) {
+    const cursoId = cursos.get(nomeCurso)!;
+    await prisma.vinculoDocenteCurso.upsert({
+      where: {
+        docenteId_cursoId_periodoLetivoId: { docenteId, cursoId, periodoLetivoId: periodo.id },
+      },
+      update: {},
+      create: { docenteId, cursoId, periodoLetivoId: periodo.id },
+    });
+  }
+
+  const vinculosCoordenador: [number, string][] = [
+    [claudia.id, "Fisioterapia"],
+    [marcos.id, "Nutrição"],
+    [paulo.id, "Educação Física"],
+  ];
+  for (const [coordenadorId, nomeCurso] of vinculosCoordenador) {
+    const cursoId = cursos.get(nomeCurso)!;
+    await prisma.vinculoCoordenadorCurso.upsert({
+      where: { coordenadorId_cursoId: { coordenadorId, cursoId } },
+      update: {},
+      create: { coordenadorId, cursoId },
+    });
+  }
+
+  console.log(
+    [
+      "Cenário de desenvolvimento pronto. Entre pelo campo de e-mail em /login:",
+      "  helena@baraodemaua.br   docente em Fisioterapia e Nutrição (coordenadores diferentes)",
+      "  claudia@baraodemaua.br  coordena Fisioterapia · avaliadora alternativa de Educação Física",
+      "  marcos@baraodemaua.br   coordena Nutrição",
+      "  paulo@baraodemaua.br    coordena e dá aula em Educação Física (RF22)",
+      "  admin@srha.dev          secretaria acadêmica",
+    ].join("\n"),
+  );
 }
 
 if (require.main === module) {
