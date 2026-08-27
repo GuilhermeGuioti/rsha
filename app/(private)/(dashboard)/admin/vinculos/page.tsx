@@ -22,6 +22,7 @@ export default async function AdminVinculosPage() {
       vinculosDocente={vinculosDocente.map((vinculo) => ({
         id: vinculo.id,
         periodoLetivoId: vinculo.periodoLetivoId,
+        periodoRotulo: `${vinculo.periodo.ano}/${vinculo.periodo.semestre}`,
         cursoId: vinculo.cursoId,
         cursoNome: vinculo.curso.nome,
         docenteId: vinculo.docenteId,

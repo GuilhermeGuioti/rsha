@@ -7,10 +7,11 @@ import { Modal } from "../../../../../components/Modal";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
 import { Campo, classeCampoSelect } from "../../../../../components/Campo";
-import { TabelaAdmin } from "../../../../../components/TabelaAdmin";
+import { Tabela } from "../../../../../components/Tabela";
 import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
-import { LinhaVazia } from "../../../../../components/LinhaVazia";
-import { LinkAcaoTabela } from "../../../../../components/LinkAcaoTabela";
+import { CampoBusca } from "../../../../../components/CampoBusca";
+import { AcaoTabela } from "../../../../../components/AcaoTabela";
+import { IconeRemover } from "../../../../../components/Icones";
 import { MensagemErro } from "../../../../../components/MensagemErro";
 import {
   acaoVincularDocente,
@@ -24,6 +25,7 @@ type Opcao = { id: number; nome: string };
 type VinculoDocente = {
   id: number;
   periodoLetivoId: number;
+  periodoRotulo: string;
   cursoId: number;
   cursoNome: string;
   docenteId: number;
@@ -53,19 +55,34 @@ export function ListaVinculos({
   usuarios: Opcao[];
 }) {
   const router = useRouter();
-  const [periodoId, setPeriodoId] = useState<number | null>(periodos[0]?.id ?? null);
   const [modo, setModo] = useState<Modo | null>(null);
   const [cursoId, setCursoId] = useState<number | "">("");
   const [pessoaId, setPessoaId] = useState<number | "">("");
+  const [periodoId, setPeriodoId] = useState<number | "">("");
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, startTransition] = useTransition();
+  const [buscaDocentes, setBuscaDocentes] = useState("");
+  const [buscaCoordenadores, setBuscaCoordenadores] = useState("");
 
-  const docentesDoPeriodo = vinculosDocente.filter((vinculo) => vinculo.periodoLetivoId === periodoId);
+  const buscaDocentesNormalizada = buscaDocentes.trim().toLowerCase();
+  const docentesFiltrados = vinculosDocente.filter(
+    (vinculo) =>
+      vinculo.docenteNome.toLowerCase().includes(buscaDocentesNormalizada) ||
+      vinculo.cursoNome.toLowerCase().includes(buscaDocentesNormalizada),
+  );
+
+  const buscaCoordenadoresNormalizada = buscaCoordenadores.trim().toLowerCase();
+  const coordenadoresFiltrados = vinculosCoordenador.filter(
+    (vinculo) =>
+      vinculo.coordenadorNome.toLowerCase().includes(buscaCoordenadoresNormalizada) ||
+      vinculo.cursoNome.toLowerCase().includes(buscaCoordenadoresNormalizada),
+  );
 
   function abrirNovo(novoModo: Modo) {
     setModo(novoModo);
     setCursoId("");
     setPessoaId("");
+    setPeriodoId(periodos[0]?.id ?? "");
     setErro(null);
   }
 
@@ -73,10 +90,11 @@ export function ListaVinculos({
     evento.preventDefault();
     setErro(null);
     if (cursoId === "" || pessoaId === "") return;
+    if (modo === "docente" && periodoId === "") return;
     startTransition(async () => {
       const resultado =
         modo === "docente"
-          ? await acaoVincularDocente({ docenteId: Number(pessoaId), cursoId: Number(cursoId), periodoLetivoId: periodoId! })
+          ? await acaoVincularDocente({ docenteId: Number(pessoaId), cursoId: Number(cursoId), periodoLetivoId: Number(periodoId) })
           : await acaoVincularCoordenador({ coordenadorId: Number(pessoaId), cursoId: Number(cursoId) });
       if (!resultado.ok) {
         setErro(resultado.erro);
@@ -106,7 +124,7 @@ export function ListaVinculos({
         }
       />
 
-      {periodos.length === 0 ? (
+      {periodos.length === 0 && (
         <p className="rounded-md border border-borda bg-superficie px-4 py-3 text-[15px] text-tinta-suave">
           Nenhum período letivo cadastrado.{" "}
           <Link href="/admin/periodos" className="font-medium text-azul-interativo hover:underline">
@@ -114,117 +132,126 @@ export function ListaVinculos({
           </Link>{" "}
           antes de vincular docentes a cursos.
         </p>
-      ) : (
+      )}
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+        {periodos.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <CabecalhoAdmin
+              nivel={2}
+              titulo="Docentes por curso"
+              acao={
+                <BotaoPrimario onClick={() => abrirNovo("docente")} icone>
+                  Vincular docente
+                </BotaoPrimario>
+              }
+            />
+
+            <div className="flex gap-2">
+              <CampoBusca
+                id="busca-docentes"
+                rotuloAcessivel="Buscar por nome do docente ou do curso"
+                placeholder="Buscar por docente ou curso…"
+                valor={buscaDocentes}
+                onChange={setBuscaDocentes}
+              />
+            </div>
+
+            <Tabela<VinculoDocente>
+              minWidthPx={0}
+              linhas={docentesFiltrados}
+              chave={(vinculo) => vinculo.id}
+              vazio={
+                buscaDocentesNormalizada ? "Nenhum vínculo encontrado." : "Nenhum docente vinculado."
+              }
+              colunas={[
+                { cabecalho: "Curso", largura: "38%", render: (vinculo) => vinculo.cursoNome },
+                { cabecalho: "Docente", largura: "38%", render: (vinculo) => vinculo.docenteNome },
+                {
+                  cabecalho: "Período",
+                  largura: "12%",
+                  classeCelula: "font-mono text-[13px] tabular-nums text-tinta-suave",
+                  render: (vinculo) => vinculo.periodoRotulo,
+                },
+                {
+                  cabecalho: "",
+                  alinhado: "direita",
+                  largura: "12%",
+                  render: (vinculo) => (
+                    <AcaoTabela
+                      cor="devolvido"
+                      rotulo={`Remover vínculo de ${vinculo.docenteNome} em ${vinculo.cursoNome}`}
+                      onClick={() => remover("docente", vinculo.id, `${vinculo.docenteNome} em ${vinculo.cursoNome}`)}
+                    >
+                      <IconeRemover className="h-[18px] w-[18px]" />
+                    </AcaoTabela>
+                  ),
+                },
+              ]}
+            />
+          </section>
+        )}
+
         <section className="flex flex-col gap-4">
           <CabecalhoAdmin
             nivel={2}
-            titulo="Docentes por curso"
-            subtitulo={
-              <label htmlFor="periodo-vinculos" className="flex items-center gap-2 text-[13px] text-tinta-suave">
-                Período
-                <select
-                  id="periodo-vinculos"
-                  value={periodoId ?? ""}
-                  onChange={(evento) => setPeriodoId(Number(evento.target.value))}
-                  className="min-h-10 rounded-md border border-borda bg-superficie px-2.5 font-mono text-[13px] tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
-                >
-                  {periodos.map((periodo) => (
-                    <option key={periodo.id} value={periodo.id}>
-                      {periodo.rotulo}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            }
+            titulo="Coordenadores por curso"
             acao={
-              <BotaoPrimario onClick={() => abrirNovo("docente")} icone>
-                Vincular docente
+              <BotaoPrimario onClick={() => abrirNovo("coordenador")} icone>
+                Vincular coordenador
               </BotaoPrimario>
             }
           />
 
-          <TabelaAdmin minWidthPx={480}>
-            <thead>
-              <tr className="border-b border-borda text-[13px] text-tinta-suave">
-                <th scope="col" className="px-4 py-2.5 font-medium">Curso</th>
-                <th scope="col" className="px-4 py-2.5 font-medium">Docente</th>
-                <th scope="col" className="px-4 py-2.5" />
-              </tr>
-            </thead>
-            <tbody>
-              {docentesDoPeriodo.length === 0 && (
-                <LinhaVazia colSpan={3}>Nenhum docente vinculado neste período.</LinhaVazia>
-              )}
-              {docentesDoPeriodo.map((vinculo) => (
-                <tr key={vinculo.id} className="border-b border-[#f0f3f6] last:border-0">
-                  <td className="px-4 py-3">{vinculo.cursoNome}</td>
-                  <td className="px-4 py-3">{vinculo.docenteNome}</td>
-                  <td className="px-4 py-3 text-right">
-                    <LinkAcaoTabela
-                      cor="devolvido"
-                      onClick={() => remover("docente", vinculo.id, `${vinculo.docenteNome} em ${vinculo.cursoNome}`)}
-                    >
-                      Remover
-                    </LinkAcaoTabela>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </TabelaAdmin>
-        </section>
-      )}
+          <div className="flex gap-2">
+            <CampoBusca
+              id="busca-coordenadores"
+              rotuloAcessivel="Buscar por nome do coordenador ou do curso"
+              placeholder="Buscar por coordenador ou curso…"
+              valor={buscaCoordenadores}
+              onChange={setBuscaCoordenadores}
+            />
+          </div>
 
-      <section className="flex flex-col gap-4">
-        <CabecalhoAdmin
-          nivel={2}
-          titulo="Coordenadores por curso"
-          acao={
-            <BotaoPrimario onClick={() => abrirNovo("coordenador")} icone>
-              Vincular coordenador
-            </BotaoPrimario>
-          }
-        />
-
-        <TabelaAdmin minWidthPx={480}>
-          <thead>
-            <tr className="border-b border-borda text-[13px] text-tinta-suave">
-              <th scope="col" className="px-4 py-2.5 font-medium">Curso</th>
-              <th scope="col" className="px-4 py-2.5 font-medium">Coordenador</th>
-              <th scope="col" className="px-4 py-2.5" />
-            </tr>
-          </thead>
-          <tbody>
-            {vinculosCoordenador.length === 0 && (
-              <LinhaVazia colSpan={3}>Nenhum coordenador vinculado.</LinhaVazia>
-            )}
-            {vinculosCoordenador.map((vinculo) => (
-              <tr key={vinculo.id} className="border-b border-[#f0f3f6] last:border-0">
-                <td className="px-4 py-3">{vinculo.cursoNome}</td>
-                <td className="px-4 py-3">{vinculo.coordenadorNome}</td>
-                <td className="px-4 py-3 text-right">
-                  <LinkAcaoTabela
+          <Tabela<VinculoCoordenador>
+            minWidthPx={0}
+            linhas={coordenadoresFiltrados}
+            chave={(vinculo) => vinculo.id}
+            vazio={
+              buscaCoordenadoresNormalizada ? "Nenhum vínculo encontrado." : "Nenhum coordenador vinculado."
+            }
+            colunas={[
+              { cabecalho: "Curso", largura: "38%", render: (vinculo) => vinculo.cursoNome },
+              { cabecalho: "Coordenador", largura: "38%", render: (vinculo) => vinculo.coordenadorNome },
+              {
+                cabecalho: "",
+                alinhado: "direita",
+                largura: "24%",
+                render: (vinculo) => (
+                  <AcaoTabela
                     cor="devolvido"
+                    rotulo={`Remover vínculo de ${vinculo.coordenadorNome} em ${vinculo.cursoNome}`}
                     onClick={() =>
                       remover("coordenador", vinculo.id, `${vinculo.coordenadorNome} em ${vinculo.cursoNome}`)
                     }
                   >
-                    Remover
-                  </LinkAcaoTabela>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </TabelaAdmin>
-      </section>
+                    <IconeRemover className="h-[18px] w-[18px]" />
+                  </AcaoTabela>
+                ),
+              },
+            ]}
+          />
+        </section>
+      </div>
 
       <Modal
         aberto={modo !== null}
         eyebrow="ADMINISTRAÇÃO · VÍNCULOS"
         titulo={modo === "docente" ? "Vincular docente a um curso" : "Vincular coordenador a um curso"}
         descricao={
-          modo === "docente"
-            ? `Vale para o período ${periodos.find((p) => p.id === periodoId)?.rotulo ?? ""}.`
-            : "O coordenador cadastrado primeiro para o curso é quem recebe os relatórios para avaliação."
+          modo === "coordenador"
+            ? "O coordenador cadastrado primeiro para o curso é quem recebe os relatórios para avaliação."
+            : undefined
         }
         onFechar={() => setModo(null)}
         rodape={
@@ -270,6 +297,24 @@ export function ListaVinculos({
               ))}
             </select>
           </Campo>
+          {modo === "docente" && (
+            <Campo rotulo="Período" htmlFor="periodo-vinculo">
+              <select
+                id="periodo-vinculo"
+                value={periodoId}
+                onChange={(evento) => setPeriodoId(evento.target.value === "" ? "" : Number(evento.target.value))}
+                required
+                className={classeCampoSelect}
+              >
+                <option value="">— selecione —</option>
+                {periodos.map((periodo) => (
+                  <option key={periodo.id} value={periodo.id}>
+                    {periodo.rotulo}
+                  </option>
+                ))}
+              </select>
+            </Campo>
+          )}
         </form>
       </Modal>
     </div>
