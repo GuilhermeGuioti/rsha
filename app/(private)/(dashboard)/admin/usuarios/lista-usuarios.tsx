@@ -2,10 +2,10 @@
 
 import { Fragment, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Pill } from "../../../components/Pill";
-import { Modal } from "../../../components/Modal";
+import { Pill } from "../../../../../components/Pill";
+import { Modal } from "../../../../../components/Modal";
 import { acaoCriarUsuario, acaoAtualizarUsuario } from "./acoes";
-import type { Perfil as TipoPerfil } from "../../generated/prisma/client";
+import type { Perfil as TipoPerfil } from "../../../../../generated/prisma/client";
 
 type UsuarioLinha = {
   id: number;

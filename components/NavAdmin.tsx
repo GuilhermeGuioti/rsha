@@ -1,12 +1,17 @@
+"use client";
+
 import Link from "next/link";
-import { acaoSair } from "../app/acoes";
+import { usePathname } from "next/navigation";
+import { acaoSair } from "../lib/auth/acoes";
 
 const links = [
   { href: "/admin/cursos", rotulo: "Cursos" },
   { href: "/admin/usuarios", rotulo: "Usuários" },
 ];
 
-export function NavAdmin({ ativo, nomeUsuario }: { ativo: "cursos" | "usuarios"; nomeUsuario: string }) {
+export function NavAdmin({ nomeUsuario }: { nomeUsuario: string }) {
+  const pathname = usePathname();
+
   return (
     <header className="flex h-14 w-full flex-none items-center justify-between gap-6 bg-azul-institucional px-4 sm:px-6">
       <div className="flex min-w-0 items-center gap-6">
@@ -15,7 +20,7 @@ export function NavAdmin({ ativo, nomeUsuario }: { ativo: "cursos" | "usuarios";
         </span>
         <nav className="flex gap-5 overflow-x-auto text-sm">
           {links.map((link) => {
-            const estaAtivo = link.href === `/admin/${ativo}`;
+            const estaAtivo = pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}

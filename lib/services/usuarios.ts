@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { Perfil, Prisma } from "../../app/generated/prisma/client";
+import { Perfil, Prisma } from "../../generated/prisma/client";
 
 export type DadosUsuario = {
   nome: string;

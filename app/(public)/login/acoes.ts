@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
-import { signIn } from "../../lib/auth/config";
+import { signIn } from "../../../lib/auth/config";
 
 async function entrarComEmail(email: string): Promise<void> {
   try {

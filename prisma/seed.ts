@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { Perfil } from "../app/generated/prisma/enums";
+import { Perfil } from "../generated/prisma/enums";
 import { prisma } from "../lib/db";
 
 // Só a secretaria inicial. Cursos, tipos de atividade, período letivo e os

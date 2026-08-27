@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { exigirSessao, exigirAcessoAoRelatorio } from "../../lib/auth/guards";
-import { obterOuCriarRascunho, submeter } from "../../lib/services/workflow";
-import { adicionarItem, removerItem, type DadosItem } from "../../lib/services/itens";
-import { DiaSemana } from "../generated/prisma/client";
-import { paraResultadoErro, type Resultado } from "../../lib/tipos";
+import { exigirSessao, exigirAcessoAoRelatorio } from "../../../lib/auth/guards";
+import { obterOuCriarRascunho, submeter } from "../../../lib/services/workflow";
+import { adicionarItem, removerItem, type DadosItem } from "../../../lib/services/itens";
+import { DiaSemana } from "../../../generated/prisma/client";
+import { paraResultadoErro, type Resultado } from "../../../lib/tipos";
 
 const SchemaAbrirRelatorio = z.object({
   cursoId: z.number().int().positive(),

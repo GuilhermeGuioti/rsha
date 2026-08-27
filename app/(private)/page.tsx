@@ -1,6 +1,6 @@
-import { exigirSessaoPagina, obterPerfis } from "../lib/auth/guards";
-import { prisma } from "../lib/db";
-import { acaoSair } from "./acoes";
+import { exigirSessaoPagina, obterPerfis } from "../../lib/auth/guards";
+import { prisma } from "../../lib/db";
+import { acaoSair } from "../../lib/auth/acoes";
 
 export default async function Home() {
   const sessao = await exigirSessaoPagina();

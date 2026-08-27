@@ -1,6 +1,6 @@
 import { prisma } from "../../db";
 import { listarUsuarios, criarUsuario, atualizarUsuario } from "../usuarios";
-import { Perfil } from "../../../app/generated/prisma/client";
+import { Perfil } from "../../../generated/prisma/client";
 
 async function limpar() {
   await prisma.$executeRawUnsafe(

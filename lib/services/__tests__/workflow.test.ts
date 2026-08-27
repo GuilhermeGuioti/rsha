@@ -1,7 +1,7 @@
 import { prisma } from "../../db";
 import { submeter, aprovar, devolver } from "../workflow";
 import { adicionarItem, removerItem } from "../itens";
-import { DiaSemana, Perfil, SituacaoRelatorio, TipoEvento } from "../../../app/generated/prisma/client";
+import { DiaSemana, Perfil, SituacaoRelatorio, TipoEvento } from "../../../generated/prisma/client";
 
 async function limpar() {
   await prisma.$executeRawUnsafe(

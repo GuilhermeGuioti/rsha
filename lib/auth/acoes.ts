@@ -1,6 +1,6 @@
 "use server";
 
-import { signOut } from "../lib/auth/config";
+import { signOut } from "./config";
 
 export async function acaoSair(): Promise<void> {
   await signOut({ redirectTo: "/login" });

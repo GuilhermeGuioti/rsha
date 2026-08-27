@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { exigirPerfil } from "../../../lib/auth/guards";
-import { Perfil } from "../../generated/prisma/client";
-import { criarUsuario, atualizarUsuario } from "../../../lib/services/usuarios";
-import { paraResultadoErro, type Resultado } from "../../../lib/tipos";
+import { exigirPerfil } from "../../../../../lib/auth/guards";
+import { Perfil } from "../../../../../generated/prisma/client";
+import { criarUsuario, atualizarUsuario } from "../../../../../lib/services/usuarios";
+import { paraResultadoErro, type Resultado } from "../../../../../lib/tipos";
 
 const SchemaUsuario = z.object({
   nome: z.string().trim().min(1, "Informe o nome."),

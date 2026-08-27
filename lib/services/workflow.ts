@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { Prisma, SituacaoRelatorio, TipoEvento } from "../../app/generated/prisma/client";
+import { Prisma, SituacaoRelatorio, TipoEvento } from "../../generated/prisma/client";
 
 /**
  * Roteamento automático (RF22): o avaliador é o coordenador vinculado ao curso.

@@ -41,7 +41,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/app/generated/prisma
+/generated/prisma
 
 # skills instaladas pelo prisma init (agentes de IA)
 /.agents

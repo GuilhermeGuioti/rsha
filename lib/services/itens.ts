@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { DiaSemana, Prisma, SituacaoRelatorio } from "../../app/generated/prisma/client";
+import { DiaSemana, Prisma, SituacaoRelatorio } from "../../generated/prisma/client";
 
 export type DadosItem = {
   tipoAtividadeId: number;

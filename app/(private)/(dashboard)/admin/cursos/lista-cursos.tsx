@@ -2,8 +2,8 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Pill } from "../../../components/Pill";
-import { Modal } from "../../../components/Modal";
+import { Pill } from "../../../../../components/Pill";
+import { Modal } from "../../../../../components/Modal";
 import { acaoCriarCurso, acaoAtualizarCurso } from "./acoes";
 
 type CursoLinha = {

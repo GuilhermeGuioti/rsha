@@ -2,7 +2,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "./config";
 import { prisma } from "../db";
-import { Perfil } from "../../app/generated/prisma/client";
+import { Perfil } from "../../generated/prisma/client";
 import { resolverAvaliadorId } from "../services/workflow";
 
 export type Sessao = { usuarioId: number };

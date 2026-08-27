@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { exigirAcessoAoRelatorio } from "../../lib/auth/guards";
-import { aprovar, devolver } from "../../lib/services/workflow";
-import { paraResultadoErro, type Resultado } from "../../lib/tipos";
+import { exigirAcessoAoRelatorio } from "../../../lib/auth/guards";
+import { aprovar, devolver } from "../../../lib/services/workflow";
+import { paraResultadoErro, type Resultado } from "../../../lib/tipos";
 
 const SchemaAprovar = z.object({ relatorioId: z.number().int().positive() });
 

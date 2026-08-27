@@ -258,6 +258,28 @@ chamada + revalidação.
 | `/admin/periodos` | secretaria | Períodos letivos e prazos |
 | `/admin/auditoria/[id]` | secretaria | Trilha completa de um relatório |
 
+*Route groups* em `app/` — nenhum aparece na URL, servem só para deixar claro, olhando
+a pasta, o que precisa de login e o que não precisa: `app/(public)/...` e
+`app/(private)/...`, lado a lado.
+
+- **`(public)`** — sem guard. Hoje só `/login`.
+- **`(private)`** — exige sessão (`exigirSessaoPagina`). Hoje `/`, `/relatorios` e
+  `/avaliacao` (estas duas só com `acoes.ts`, sem tela própria ainda), mais o
+  subgrupo `(dashboard)` aninhado dentro dele.
+- **`(private)/(dashboard)`** — é `(private)`, então já exige sessão; além disso
+  desenha a barra superior (mockup: "Horas Atividades" + navegação + crachá de
+  perfil + Sair), em `app/(private)/(dashboard)/layout.tsx`. Hoje só `/admin/*`.
+
+Todas as rotas de `(private)` usam a mesma barra no mockup — só mudam os links e o
+crachá conforme o perfil. `/`, `/relatorios` e `/avaliacao` migram para dentro de
+`(dashboard)` quando ganharem tela própria com essa barra; até lá ficam soltas
+direto em `(private)`.
+
+**Cada page continua fazendo seu próprio `exigirPerfil` (ou equivalente) na primeira
+linha**, dentro ou fora do `(dashboard)` — o layout dele só evita duplicar a barra e
+a busca do usuário logado; não substitui a autorização por perfil, que é sempre da
+page ou da Server Action.
+
 ---
 
 ## Duas simplificações deliberadas
@@ -327,8 +349,14 @@ anos do RNF09.
 
 ## Convenções
 
-- Estrutura: `app/` (rotas), `lib/services/` (regras de negócio), `lib/auth/` (sessão e
-  guards), `lib/db.ts` (cliente Prisma singleton), `components/`
+- Estrutura: `app/` (rotas — só o que for rota, mais layout/globals/favicon; dentro
+  dele, `(public)` e `(private)` conforme exige sessão, com `(dashboard)` aninhado em
+  `(private)` para quem também tem a barra compartilhada — ver §Rotas),
+  `lib/services/` (regras de negócio), `lib/auth/`
+  (sessão, guards e a action de sair — não é rota, por isso não mora em `app/`),
+  `lib/db.ts` (cliente Prisma singleton), `components/`, `generated/prisma` (saída
+  do `prisma generate`, fora de `app/` de propósito — não é rota nem código que se
+  escreve à mão)
 - Nomes de domínio em **português** (`Relatorio`, `submeter`, `cargaHorariaTotal`);
   termos de framework em inglês
 - **Zod em toda Server Action**, antes de tocar no banco
