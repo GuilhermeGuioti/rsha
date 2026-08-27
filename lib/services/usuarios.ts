@@ -1,5 +1,6 @@
 import { prisma } from "../db";
-import { Perfil, Prisma } from "../../generated/prisma/client";
+import { Perfil } from "../../generated/prisma/client";
+import { sincronizarPerfil } from "./perfis";
 
 export type DadosUsuario = {
   nome: string;
@@ -26,28 +27,13 @@ async function exigirEmailDisponivel(email: string, ignorarId?: number): Promise
   }
 }
 
-async function sincronizarPerfilSecretaria(
-  cliente: Prisma.TransactionClient,
-  usuarioId: number,
-  secretaria: boolean,
-): Promise<void> {
-  const perfilSecretaria = await cliente.usuarioPerfil.findUnique({
-    where: { usuarioId_perfil: { usuarioId, perfil: Perfil.SECRETARIA } },
-  });
-  if (secretaria && !perfilSecretaria) {
-    await cliente.usuarioPerfil.create({ data: { usuarioId, perfil: Perfil.SECRETARIA } });
-  } else if (!secretaria && perfilSecretaria) {
-    await cliente.usuarioPerfil.delete({ where: { id: perfilSecretaria.id } });
-  }
-}
-
 export async function criarUsuario(dados: DadosUsuario): Promise<number> {
   await exigirEmailDisponivel(dados.email);
   return prisma.$transaction(async (tx) => {
     const usuario = await tx.usuario.create({
       data: { nome: dados.nome, email: dados.email, ativo: dados.ativo },
     });
-    await sincronizarPerfilSecretaria(tx, usuario.id, dados.secretaria);
+    await sincronizarPerfil(tx, usuario.id, Perfil.SECRETARIA, dados.secretaria);
     return usuario.id;
   });
 }
@@ -59,6 +45,6 @@ export async function atualizarUsuario(id: number, dados: DadosUsuario): Promise
       where: { id },
       data: { nome: dados.nome, email: dados.email, ativo: dados.ativo },
     });
-    await sincronizarPerfilSecretaria(tx, id, dados.secretaria);
+    await sincronizarPerfil(tx, id, Perfil.SECRETARIA, dados.secretaria);
   });
 }

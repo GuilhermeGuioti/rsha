@@ -28,6 +28,12 @@ export default async function Home() {
           <Link href="/admin/usuarios" className="font-medium text-azul-interativo underline">
             Usuários
           </Link>
+          <Link href="/admin/vinculos" className="font-medium text-azul-interativo underline">
+            Vínculos
+          </Link>
+          <Link href="/admin/periodos" className="font-medium text-azul-interativo underline">
+            Períodos
+          </Link>
         </nav>
       )}
       <form action={acaoSair}>
