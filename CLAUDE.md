@@ -364,6 +364,12 @@ anos do RNF09.
 - Credenciais só em variável de ambiente, nunca no código
 - Datas em UTC no banco, convertidas na exibição
 - Commits pequenos, um assunto por commit, mensagem em português no imperativo
+- **Sempre modularizar componentes.** JSX que se repete em duas ou mais telas vira
+  componente compartilhado em `components/` assim que aparecer pela segunda vez —
+  botão, campo de formulário, cabeçalho de tela, linha vazia de tabela, célula de
+  ação, o que for. Não deixe a mesma classe Tailwind copiada em três arquivos.
+  Não crie componente para algo usado uma vez só — isso é a abstração especulativa
+  que o resto deste documento pede pra evitar.
 
 ---
 
