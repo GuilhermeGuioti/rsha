@@ -1,24 +1,45 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { acaoSair } from "../lib/auth/acoes";
+import { Modal } from "./Modal";
+import { BotaoSecundario } from "./BotaoSecundario";
+import { Pill } from "./Pill";
 
 const links = [
   { href: "/admin/cursos", rotulo: "Cursos" },
   { href: "/admin/usuarios", rotulo: "Usuários" },
+  { href: "/admin/vinculos", rotulo: "Vínculos" },
+  { href: "/admin/periodos", rotulo: "Períodos" },
 ];
 
 export function NavAdmin({ nomeUsuario }: { nomeUsuario: string }) {
   const pathname = usePathname();
+  const [contaAberta, setContaAberta] = useState(false);
+  const inicial = nomeUsuario.trim().charAt(0).toUpperCase();
 
   return (
-    <header className="flex h-14 w-full flex-none items-center justify-between gap-6 bg-azul-institucional px-4 sm:px-6">
+    <header className="flex h-16 w-full flex-none items-center justify-between gap-6 bg-azul-institucional px-4 sm:px-6">
       <div className="flex min-w-0 items-center gap-6">
-        <span className="whitespace-nowrap font-serif text-[15px] font-semibold text-white">
-          Horas Atividades
-        </span>
-        <nav className="flex gap-5 overflow-x-auto text-sm">
+        <div className="flex items-center gap-2.5">
+          <span
+            aria-hidden
+            className="flex h-9 w-9 flex-none items-center justify-center rounded-md border border-white/35 bg-white/[.16]"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12,4 22,9 12,14 2,9" />
+              <path d="M7 11.3v3.8c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5v-3.8" />
+              <line x1="22" y1="9" x2="22" y2="15" />
+              <circle cx="22" cy="16" r="1" fill="currentColor" stroke="none" />
+            </svg>
+          </span>
+          {/* <span className="whitespace-nowrap font-serif text-[15px] font-semibold text-white">
+            Horas Atividades
+          </span> */}
+        </div>
+        <nav className="flex gap-5 overflow-x-auto text-[15px]">
           {links.map((link) => {
             const estaAtivo = pathname.startsWith(link.href);
             return (
@@ -37,21 +58,36 @@ export function NavAdmin({ nomeUsuario }: { nomeUsuario: string }) {
           })}
         </nav>
       </div>
-      <div className="flex flex-none items-center gap-3.5">
-        <span className="hidden items-center gap-1.5 whitespace-nowrap rounded-full border border-white/35 bg-white/[.16] px-2.5 py-1 text-xs font-medium text-white sm:inline-flex">
-          <span aria-hidden className="h-2 w-2 flex-none rounded-full bg-white" />
-          Secretaria acadêmica
-        </span>
-        <span className="hidden whitespace-nowrap text-sm text-white/85 md:inline">{nomeUsuario}</span>
-        <form action={acaoSair}>
-          <button
-            type="submit"
-            className="whitespace-nowrap text-sm text-white underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          >
-            Sair
-          </button>
-        </form>
-      </div>
+      <button
+        type="button"
+        onClick={() => setContaAberta(true)}
+        aria-label={`Conta de ${nomeUsuario}`}
+        className="flex h-11 w-11 flex-none items-center justify-center rounded-full border border-white/35 bg-white/[.16] font-serif text-base font-semibold text-white transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+      >
+        {inicial}
+      </button>
+
+      <Modal
+        aberto={contaAberta}
+        eyebrow="CONTA"
+        titulo={nomeUsuario}
+        onFechar={() => setContaAberta(false)}
+        rodape={
+          <>
+            <BotaoSecundario onClick={() => setContaAberta(false)}>Fechar</BotaoSecundario>
+            <form action={acaoSair}>
+              <button
+                type="submit"
+                className="flex min-h-11 items-center rounded-md border border-estado-devolvido px-5 text-[15px] font-medium text-estado-devolvido focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+              >
+                Sair
+              </button>
+            </form>
+          </>
+        }
+      >
+        <Pill cor="neutro">Secretaria acadêmica</Pill>
+      </Modal>
     </header>
   );
 }

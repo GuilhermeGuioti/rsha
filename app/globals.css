@@ -40,3 +40,7 @@ body {
   background: var(--papel);
   color: var(--tinta);
 }
+
+button:not(:disabled) {
+  cursor: pointer;
+}

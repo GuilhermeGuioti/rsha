@@ -9,7 +9,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="flex flex-1 flex-col">
       <NavAdmin nomeUsuario={usuario.nome} />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">{children}</main>
+      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-8 lg:px-10">{children}</main>
     </div>
   );
 }
