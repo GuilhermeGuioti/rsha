@@ -36,9 +36,9 @@ export function Modal({ aberto, eyebrow, titulo, descricao, onFechar, children, 
       <div className="flex items-start justify-between gap-5 border-b border-borda px-6 py-5">
         <div>
           <p className="font-mono text-xs font-medium tracking-[0.12em] text-acento">{eyebrow}</p>
-          <h2 className="mt-2 font-serif text-xl font-semibold text-azul-interativo">{titulo}</h2>
+          <h2 className="mt-2 font-serif text-[22px] font-semibold text-azul-interativo">{titulo}</h2>
           {descricao && (
-            <p className="mt-2 max-w-sm text-sm leading-relaxed text-tinta-suave">{descricao}</p>
+            <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-tinta-suave">{descricao}</p>
           )}
         </div>
         <button

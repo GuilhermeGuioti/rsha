@@ -11,7 +11,7 @@ const estilos: Record<Cor, string> = {
 export function Pill({ cor, children }: { cor: Cor; children: React.ReactNode }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium ${estilos[cor]}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[13px] font-medium ${estilos[cor]}`}
     >
       <span aria-hidden className="h-2 w-2 flex-none rounded-full bg-current" />
       {children}

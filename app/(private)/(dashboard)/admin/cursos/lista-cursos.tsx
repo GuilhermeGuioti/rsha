@@ -4,6 +4,17 @@ import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Pill } from "../../../../../components/Pill";
 import { Modal } from "../../../../../components/Modal";
+import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
+import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
+import { Campo, classeCampo, classeCampoSelect } from "../../../../../components/Campo";
+import { TabelaAdmin } from "../../../../../components/TabelaAdmin";
+import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
+import { CampoBusca } from "../../../../../components/CampoBusca";
+import { AbasAtivoInativo } from "../../../../../components/AbasAtivoInativo";
+import { LinhaVazia } from "../../../../../components/LinhaVazia";
+import { LinkAcaoTabela } from "../../../../../components/LinkAcaoTabela";
+import { CampoCheckbox } from "../../../../../components/CampoCheckbox";
+import { MensagemErro } from "../../../../../components/MensagemErro";
 import { acaoCriarCurso, acaoAtualizarCurso } from "./acoes";
 
 type CursoLinha = {
@@ -84,94 +95,69 @@ export function ListaCursos({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-2xl font-semibold text-azul-interativo">Cursos</h1>
-          <p className="mt-1 text-[15px] text-tinta-suave">
-            Cada curso gera um relatório por docente e por semestre.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={abrirNovo}
-          className="flex min-h-11 items-center justify-center gap-1.5 rounded-md border border-azul-institucional bg-azul-institucional px-4 text-sm font-medium text-white hover:bg-azul-interativo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo focus-visible:ring-offset-2"
-        >
-          <span aria-hidden="true">+</span>
-          Novo curso
-        </button>
-      </div>
+      <CabecalhoAdmin
+        titulo="Cursos"
+        subtitulo={
+          <p className="text-[15px] text-tinta-suave">Cada curso gera um relatório por docente e por semestre.</p>
+        }
+        acao={
+          <BotaoPrimario onClick={abrirNovo} icone>
+            Novo curso
+          </BotaoPrimario>
+        }
+      />
 
       <div className="flex gap-2">
-        <label htmlFor="busca-curso" className="sr-only">Buscar curso por nome</label>
-        <input
+        <CampoBusca
           id="busca-curso"
-          type="search"
-          value={busca}
-          onChange={(evento) => setBusca(evento.target.value)}
+          rotuloAcessivel="Buscar curso por nome"
           placeholder="Buscar curso…"
-          className="min-h-10 w-full rounded-md border border-borda bg-superficie px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo sm:w-80"
+          valor={busca}
+          onChange={setBusca}
         />
-        <button
-          type="button"
-          onClick={() => setAba("ativos")}
-          className={`flex min-h-10 items-center rounded-md px-3.5 text-sm font-medium ${aba === "ativos" ? "bg-azul-institucional text-white" : "border border-borda bg-superficie text-tinta-suave"}`}
-        >
-          Ativos ({cursosAtivos.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setAba("inativos")}
-          className={`flex min-h-10 items-center rounded-md px-3.5 text-sm font-medium ${aba === "inativos" ? "bg-azul-institucional text-white" : "border border-borda bg-superficie text-tinta-suave"}`}
-        >
-          Inativos ({cursosInativos.length})
-        </button>
+        <AbasAtivoInativo
+          aba={aba}
+          onMudar={setAba}
+          contagemAtivos={cursosAtivos.length}
+          contagemInativos={cursosInativos.length}
+        />
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-borda bg-superficie">
-        <table className="w-full min-w-[620px] border-collapse text-left text-sm">
-          <thead>
-            <tr className="border-b border-borda text-tinta-suave">
-              <th scope="col" className="px-4 py-2.5 font-medium">Curso</th>
-              <th scope="col" className="px-4 py-2.5 font-medium">Coordenação</th>
-              <th scope="col" className="px-4 py-2.5 text-right font-medium">Docentes</th>
-              <th scope="col" className="px-4 py-2.5 font-medium">Situação</th>
-              <th scope="col" className="px-4 py-2.5" />
+      <TabelaAdmin minWidthPx={620}>
+        <thead>
+          <tr className="border-b border-borda text-[13px] text-tinta-suave">
+            <th scope="col" className="px-4 py-2.5 font-medium">Curso</th>
+            <th scope="col" className="px-4 py-2.5 font-medium">Coordenação</th>
+            <th scope="col" className="px-4 py-2.5 text-right font-medium">Docentes</th>
+            <th scope="col" className="px-4 py-2.5 font-medium">Situação</th>
+            <th scope="col" className="px-4 py-2.5" />
+          </tr>
+        </thead>
+        <tbody>
+          {visiveis.length === 0 && (
+            <LinhaVazia colSpan={5}>
+              {buscaNormalizada
+                ? "Nenhum curso encontrado."
+                : `Nenhum curso ${aba === "ativos" ? "ativo" : "inativo"}.`}
+            </LinhaVazia>
+          )}
+          {visiveis.map((curso) => (
+            <tr key={curso.id} className="border-b border-[#f0f3f6] last:border-0">
+              <td className="px-4 py-3">{curso.nome}</td>
+              <td className="px-4 py-3 text-tinta-suave">
+                {curso.coordenadores.length > 0 ? curso.coordenadores.join(", ") : "sem coordenação definida"}
+              </td>
+              <td className="px-4 py-3 text-right font-mono font-medium tabular-nums">{curso.totalDocentes}</td>
+              <td className="px-4 py-3">
+                <Pill cor={curso.ativo ? "aprovado" : "neutro"}>{curso.ativo ? "Ativo" : "Inativo"}</Pill>
+              </td>
+              <td className="px-4 py-3 text-right">
+                <LinkAcaoTabela onClick={() => abrirEdicao(curso)}>Editar</LinkAcaoTabela>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {visiveis.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-tinta-suave">
-                  {buscaNormalizada
-                    ? "Nenhum curso encontrado."
-                    : `Nenhum curso ${aba === "ativos" ? "ativo" : "inativo"}.`}
-                </td>
-              </tr>
-            )}
-            {visiveis.map((curso) => (
-              <tr key={curso.id} className="border-b border-[#f0f3f6] last:border-0">
-                <td className="px-4 py-3">{curso.nome}</td>
-                <td className="px-4 py-3 text-tinta-suave">
-                  {curso.coordenadores.length > 0 ? curso.coordenadores.join(", ") : "sem coordenação definida"}
-                </td>
-                <td className="px-4 py-3 text-right font-mono tabular-nums">{curso.totalDocentes}</td>
-                <td className="px-4 py-3">
-                  <Pill cor={curso.ativo ? "aprovado" : "neutro"}>{curso.ativo ? "Ativo" : "Inativo"}</Pill>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <button
-                    type="button"
-                    onClick={() => abrirEdicao(curso)}
-                    className="font-medium text-azul-interativo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
-                  >
-                    Editar
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </TabelaAdmin>
 
       <Modal
         aberto={modalAberto}
@@ -181,50 +167,33 @@ export function ListaCursos({
         onFechar={() => setModalAberto(false)}
         rodape={
           <>
-            <button
-              type="button"
-              onClick={() => setModalAberto(false)}
-              className="flex min-h-11 items-center rounded-md border border-[#92cde9] bg-superficie px-4 text-sm font-medium text-azul-interativo"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              form="form-curso"
-              disabled={pendente}
-              className="flex min-h-11 items-center rounded-md border border-azul-institucional bg-azul-institucional px-5 text-sm font-medium text-white hover:bg-azul-interativo disabled:cursor-not-allowed disabled:opacity-60"
-            >
+            <BotaoSecundario onClick={() => setModalAberto(false)}>Cancelar</BotaoSecundario>
+            <BotaoPrimario type="submit" form="form-curso" disabled={pendente}>
               {pendente ? "Salvando…" : "Salvar curso"}
-            </button>
+            </BotaoPrimario>
           </>
         }
       >
         <form id="form-curso" onSubmit={salvar} className="flex flex-col gap-4">
-          {erro && (
-            <p role="alert" className="text-sm font-medium text-estado-devolvido">
-              {erro}
-            </p>
-          )}
-          <label htmlFor="nome-curso" className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-tinta-suave">Nome do curso</span>
+          {erro && <MensagemErro>{erro}</MensagemErro>}
+          <Campo rotulo="Nome do curso" htmlFor="nome-curso">
             <input
               id="nome-curso"
               type="text"
               value={nome}
               onChange={(evento) => setNome(evento.target.value)}
               required
-              className="min-h-11 rounded-md border border-borda px-3 text-[15px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+              className={classeCampo}
             />
-          </label>
-          <label htmlFor="avaliador-alternativo" className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-tinta-suave">Avaliador alternativo</span>
+          </Campo>
+          <Campo rotulo="Avaliador alternativo" htmlFor="avaliador-alternativo">
             <select
               id="avaliador-alternativo"
               value={avaliadorAlternativoId}
               onChange={(evento) =>
                 setAvaliadorAlternativoId(evento.target.value === "" ? "" : Number(evento.target.value))
               }
-              className="min-h-11 rounded-md border border-borda bg-superficie px-3 text-[15px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+              className={classeCampoSelect}
             >
               <option value="">— nenhum —</option>
               {usuariosDisponiveis.map((usuario) => (
@@ -233,17 +202,8 @@ export function ListaCursos({
                 </option>
               ))}
             </select>
-          </label>
-          <label htmlFor="curso-ativo" className="flex items-center gap-2.5 pt-1">
-            <input
-              id="curso-ativo"
-              type="checkbox"
-              checked={ativo}
-              onChange={(evento) => setAtivo(evento.target.checked)}
-              className="h-5 w-5 rounded border-borda focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
-            />
-            <span className="text-[15px]">Curso ativo</span>
-          </label>
+          </Campo>
+          <CampoCheckbox id="curso-ativo" rotulo="Curso ativo" checked={ativo} onChange={setAtivo} className="pt-1" />
         </form>
       </Modal>
     </div>
