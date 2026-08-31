@@ -2,24 +2,19 @@ import { prisma } from "../db";
 import { Prisma, SituacaoRelatorio, TipoEvento } from "../../generated/prisma/client";
 
 /**
- * Roteamento automático (RF22): o avaliador é o coordenador vinculado ao curso.
- * Se o autor for o próprio coordenador (ou não houver coordenador vinculado),
- * cai para o avaliadorAlternativo do curso. Sem alternativo, não há avaliador.
+ * Roteamento automático: o avaliador é o coordenador vinculado ao curso —
+ * mesmo quando o autor do relatório é esse coordenador. Autoaprovação é
+ * permitida de propósito. Sem coordenador vinculado, não há avaliador.
  */
 export async function resolverAvaliadorId(
   cliente: Prisma.TransactionClient,
   cursoId: number,
-  docenteId: number,
 ): Promise<number | null> {
-  const [curso, vinculo] = await Promise.all([
-    cliente.curso.findUniqueOrThrow({ where: { id: cursoId } }),
-    cliente.vinculoCoordenadorCurso.findFirst({ where: { cursoId }, orderBy: { id: "asc" } }),
-  ]);
-
-  if (vinculo && vinculo.coordenadorId !== docenteId) {
-    return vinculo.coordenadorId;
-  }
-  return curso.avaliadorAlternativoId;
+  const vinculo = await cliente.vinculoCoordenadorCurso.findFirst({
+    where: { cursoId },
+    orderBy: { id: "asc" },
+  });
+  return vinculo?.coordenadorId ?? null;
 }
 
 /**
@@ -79,10 +74,10 @@ export async function submeter(relatorioId: number, usuarioId: number): Promise<
       throw new Error("Fora do prazo de submissão deste período letivo.");
     }
 
-    const avaliadorId = await resolverAvaliadorId(tx, relatorio.cursoId, relatorio.docenteId);
+    const avaliadorId = await resolverAvaliadorId(tx, relatorio.cursoId);
     if (avaliadorId === null) {
       throw new Error(
-        "Nenhum avaliador disponível para este curso — cadastre um avaliador alternativo antes de submeter.",
+        "Nenhum coordenador vinculado a este curso — a secretaria precisa cadastrar um antes da submissão.",
       );
     }
 
@@ -106,7 +101,7 @@ export async function aprovar(relatorioId: number, usuarioId: number): Promise<v
       throw new Error(`Não é possível aprovar um relatório em situação ${relatorio.situacao}.`);
     }
 
-    const avaliadorId = await resolverAvaliadorId(tx, relatorio.cursoId, relatorio.docenteId);
+    const avaliadorId = await resolverAvaliadorId(tx, relatorio.cursoId);
     if (avaliadorId !== usuarioId) {
       throw new Error("Usuário não é o avaliador responsável por este relatório.");
     }
@@ -139,7 +134,7 @@ export async function devolver(
       throw new Error(`Não é possível devolver um relatório em situação ${relatorio.situacao}.`);
     }
 
-    const avaliadorId = await resolverAvaliadorId(tx, relatorio.cursoId, relatorio.docenteId);
+    const avaliadorId = await resolverAvaliadorId(tx, relatorio.cursoId);
     if (avaliadorId !== usuarioId) {
       throw new Error("Usuário não é o avaliador responsável por este relatório.");
     }

@@ -6,7 +6,7 @@ import { Pill } from "../../../../../components/Pill";
 import { Modal } from "../../../../../components/Modal";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
-import { Campo, classeCampo, classeCampoSelect } from "../../../../../components/Campo";
+import { Campo, classeCampo } from "../../../../../components/Campo";
 import { Tabela } from "../../../../../components/Tabela";
 import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
 import { CampoBusca } from "../../../../../components/CampoBusca";
@@ -21,28 +21,17 @@ type CursoLinha = {
   id: number;
   nome: string;
   ativo: boolean;
-  avaliadorAlternativoId: number | null;
-  avaliadorAlternativoNome: string | null;
   coordenadores: string[];
   totalDocentes: number;
 };
 
-type UsuarioOpcao = { id: number; nome: string };
-
-export function ListaCursos({
-  cursos,
-  usuariosDisponiveis,
-}: {
-  cursos: CursoLinha[];
-  usuariosDisponiveis: UsuarioOpcao[];
-}) {
+export function ListaCursos({ cursos }: { cursos: CursoLinha[] }) {
   const router = useRouter();
   const [aba, setAba] = useState<"ativos" | "inativos">("ativos");
   const [modalAberto, setModalAberto] = useState(false);
   const [cursoEmEdicao, setCursoEmEdicao] = useState<CursoLinha | null>(null);
   const [nome, setNome] = useState("");
   const [ativo, setAtivo] = useState(true);
-  const [avaliadorAlternativoId, setAvaliadorAlternativoId] = useState<number | "">("");
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, startTransition] = useTransition();
   const [busca, setBusca] = useState("");
@@ -58,7 +47,6 @@ export function ListaCursos({
     setCursoEmEdicao(null);
     setNome("");
     setAtivo(true);
-    setAvaliadorAlternativoId("");
     setErro(null);
     setModalAberto(true);
   }
@@ -67,7 +55,6 @@ export function ListaCursos({
     setCursoEmEdicao(curso);
     setNome(curso.nome);
     setAtivo(curso.ativo);
-    setAvaliadorAlternativoId(curso.avaliadorAlternativoId ?? "");
     setErro(null);
     setModalAberto(true);
   }
@@ -75,11 +62,7 @@ export function ListaCursos({
   function salvar(evento: FormEvent) {
     evento.preventDefault();
     setErro(null);
-    const dados = {
-      nome,
-      ativo,
-      avaliadorAlternativoId: avaliadorAlternativoId === "" ? null : Number(avaliadorAlternativoId),
-    };
+    const dados = { nome, ativo };
     startTransition(async () => {
       const resultado = cursoEmEdicao
         ? await acaoAtualizarCurso(cursoEmEdicao.id, dados)
@@ -168,7 +151,6 @@ export function ListaCursos({
         aberto={modalAberto}
         eyebrow="ADMINISTRAÇÃO · CURSOS"
         titulo={cursoEmEdicao ? "Editar curso" : "Novo curso"}
-        descricao="O avaliador alternativo assume quando o próprio coordenador do curso é o autor do relatório."
         onFechar={() => setModalAberto(false)}
         rodape={
           <>
@@ -190,23 +172,6 @@ export function ListaCursos({
               required
               className={classeCampo}
             />
-          </Campo>
-          <Campo rotulo="Avaliador alternativo" htmlFor="avaliador-alternativo">
-            <select
-              id="avaliador-alternativo"
-              value={avaliadorAlternativoId}
-              onChange={(evento) =>
-                setAvaliadorAlternativoId(evento.target.value === "" ? "" : Number(evento.target.value))
-              }
-              className={classeCampoSelect}
-            >
-              <option value="">— nenhum —</option>
-              {usuariosDisponiveis.map((usuario) => (
-                <option key={usuario.id} value={usuario.id}>
-                  {usuario.nome}
-                </option>
-              ))}
-            </select>
           </Campo>
           <CampoCheckbox id="curso-ativo" rotulo="Curso ativo" checked={ativo} onChange={setAtivo} className="pt-1" />
         </form>

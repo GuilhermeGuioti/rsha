@@ -56,7 +56,7 @@ São duas coisas separadas, e confundi-las é o erro mais provável neste projet
 
 O registro da aplicação no Entra ID depende da equipe de TI da instituição e pode demorar. **Não deixe o projeto parado.**
 
-Adicione um provider `Credentials` habilitado apenas quando `NODE_ENV === "development"`, com usuários fixos de teste: um docente vinculado a dois cursos, um coordenador de um curso, um coordenador que também dá aula no próprio curso (para testar o RF22) e uma pessoa da secretaria acadêmica. Um `if` na configuração decide qual provider sobe.
+Adicione um provider `Credentials` habilitado apenas quando `NODE_ENV === "development"`, com usuários fixos de teste: um docente vinculado a dois cursos, um coordenador de um curso, um coordenador que também dá aula no próprio curso (para testar a autoaprovação) e uma pessoa da secretaria acadêmica. Um `if` na configuração decide qual provider sobe.
 
 ### Autorização
 
@@ -93,12 +93,11 @@ model Usuario {
   ativo     Boolean  @default(true)
   criadoEm  DateTime @default(now())
 
-  perfis                UsuarioPerfil[]
-  vinculosDocente       VinculoDocenteCurso[]
-  vinculosCoordenador   VinculoCoordenadorCurso[]
-  relatorios            Relatorio[]
-  eventos               EventoAuditoria[]
-  cursosComoAlternativo Curso[] @relation("AvaliadorAlternativo")
+  perfis              UsuarioPerfil[]
+  vinculosDocente     VinculoDocenteCurso[]
+  vinculosCoordenador VinculoCoordenadorCurso[]
+  relatorios          Relatorio[]
+  eventos             EventoAuditoria[]
 }
 
 model UsuarioPerfil {
@@ -111,15 +110,13 @@ model UsuarioPerfil {
 }
 
 model Curso {
-  id                     Int     @id @default(autoincrement())
-  nome                   String  @unique
-  ativo                  Boolean @default(true)
-  avaliadorAlternativoId Int?
+  id     Int     @id @default(autoincrement())
+  nome   String  @unique
+  ativo  Boolean @default(true)
 
-  avaliadorAlternativo Usuario? @relation("AvaliadorAlternativo", fields: [avaliadorAlternativoId], references: [id])
-  docentes             VinculoDocenteCurso[]
-  coordenadores        VinculoCoordenadorCurso[]
-  relatorios           Relatorio[]
+  docentes      VinculoDocenteCurso[]
+  coordenadores VinculoCoordenadorCurso[]
+  relatorios    Relatorio[]
 }
 
 model PeriodoLetivo {
@@ -253,7 +250,7 @@ Nunca altere `situacao` fora dessas funções.
 ### Regras do workflow
 
 - **Roteamento automático.** Ao submeter, o avaliador é o coordenador vinculado ao curso do relatório. O docente não escolhe destinatário.
-- **Autoaprovação proibida.** Se o autor for o próprio coordenador do curso, o relatório vai para o `avaliadorAlternativo` cadastrado no curso. Se não houver alternativo cadastrado, bloqueie a submissão com mensagem clara em vez de deixar o relatório órfão.
+- **Autoaprovação permitida.** Se o autor for o próprio coordenador do curso, ele mesmo é o avaliador — não existe avaliador alternativo. **Decisão revisada em 2026-08-31: diverge do RF22 original do `rsha-docreq.pdf`**, que descrevia a autoaprovação como proibida (requisito marcado "Essencial") e previa o campo `avaliadorAlternativo` em `Curso`. Sem coordenador vinculado ao curso, bloqueie a submissão com mensagem clara em vez de deixar o relatório órfão.
 - **Devolução exige justificativa** não vazia.
 - **Sem limite de devoluções.** Cada ciclo gera seu próprio evento.
 - **Submissão fora do prazo do período letivo é bloqueada**, mas consulta a períodos encerrados continua livre.
@@ -271,7 +268,7 @@ Nunca altere `situacao` fora dessas funções.
 | `/avaliacao/[id]` | coordenador | Relatório em leitura + aprovar / devolver + histórico |
 | `/acompanhamento` | coord./secretaria | Situação de entrega por curso no período corrente |
 | `/arquivo` | todos | Navegação Ano › Semestre › Curso (filtro, não pasta) |
-| `/admin/cursos` | secretaria | CRUD de cursos e avaliador alternativo |
+| `/admin/cursos` | secretaria | CRUD de cursos |
 | `/admin/usuarios` | secretaria | CRUD de usuários, perfis e vínculos + importação CSV |
 | `/admin/periodos` | secretaria | Períodos letivos e prazos |
 | `/admin/auditoria/[id]` | secretaria | Trilha completa de um relatório |

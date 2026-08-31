@@ -3,14 +3,12 @@ import { prisma } from "../db";
 export type DadosCurso = {
   nome: string;
   ativo: boolean;
-  avaliadorAlternativoId: number | null;
 };
 
 export async function listarCursos() {
   return prisma.curso.findMany({
     orderBy: { nome: "asc" },
     include: {
-      avaliadorAlternativo: true,
       coordenadores: { include: { coordenador: true } },
       _count: { select: { docentes: true } },
     },

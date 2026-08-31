@@ -28,9 +28,7 @@ async function obterAmbiente() {
   ]);
 
   const [cursoEngSoftware, cursoCienciaComp, cursoSistemasInfo] = await Promise.all([
-    prisma.curso.create({
-      data: { nome: "Engenharia de Software", avaliadorAlternativoId: coordenador.id },
-    }),
+    prisma.curso.create({ data: { nome: "Engenharia de Software" } }),
     prisma.curso.create({ data: { nome: "Ciência da Computação" } }),
     prisma.curso.create({ data: { nome: "Sistemas de Informação" } }),
   ]);
@@ -126,7 +124,7 @@ test("docente vinculado a dois cursos gera dois relatórios independentes, rotea
   expect(siFinal.situacao).toBe(SituacaoRelatorio.APROVADO);
 });
 
-test("coordenador não consegue aprovar relatório do qual é autor", async () => {
+test("coordenador consegue aprovar relatório do qual é autor (autoaprovação permitida)", async () => {
   const ambiente = await obterAmbiente();
   const relatorio = await prisma.relatorio.create({
     data: {
@@ -137,10 +135,8 @@ test("coordenador não consegue aprovar relatório do qual é autor", async () =
   });
 
   await submeter(relatorio.id, ambiente.coordenadorDocente.id);
+  await aprovar(relatorio.id, ambiente.coordenadorDocente.id);
 
-  await expect(aprovar(relatorio.id, ambiente.coordenadorDocente.id)).rejects.toThrow();
-
-  await aprovar(relatorio.id, ambiente.coordenador.id);
   const final = await prisma.relatorio.findUniqueOrThrow({ where: { id: relatorio.id } });
   expect(final.situacao).toBe(SituacaoRelatorio.APROVADO);
 });

@@ -34,16 +34,18 @@ export default async function AvaliacaoPage() {
     orderBy: { curso: { nome: "asc" } },
   });
 
-  // O avaliador é resolvido por relatório (não por curso): o RF22 desvia o
-  // relatório do próprio coordenador para o avaliador alternativo.
-  const daFila = (
+  // O avaliador é o coordenador do curso, independente de quem é o autor
+  // (autoaprovação permitida) — então resolve uma vez por curso, não por
+  // relatório.
+  const todosCursoIds = [...new Set(relatorios.map((relatorio) => relatorio.cursoId))];
+  const avaliadorPorCurso = new Map(
     await Promise.all(
-      relatorios.map(async (relatorio) => {
-        const avaliadorId = await resolverAvaliadorId(prisma, relatorio.cursoId, relatorio.docenteId);
-        return avaliadorId === sessao.usuarioId ? relatorio : null;
-      }),
-    )
-  ).filter((relatorio) => relatorio !== null);
+      todosCursoIds.map(async (cursoId) => [cursoId, await resolverAvaliadorId(prisma, cursoId)] as const),
+    ),
+  );
+  const daFila = relatorios.filter(
+    (relatorio) => avaliadorPorCurso.get(relatorio.cursoId) === sessao.usuarioId,
+  );
 
   const cursoIds = [...new Set(daFila.map((relatorio) => relatorio.cursoId))];
   const totaisPorCurso = new Map(

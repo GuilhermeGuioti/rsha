@@ -54,7 +54,7 @@ export async function exigirAcessoAoRelatorio(
   }
 
   const ehAutor = relatorio.docenteId === sessao.usuarioId;
-  const avaliadorId = await resolverAvaliadorId(prisma, relatorio.cursoId, relatorio.docenteId);
+  const avaliadorId = await resolverAvaliadorId(prisma, relatorio.cursoId);
   const ehAvaliador = avaliadorId === sessao.usuarioId;
 
   if (acao === "editar" && !ehAutor) {

@@ -10,7 +10,6 @@ import { paraResultadoErro, type Resultado } from "../../../../../lib/tipos";
 const SchemaCurso = z.object({
   nome: z.string().trim().min(1, "Informe o nome do curso."),
   ativo: z.boolean(),
-  avaliadorAlternativoId: z.number().int().positive().nullable(),
 });
 
 export type DadosFormularioCurso = z.infer<typeof SchemaCurso>;

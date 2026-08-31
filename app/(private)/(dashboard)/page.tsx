@@ -6,7 +6,7 @@ import { HomeSecretaria } from "./home-secretaria";
 
 // "/" não é uma tela única: cada perfil tem um destino que faz sentido pra
 // ele. Docente ganha prioridade por ser o caso mais comum (302 vs. 17
-// coordenadores) — quem acumula os dois perfis (RF22) cai no próprio
+// coordenadores) — quem acumula os dois perfis no mesmo curso cai no próprio
 // relatório e chega na fila pelo nav. Coordenador puro vai direto pra fila,
 // que é trabalho pendente. Secretaria não preenche nem avalia relatório —
 // aqui ganha os atalhos de cadastro.

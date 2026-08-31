@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CabecalhoAdmin } from "../../../components/CabecalhoAdmin";
 
 const ATALHOS: { href: string; titulo: string; descricao: string }[] = [
-  { href: "/admin/cursos", titulo: "Cursos", descricao: "Cadastro de cursos e avaliador alternativo." },
+  { href: "/admin/cursos", titulo: "Cursos", descricao: "Cadastro de cursos." },
   { href: "/admin/usuarios", titulo: "Usuários", descricao: "Pessoas com acesso ao sistema e seus perfis." },
   { href: "/admin/vinculos", titulo: "Vínculos", descricao: "Quem dá aula e quem coordena em cada curso." },
   { href: "/admin/periodos", titulo: "Períodos letivos", descricao: "Prazos de submissão de cada semestre." },

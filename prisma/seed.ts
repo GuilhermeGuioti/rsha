@@ -38,9 +38,8 @@ export async function seed() {
 /**
  * Cenário de teste do login falso (CLAUDE.md § Login falso para
  * desenvolvimento): um docente em dois cursos com coordenadores diferentes,
- * um coordenador de um curso só, e um coordenador que dá aula no próprio
- * curso — este último é o caso do RF22, e por isso o curso dele tem avaliador
- * alternativo cadastrado.
+ * um coordenador de um curso só, e um coordenador que também dá aula no
+ * próprio curso — para testar a autoaprovação.
  *
  * Não cria nenhum Relatorio: a linha nasce sob demanda, no primeiro clique do
  * docente. É isso que faz "não iniciado" existir no painel.
@@ -62,18 +61,8 @@ async function seedDesenvolvimento() {
   ]);
 
   const cursos = new Map<string, number>();
-  for (const [nome, avaliadorAlternativoId] of [
-    ["Fisioterapia", null],
-    ["Nutrição", null],
-    // Paulo coordena e dá aula aqui: sem alternativo, a submissão dele
-    // ficaria bloqueada.
-    ["Educação Física", claudia.id],
-  ] as const) {
-    const curso = await prisma.curso.upsert({
-      where: { nome },
-      update: { avaliadorAlternativoId },
-      create: { nome, avaliadorAlternativoId },
-    });
+  for (const nome of ["Fisioterapia", "Nutrição", "Educação Física"]) {
+    const curso = await prisma.curso.upsert({ where: { nome }, update: {}, create: { nome } });
     cursos.set(nome, curso.id);
   }
 
@@ -125,9 +114,9 @@ async function seedDesenvolvimento() {
     [
       "Cenário de desenvolvimento pronto. Entre pelo campo de e-mail em /login:",
       "  helena@baraodemaua.br   docente em Fisioterapia e Nutrição (coordenadores diferentes)",
-      "  claudia@baraodemaua.br  coordena Fisioterapia · avaliadora alternativa de Educação Física",
+      "  claudia@baraodemaua.br  coordena Fisioterapia",
       "  marcos@baraodemaua.br   coordena Nutrição",
-      "  paulo@baraodemaua.br    coordena e dá aula em Educação Física (RF22)",
+      "  paulo@baraodemaua.br    coordena e dá aula em Educação Física (testa autoaprovação)",
       "  admin@srha.dev          secretaria acadêmica",
     ].join("\n"),
   );

@@ -17,8 +17,8 @@ export default async function AdminUsuariosPage() {
         ativo: usuario.ativo,
         secretaria: usuario.perfis.some((perfil) => perfil.perfil === Perfil.SECRETARIA),
         perfis: usuario.perfis.map((perfil) => perfil.perfil),
-        // Coordenador que também dá aula no próprio curso (RF22) tem vínculo duplo
-        // no mesmo curso — a coluna mostra o curso uma vez só, o papel já está em Perfil.
+        // Coordenador que também dá aula no próprio curso tem vínculo duplo no
+        // mesmo curso — a coluna mostra o curso uma vez só, o papel já está em Perfil.
         cursos: [
           ...new Set([
             ...usuario.vinculosDocente.map((vinculo) => vinculo.curso.nome),

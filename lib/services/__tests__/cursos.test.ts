@@ -16,7 +16,7 @@ afterAll(async () => {
 });
 
 test("cria curso e aparece na listagem", async () => {
-  const id = await criarCurso({ nome: "Fisioterapia", ativo: true, avaliadorAlternativoId: null });
+  const id = await criarCurso({ nome: "Fisioterapia", ativo: true });
 
   const cursos = await listarCursos();
 
@@ -25,26 +25,26 @@ test("cria curso e aparece na listagem", async () => {
 });
 
 test("nome de curso duplicado é rejeitado", async () => {
-  await criarCurso({ nome: "Fisioterapia", ativo: true, avaliadorAlternativoId: null });
+  await criarCurso({ nome: "Fisioterapia", ativo: true });
 
   await expect(
-    criarCurso({ nome: "Fisioterapia", ativo: true, avaliadorAlternativoId: null }),
+    criarCurso({ nome: "Fisioterapia", ativo: true }),
   ).rejects.toThrow("Já existe um curso com este nome.");
 });
 
 test("atualizar curso mantendo o mesmo nome não é rejeitado como duplicado", async () => {
-  const id = await criarCurso({ nome: "Fisioterapia", ativo: true, avaliadorAlternativoId: null });
+  const id = await criarCurso({ nome: "Fisioterapia", ativo: true });
 
-  await atualizarCurso(id, { nome: "Fisioterapia", ativo: false, avaliadorAlternativoId: null });
+  await atualizarCurso(id, { nome: "Fisioterapia", ativo: false });
 
   const cursos = await listarCursos();
   expect(cursos[0].ativo).toBe(false);
 });
 
 test("inativar curso preserva o registro em vez de excluir", async () => {
-  const id = await criarCurso({ nome: "Fisioterapia", ativo: true, avaliadorAlternativoId: null });
+  const id = await criarCurso({ nome: "Fisioterapia", ativo: true });
 
-  await atualizarCurso(id, { nome: "Fisioterapia", ativo: false, avaliadorAlternativoId: null });
+  await atualizarCurso(id, { nome: "Fisioterapia", ativo: false });
 
   const cursos = await listarCursos();
   expect(cursos).toHaveLength(1);

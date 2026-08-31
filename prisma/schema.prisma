@@ -48,12 +48,11 @@ model Usuario {
   ativo     Boolean  @default(true)
   criadoEm  DateTime @default(now())
 
-  perfis                UsuarioPerfil[]
-  vinculosDocente       VinculoDocenteCurso[]
-  vinculosCoordenador   VinculoCoordenadorCurso[]
-  relatorios            Relatorio[]
-  eventos               EventoAuditoria[]
-  cursosComoAlternativo Curso[] @relation("AvaliadorAlternativo")
+  perfis              UsuarioPerfil[]
+  vinculosDocente     VinculoDocenteCurso[]
+  vinculosCoordenador VinculoCoordenadorCurso[]
+  relatorios          Relatorio[]
+  eventos             EventoAuditoria[]
 }
 
 model UsuarioPerfil {
@@ -66,15 +65,13 @@ model UsuarioPerfil {
 }
 
 model Curso {
-  id                     Int     @id @default(autoincrement())
-  nome                   String  @unique
-  ativo                  Boolean @default(true)
-  avaliadorAlternativoId Int?
+  id     Int     @id @default(autoincrement())
+  nome   String  @unique
+  ativo  Boolean @default(true)
 
-  avaliadorAlternativo Usuario? @relation("AvaliadorAlternativo", fields: [avaliadorAlternativoId], references: [id])
-  docentes             VinculoDocenteCurso[]
-  coordenadores        VinculoCoordenadorCurso[]
-  relatorios           Relatorio[]
+  docentes      VinculoDocenteCurso[]
+  coordenadores VinculoCoordenadorCurso[]
+  relatorios    Relatorio[]
 }
 
 model PeriodoLetivo {

@@ -123,7 +123,7 @@ usuários fixos vindos do seed:
 
 - um docente vinculado a dois cursos
 - um coordenador de um curso
-- um coordenador que também dá aula no próprio curso (para testar o RF22)
+- um coordenador que também dá aula no próprio curso (para testar a autoaprovação)
 - uma pessoa da secretaria acadêmica
 
 Um `if` na configuração decide qual provider sobe. Isso existe para o projeto não ficar
@@ -203,8 +203,10 @@ Cada função, dentro de **uma transação**:
 
 - **Roteamento automático.** O avaliador é o coordenador vinculado ao curso do relatório.
   O docente não escolhe destinatário.
-- **Autoaprovação proibida (RF22).** Se o autor for o próprio coordenador do curso, vai
-  para o `avaliadorAlternativo` cadastrado no curso. **Sem alternativo cadastrado,
+- **Autoaprovação permitida, de propósito.** Se o autor for o próprio coordenador do
+  curso, ele mesmo é o avaliador — não existe mais avaliador alternativo (decisão
+  revisada; diverge do RF22 original do `docs/rsha-docreq.pdf`, que marcava a
+  autoaprovação como proibida e "Essencial"). **Sem coordenador vinculado ao curso,
   bloqueie a submissão** com mensagem clara, em vez de deixar o relatório órfão.
 - **Devolução exige justificativa** não vazia.
 - **Sem limite de devoluções.** Cada ciclo gera seu próprio evento.
@@ -252,7 +254,7 @@ chamada + revalidação.
 | `/avaliacao/[id]` | coordenador | Relatório em leitura + aprovar / devolver + histórico |
 | `/acompanhamento` | coord./secretaria | Situação de entrega por curso no período corrente |
 | `/arquivo` | todos | Navegação Ano › Semestre › Curso (filtro, não pasta) |
-| `/admin/cursos` | secretaria | CRUD de cursos e avaliador alternativo |
+| `/admin/cursos` | secretaria | CRUD de cursos |
 | `/admin/usuarios` | secretaria | CRUD de usuários, perfis e importação CSV |
 | `/admin/vinculos` | secretaria | Vínculos docente-curso e coordenador-curso — os dois lados da relação |
 | `/admin/periodos` | secretaria | Períodos letivos e prazos |
@@ -263,7 +265,7 @@ porque quem não é docente não tem relatório nenhum pra ver ali:
 
 - **docente** → `HomeDocente`: cursos do período aberto e situação do relatório de cada um.
   Prioridade sobre os outros perfis por ser o caso mais comum (302 vs. 17 coordenadores) —
-  quem acumula docente + coordenador (RF22) cai aqui e chega na fila pelo nav.
+  quem acumula docente + coordenador no mesmo curso cai aqui e chega na fila pelo nav.
 - **coordenador** (sem ser também docente) → `redirect("/avaliacao")`: a fila é trabalho
   pendente, não faz sentido logar numa tela vazia.
 - **secretaria** (sem ser também docente) → `HomeSecretaria`: atalhos grandes para
@@ -442,7 +444,7 @@ Todos os testes ficam em `lib/services/__tests__/`, rodam sem subir tela e sem b
 
 - Docente vinculado a dois cursos gera dois relatórios independentes, roteados a
   coordenadores diferentes
-- Coordenador não consegue aprovar relatório do qual é autor
+- Coordenador consegue aprovar relatório do qual é autor (autoaprovação permitida)
 - Coordenador não enxerga relatório de curso que não é dele
 - Submissão fora do prazo é bloqueada
 - Devolução sem justificativa é bloqueada
