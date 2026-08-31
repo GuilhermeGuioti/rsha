@@ -3,8 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CabecalhoAdmin } from "../../../../components/CabecalhoAdmin";
+import { CampoBusca } from "../../../../components/CampoBusca";
+import { AbasFiltro } from "../../../../components/AbasFiltro";
 import { SituacaoPill } from "../../../../components/SituacaoPill";
+import { classeCampoSelect } from "../../../../components/Campo";
 import { formatarHoras } from "../../../../lib/formato";
+import { useBusca } from "../../../../lib/hooks/useBusca";
 import type { SituacaoRelatorio } from "../../../../generated/prisma/client";
 
 export type ItemFila = {
@@ -12,6 +16,8 @@ export type ItemFila = {
   docenteNome: string;
   cursoId: number;
   cursoNome: string;
+  periodoLetivoId: number;
+  periodoRotulo: string;
   situacao: SituacaoRelatorio;
   horas: number;
   desde: Date;
@@ -38,20 +44,40 @@ function corUrgencia(dias: number): string {
   return "text-tinta-suave";
 }
 
-export function ListaAvaliacao({ itens, periodoRotulo }: { itens: ItemFila[]; periodoRotulo: string }) {
+export function ListaAvaliacao({
+  itens,
+  periodos,
+}: {
+  itens: ItemFila[];
+  periodos: { id: number; rotulo: string }[];
+}) {
   const [aba, setAba] = useState<Aba>("AGUARDANDO_AVALIACAO");
+  // periodos já vem ordenado do mais recente pro mais antigo — esse é o
+  // período de trabalho corrente; os demais ficam a um clique de distância.
+  const [periodoId, setPeriodoId] = useState<number>(periodos[0].id);
+  const busca = useBusca();
+
+  const itensDoPeriodo = useMemo(
+    () => itens.filter((item) => item.periodoLetivoId === periodoId),
+    [itens, periodoId],
+  );
 
   const contagens = useMemo(
     () => ({
-      AGUARDANDO_AVALIACAO: itens.filter((item) => item.situacao === "AGUARDANDO_AVALIACAO").length,
-      DEVOLVIDO_PARA_AJUSTE: itens.filter((item) => item.situacao === "DEVOLVIDO_PARA_AJUSTE").length,
-      APROVADO: itens.filter((item) => item.situacao === "APROVADO").length,
+      AGUARDANDO_AVALIACAO: itensDoPeriodo.filter((item) => item.situacao === "AGUARDANDO_AVALIACAO").length,
+      DEVOLVIDO_PARA_AJUSTE: itensDoPeriodo.filter((item) => item.situacao === "DEVOLVIDO_PARA_AJUSTE").length,
+      APROVADO: itensDoPeriodo.filter((item) => item.situacao === "APROVADO").length,
     }),
-    [itens],
+    [itensDoPeriodo],
   );
 
   const grupos = useMemo(() => {
-    const visiveis = itens.filter((item) => item.situacao === aba);
+    const visiveis = itensDoPeriodo.filter(
+      (item) =>
+        item.situacao === aba &&
+        (item.docenteNome.toLowerCase().includes(busca.normalizado) ||
+          item.cursoNome.toLowerCase().includes(busca.normalizado)),
+    );
     const porCurso = new Map<number, { cursoNome: string; totalDocentesNoCurso: number; itens: ItemFila[] }>();
     for (const item of visiveis) {
       const grupo = porCurso.get(item.cursoId);
@@ -66,7 +92,7 @@ export function ListaAvaliacao({ itens, periodoRotulo }: { itens: ItemFila[]; pe
       }
     }
     return [...porCurso.values()].sort((a, b) => a.cursoNome.localeCompare(b.cursoNome, "pt-BR"));
-  }, [itens, aba]);
+  }, [itensDoPeriodo, aba, busca.normalizado]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -75,33 +101,46 @@ export function ListaAvaliacao({ itens, periodoRotulo }: { itens: ItemFila[]; pe
         subtitulo={
           <p className="text-[15px] text-tinta-suave">
             <span className="font-mono font-medium text-tinta">{contagens.AGUARDANDO_AVALIACAO}</span>{" "}
-            {contagens.AGUARDANDO_AVALIACAO === 1 ? "relatório aguardando" : "relatórios aguardando"} você ·{" "}
-            {periodoRotulo}
+            {contagens.AGUARDANDO_AVALIACAO === 1 ? "relatório aguardando" : "relatórios aguardando"} você
           </p>
-        }
-        acao={
-          <div className="flex gap-2">
-            {ABAS.map((item) => (
-              <button
-                key={item.valor}
-                type="button"
-                onClick={() => setAba(item.valor)}
-                className={`flex min-h-10 items-center rounded-md px-3.5 text-[13px] ${
-                  aba === item.valor
-                    ? "bg-azul-institucional font-medium text-white"
-                    : "border border-borda bg-superficie text-tinta-suave"
-                }`}
-              >
-                {item.rotulo} ({contagens[item.valor]})
-              </button>
-            ))}
-          </div>
         }
       />
 
+      <div className="flex flex-wrap gap-2">
+        <CampoBusca
+          id="busca-avaliacao"
+          rotuloAcessivel="Buscar por nome do docente ou do curso"
+          placeholder="Buscar por docente ou curso…"
+          valor={busca.valor}
+          onChange={busca.definir}
+        />
+        <label htmlFor="filtro-periodo-avaliacao" className="sr-only">
+          Filtrar por período letivo
+        </label>
+        <select
+          id="filtro-periodo-avaliacao"
+          value={periodoId}
+          onChange={(evento) => setPeriodoId(Number(evento.target.value))}
+          className={`${classeCampoSelect} min-h-10`}
+        >
+          {periodos.map((periodo) => (
+            <option key={periodo.id} value={periodo.id}>
+              {periodo.rotulo}
+            </option>
+          ))}
+        </select>
+        <AbasFiltro
+          aba={aba}
+          onMudar={setAba}
+          opcoes={ABAS.map((item) => ({ ...item, contagem: contagens[item.valor] }))}
+        />
+      </div>
+
       {grupos.length === 0 ? (
         <p className="rounded-md border border-borda bg-superficie px-5 py-8 text-center text-[15px] text-tinta-suave">
-          Nenhum relatório {ABAS.find((item) => item.valor === aba)!.rotulo.toLowerCase()} no momento.
+          {busca.normalizado
+            ? "Nenhum relatório encontrado."
+            : `Nenhum relatório ${ABAS.find((item) => item.valor === aba)!.rotulo.toLowerCase()} nesse período.`}
         </p>
       ) : (
         <div className="overflow-hidden rounded-md border border-borda bg-superficie">

@@ -10,11 +10,12 @@ import { Campo, classeCampo } from "../../../../../components/Campo";
 import { Tabela } from "../../../../../components/Tabela";
 import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
 import { CampoBusca } from "../../../../../components/CampoBusca";
-import { AbasAtivoInativo } from "../../../../../components/AbasAtivoInativo";
+import { AbasFiltro } from "../../../../../components/AbasFiltro";
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeEditar } from "../../../../../components/Icones";
 import { CampoCheckbox } from "../../../../../components/CampoCheckbox";
 import { MensagemErro } from "../../../../../components/MensagemErro";
+import { useBusca } from "../../../../../lib/hooks/useBusca";
 import { acaoCriarCurso, acaoAtualizarCurso } from "./acoes";
 
 type CursoLinha = {
@@ -34,13 +35,12 @@ export function ListaCursos({ cursos }: { cursos: CursoLinha[] }) {
   const [ativo, setAtivo] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, startTransition] = useTransition();
-  const [busca, setBusca] = useState("");
+  const busca = useBusca();
 
   const cursosAtivos = cursos.filter((curso) => curso.ativo);
   const cursosInativos = cursos.filter((curso) => !curso.ativo);
-  const buscaNormalizada = busca.trim().toLowerCase();
   const visiveis = (aba === "ativos" ? cursosAtivos : cursosInativos).filter((curso) =>
-    curso.nome.toLowerCase().includes(buscaNormalizada),
+    curso.nome.toLowerCase().includes(busca.normalizado),
   );
 
   function abrirNovo() {
@@ -90,19 +90,21 @@ export function ListaCursos({ cursos }: { cursos: CursoLinha[] }) {
         }
       />
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <CampoBusca
           id="busca-curso"
           rotuloAcessivel="Buscar curso por nome"
           placeholder="Buscar curso…"
-          valor={busca}
-          onChange={setBusca}
+          valor={busca.valor}
+          onChange={busca.definir}
         />
-        <AbasAtivoInativo
+        <AbasFiltro
           aba={aba}
           onMudar={setAba}
-          contagemAtivos={cursosAtivos.length}
-          contagemInativos={cursosInativos.length}
+          opcoes={[
+            { valor: "ativos", rotulo: "Ativos", contagem: cursosAtivos.length },
+            { valor: "inativos", rotulo: "Inativos", contagem: cursosInativos.length },
+          ]}
         />
       </div>
 
@@ -111,7 +113,7 @@ export function ListaCursos({ cursos }: { cursos: CursoLinha[] }) {
         linhas={visiveis}
         chave={(curso) => curso.id}
         vazio={
-          buscaNormalizada
+          busca.normalizado
             ? "Nenhum curso encontrado."
             : `Nenhum curso ${aba === "ativos" ? "ativo" : "inativo"}.`
         }

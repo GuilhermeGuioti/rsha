@@ -13,6 +13,7 @@ import { CampoBusca } from "../../../../../components/CampoBusca";
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeRemover } from "../../../../../components/Icones";
 import { MensagemErro } from "../../../../../components/MensagemErro";
+import { useBusca } from "../../../../../lib/hooks/useBusca";
 import {
   acaoVincularDocente,
   acaoDesvincularDocente,
@@ -61,21 +62,21 @@ export function ListaVinculos({
   const [periodoId, setPeriodoId] = useState<number | "">("");
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, startTransition] = useTransition();
-  const [buscaDocentes, setBuscaDocentes] = useState("");
-  const [buscaCoordenadores, setBuscaCoordenadores] = useState("");
+  const buscaDocentes = useBusca();
+  const buscaCoordenadores = useBusca();
+  const [periodoFiltroId, setPeriodoFiltroId] = useState<number | "todos">("todos");
 
-  const buscaDocentesNormalizada = buscaDocentes.trim().toLowerCase();
   const docentesFiltrados = vinculosDocente.filter(
     (vinculo) =>
-      vinculo.docenteNome.toLowerCase().includes(buscaDocentesNormalizada) ||
-      vinculo.cursoNome.toLowerCase().includes(buscaDocentesNormalizada),
+      (periodoFiltroId === "todos" || vinculo.periodoLetivoId === periodoFiltroId) &&
+      (vinculo.docenteNome.toLowerCase().includes(buscaDocentes.normalizado) ||
+        vinculo.cursoNome.toLowerCase().includes(buscaDocentes.normalizado)),
   );
 
-  const buscaCoordenadoresNormalizada = buscaCoordenadores.trim().toLowerCase();
   const coordenadoresFiltrados = vinculosCoordenador.filter(
     (vinculo) =>
-      vinculo.coordenadorNome.toLowerCase().includes(buscaCoordenadoresNormalizada) ||
-      vinculo.cursoNome.toLowerCase().includes(buscaCoordenadoresNormalizada),
+      vinculo.coordenadorNome.toLowerCase().includes(buscaCoordenadores.normalizado) ||
+      vinculo.cursoNome.toLowerCase().includes(buscaCoordenadores.normalizado),
   );
 
   function abrirNovo(novoModo: Modo) {
@@ -147,14 +148,32 @@ export function ListaVinculos({
               }
             />
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <CampoBusca
                 id="busca-docentes"
                 rotuloAcessivel="Buscar por nome do docente ou do curso"
                 placeholder="Buscar por docente ou curso…"
-                valor={buscaDocentes}
-                onChange={setBuscaDocentes}
+                valor={buscaDocentes.valor}
+                onChange={buscaDocentes.definir}
               />
+              <label htmlFor="filtro-periodo-docentes" className="sr-only">
+                Filtrar por período letivo
+              </label>
+              <select
+                id="filtro-periodo-docentes"
+                value={periodoFiltroId}
+                onChange={(evento) =>
+                  setPeriodoFiltroId(evento.target.value === "todos" ? "todos" : Number(evento.target.value))
+                }
+                className={`${classeCampoSelect} min-h-10`}
+              >
+                <option value="todos">Todos os períodos</option>
+                {periodos.map((periodo) => (
+                  <option key={periodo.id} value={periodo.id}>
+                    {periodo.rotulo}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <Tabela<VinculoDocente>
@@ -162,7 +181,9 @@ export function ListaVinculos({
               linhas={docentesFiltrados}
               chave={(vinculo) => vinculo.id}
               vazio={
-                buscaDocentesNormalizada ? "Nenhum vínculo encontrado." : "Nenhum docente vinculado."
+                buscaDocentes.normalizado || periodoFiltroId !== "todos"
+                  ? "Nenhum vínculo encontrado."
+                  : "Nenhum docente vinculado."
               }
               colunas={[
                 { cabecalho: "Curso", largura: "38%", render: (vinculo) => vinculo.cursoNome },
@@ -208,8 +229,8 @@ export function ListaVinculos({
               id="busca-coordenadores"
               rotuloAcessivel="Buscar por nome do coordenador ou do curso"
               placeholder="Buscar por coordenador ou curso…"
-              valor={buscaCoordenadores}
-              onChange={setBuscaCoordenadores}
+              valor={buscaCoordenadores.valor}
+              onChange={buscaCoordenadores.definir}
             />
           </div>
 
@@ -218,7 +239,7 @@ export function ListaVinculos({
             linhas={coordenadoresFiltrados}
             chave={(vinculo) => vinculo.id}
             vazio={
-              buscaCoordenadoresNormalizada ? "Nenhum vínculo encontrado." : "Nenhum coordenador vinculado."
+              buscaCoordenadores.normalizado ? "Nenhum vínculo encontrado." : "Nenhum coordenador vinculado."
             }
             colunas={[
               { cabecalho: "Curso", largura: "38%", render: (vinculo) => vinculo.cursoNome },

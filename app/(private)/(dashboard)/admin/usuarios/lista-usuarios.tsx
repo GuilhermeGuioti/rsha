@@ -10,11 +10,12 @@ import { Campo, classeCampo } from "../../../../../components/Campo";
 import { Tabela } from "../../../../../components/Tabela";
 import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
 import { CampoBusca } from "../../../../../components/CampoBusca";
-import { AbasAtivoInativo } from "../../../../../components/AbasAtivoInativo";
+import { AbasFiltro } from "../../../../../components/AbasFiltro";
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeEditar } from "../../../../../components/Icones";
 import { CampoCheckbox } from "../../../../../components/CampoCheckbox";
 import { MensagemErro } from "../../../../../components/MensagemErro";
+import { useBusca } from "../../../../../lib/hooks/useBusca";
 import { acaoCriarUsuario, acaoAtualizarUsuario } from "./acoes";
 import type { Perfil as TipoPerfil } from "../../../../../generated/prisma/client";
 
@@ -46,17 +47,16 @@ export function ListaUsuarios({ usuarios }: { usuarios: UsuarioLinha[] }) {
   const [secretaria, setSecretaria] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, startTransition] = useTransition();
-  const [busca, setBusca] = useState("");
+  const busca = useBusca();
   const [aba, setAba] = useState<"ativos" | "inativos">("ativos");
   const [expandidos, setExpandidos] = useState<Set<number>>(new Set());
 
   const usuariosAtivos = usuarios.filter((usuario) => usuario.ativo);
   const usuariosInativos = usuarios.filter((usuario) => !usuario.ativo);
-  const buscaNormalizada = busca.trim().toLowerCase();
   const visiveis = (aba === "ativos" ? usuariosAtivos : usuariosInativos).filter(
     (usuario) =>
-      usuario.nome.toLowerCase().includes(buscaNormalizada) ||
-      usuario.email.toLowerCase().includes(buscaNormalizada),
+      usuario.nome.toLowerCase().includes(busca.normalizado) ||
+      usuario.email.toLowerCase().includes(busca.normalizado),
   );
 
   function alternarExpandido(id: number) {
@@ -124,19 +124,21 @@ export function ListaUsuarios({ usuarios }: { usuarios: UsuarioLinha[] }) {
         }
       />
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <CampoBusca
           id="busca-usuario"
           rotuloAcessivel="Buscar usuário por nome ou e-mail"
           placeholder="Buscar por nome ou e-mail…"
-          valor={busca}
-          onChange={setBusca}
+          valor={busca.valor}
+          onChange={busca.definir}
         />
-        <AbasAtivoInativo
+        <AbasFiltro
           aba={aba}
           onMudar={setAba}
-          contagemAtivos={usuariosAtivos.length}
-          contagemInativos={usuariosInativos.length}
+          opcoes={[
+            { valor: "ativos", rotulo: "Ativos", contagem: usuariosAtivos.length },
+            { valor: "inativos", rotulo: "Inativos", contagem: usuariosInativos.length },
+          ]}
         />
       </div>
 
@@ -145,7 +147,7 @@ export function ListaUsuarios({ usuarios }: { usuarios: UsuarioLinha[] }) {
         linhas={visiveis}
         chave={(usuario) => usuario.id}
         vazio={
-          buscaNormalizada
+          busca.normalizado
             ? "Nenhum usuário encontrado."
             : `Nenhum usuário ${aba === "ativos" ? "ativo" : "inativo"}.`
         }

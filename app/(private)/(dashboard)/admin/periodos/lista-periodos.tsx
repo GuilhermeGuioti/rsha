@@ -9,6 +9,7 @@ import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
 import { Campo, classeCampo, classeCampoSelect } from "../../../../../components/Campo";
 import { Tabela } from "../../../../../components/Tabela";
 import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
+import { AbasFiltro } from "../../../../../components/AbasFiltro";
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeEditar } from "../../../../../components/Icones";
 import { MensagemErro } from "../../../../../components/MensagemErro";
@@ -33,11 +34,15 @@ function formatarData(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
-function situacaoPeriodo(periodo: PeriodoLinha): { rotulo: string; cor: "aprovado" | "neutro" | "interativo" } {
+type SituacaoPeriodo = "AGENDADO" | "ABERTO" | "ENCERRADO";
+
+function situacaoPeriodo(
+  periodo: PeriodoLinha,
+): { chave: SituacaoPeriodo; rotulo: string; cor: "aprovado" | "neutro" | "interativo" } {
   const agora = new Date();
-  if (agora < new Date(periodo.aberturaSubmissao)) return { rotulo: "Agendado", cor: "interativo" };
-  if (agora > new Date(periodo.encerramentoSubmissao)) return { rotulo: "Encerrado", cor: "neutro" };
-  return { rotulo: "Aberto", cor: "aprovado" };
+  if (agora < new Date(periodo.aberturaSubmissao)) return { chave: "AGENDADO", rotulo: "Agendado", cor: "interativo" };
+  if (agora > new Date(periodo.encerramentoSubmissao)) return { chave: "ENCERRADO", rotulo: "Encerrado", cor: "neutro" };
+  return { chave: "ABERTO", rotulo: "Aberto", cor: "aprovado" };
 }
 
 export function ListaPeriodos({ periodos }: { periodos: PeriodoLinha[] }) {
@@ -50,6 +55,11 @@ export function ListaPeriodos({ periodos }: { periodos: PeriodoLinha[] }) {
   const [encerramento, setEncerramento] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, startTransition] = useTransition();
+  const [aba, setAba] = useState<SituacaoPeriodo | "TODOS">("TODOS");
+
+  const visiveis = periodos.filter((periodo) => aba === "TODOS" || situacaoPeriodo(periodo).chave === aba);
+  const contagem = (chave: SituacaoPeriodo) =>
+    periodos.filter((periodo) => situacaoPeriodo(periodo).chave === chave).length;
 
   function abrirNovo() {
     setPeriodoEmEdicao(null);
@@ -109,11 +119,22 @@ export function ListaPeriodos({ periodos }: { periodos: PeriodoLinha[] }) {
         }
       />
 
+      <AbasFiltro
+        aba={aba}
+        onMudar={setAba}
+        opcoes={[
+          { valor: "TODOS", rotulo: "Todos", contagem: periodos.length },
+          { valor: "AGENDADO", rotulo: "Agendados", contagem: contagem("AGENDADO") },
+          { valor: "ABERTO", rotulo: "Abertos", contagem: contagem("ABERTO") },
+          { valor: "ENCERRADO", rotulo: "Encerrados", contagem: contagem("ENCERRADO") },
+        ]}
+      />
+
       <Tabela<PeriodoLinha>
         minWidthPx={560}
-        linhas={periodos}
+        linhas={visiveis}
         chave={(periodo) => periodo.id}
-        vazio="Nenhum período letivo cadastrado."
+        vazio={periodos.length === 0 ? "Nenhum período letivo cadastrado." : "Nenhum período nessa situação."}
         colunas={[
           {
             cabecalho: "Período",
