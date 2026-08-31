@@ -25,19 +25,9 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   if (perfis.includes(Perfil.COORDENADOR)) {
     links.push({ href: "/avaliacao", rotulo: "Fila de avaliação" });
   }
-  if (perfis.includes(Perfil.SECRETARIA)) {
-    // Quem também é docente já tem "Meus relatórios" apontando pra "/" —
-    // não duplica o link, só muda o que "/" mostra (ver page.tsx).
-    if (!perfis.includes(Perfil.DOCENTE)) {
-      links.push({ href: "/", rotulo: "Administração" });
-    }
-    links.push(
-      { href: "/admin/cursos", rotulo: "Cursos" },
-      { href: "/admin/usuarios", rotulo: "Usuários" },
-      { href: "/admin/vinculos", rotulo: "Vínculos" },
-      { href: "/admin/periodos", rotulo: "Períodos" },
-    );
-  }
+  // Secretaria não tem links de admin na barra — o logo leva pro "/", que já
+  // mostra os atalhos grandes (HomeSecretaria). Um menu duplicado ali só
+  // adicionaria ruído.
 
   return (
     <div className="flex flex-1 flex-col">

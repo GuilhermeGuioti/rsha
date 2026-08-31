@@ -27,7 +27,11 @@ export function Nav({
   return (
     <header className="flex h-16 w-full flex-none items-center justify-between gap-6 bg-azul-institucional px-4 sm:px-6">
       <div className="flex min-w-0 items-center gap-6">
-        <div className="flex items-center gap-2.5">
+        <Link
+          href="/"
+          aria-label="Ir para o início"
+          className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        >
           <span
             aria-hidden
             className="flex h-9 w-9 flex-none items-center justify-center rounded-md border border-white/35 bg-white/[.16]"
@@ -37,7 +41,7 @@ export function Nav({
           {/* <span className="whitespace-nowrap font-serif text-[15px] font-semibold text-white">
             Horas Atividades
           </span> */}
-        </div>
+        </Link>
         <nav className="flex gap-5 overflow-x-auto text-[15px]">
           {links.map((link) => {
             const estaAtivo = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
