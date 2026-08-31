@@ -246,7 +246,7 @@ chamada + revalidação.
 | Rota | Perfil | Conteúdo |
 |---|---|---|
 | `/login` | público | Botão único de entrada institucional |
-| `/` | docente | Cursos do período aberto e situação do relatório de cada um |
+| `/` | todos | Conteúdo por perfil — ver nota abaixo da tabela |
 | `/relatorios/[id]` | docente | Formulário com itens, total e ações |
 | `/avaliacao` | coordenador | Fila agrupada por curso |
 | `/avaliacao/[id]` | coordenador | Relatório em leitura + aprovar / devolver + histórico |
@@ -258,22 +258,34 @@ chamada + revalidação.
 | `/admin/periodos` | secretaria | Períodos letivos e prazos |
 | `/admin/auditoria/[id]` | secretaria | Trilha completa de um relatório |
 
+`/` não é uma tela única — é um roteador por perfil (`app/(private)/(dashboard)/page.tsx`),
+porque quem não é docente não tem relatório nenhum pra ver ali:
+
+- **docente** → `HomeDocente`: cursos do período aberto e situação do relatório de cada um.
+  Prioridade sobre os outros perfis por ser o caso mais comum (302 vs. 17 coordenadores) —
+  quem acumula docente + coordenador (RF22) cai aqui e chega na fila pelo nav.
+- **coordenador** (sem ser também docente) → `redirect("/avaliacao")`: a fila é trabalho
+  pendente, não faz sentido logar numa tela vazia.
+- **secretaria** (sem ser também docente) → `HomeSecretaria`: atalhos grandes para
+  `/admin/*`, já que a secretaria não preenche nem avalia relatório.
+- **sem perfil algum** → mensagem pedindo pra procurar a secretaria. Não deveria acontecer
+  em uso normal, mas pode existir entre o cadastro do usuário e o primeiro vínculo.
+
 *Route groups* em `app/` — nenhum aparece na URL, servem só para deixar claro, olhando
 a pasta, o que precisa de login e o que não precisa: `app/(public)/...` e
 `app/(private)/...`, lado a lado.
 
 - **`(public)`** — sem guard. Hoje só `/login`.
-- **`(private)`** — exige sessão (`exigirSessaoPagina`). Hoje `/`, `/relatorios` e
-  `/avaliacao` (estas duas só com `acoes.ts`, sem tela própria ainda), mais o
-  subgrupo `(dashboard)` aninhado dentro dele.
+- **`(private)`** — exige sessão (`exigirSessaoPagina`). Hoje só o subgrupo
+  `(dashboard)` aninhado dentro dele — não sobrou rota solta direto em `(private)`.
 - **`(private)/(dashboard)`** — é `(private)`, então já exige sessão; além disso
   desenha a barra superior (mockup: "Horas Atividades" + navegação + crachá de
-  perfil + Sair), em `app/(private)/(dashboard)/layout.tsx`. Hoje só `/admin/*`.
+  perfil + Sair), em `app/(private)/(dashboard)/layout.tsx`. Hoje `/`, `/relatorios`,
+  `/avaliacao` e `/admin/*`.
 
 Todas as rotas de `(private)` usam a mesma barra no mockup — só mudam os links e o
-crachá conforme o perfil. `/`, `/relatorios` e `/avaliacao` migram para dentro de
-`(dashboard)` quando ganharem tela própria com essa barra; até lá ficam soltas
-direto em `(private)`.
+crachá conforme o perfil. Uma rota nova nasce direto em `(private)` (sem barra) até
+ganhar tela própria — só então migra pra dentro de `(dashboard)`.
 
 **Cada page continua fazendo seu próprio `exigirPerfil` (ou equivalente) na primeira
 linha**, dentro ou fora do `(dashboard)` — o layout dele só evita duplicar a barra e

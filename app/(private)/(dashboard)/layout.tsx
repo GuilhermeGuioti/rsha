@@ -26,6 +26,11 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
     links.push({ href: "/avaliacao", rotulo: "Fila de avaliação" });
   }
   if (perfis.includes(Perfil.SECRETARIA)) {
+    // Quem também é docente já tem "Meus relatórios" apontando pra "/" —
+    // não duplica o link, só muda o que "/" mostra (ver page.tsx).
+    if (!perfis.includes(Perfil.DOCENTE)) {
+      links.push({ href: "/", rotulo: "Administração" });
+    }
     links.push(
       { href: "/admin/cursos", rotulo: "Cursos" },
       { href: "/admin/usuarios", rotulo: "Usuários" },
