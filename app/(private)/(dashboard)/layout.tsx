@@ -22,6 +22,9 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   if (perfis.includes(Perfil.DOCENTE)) {
     links.push({ href: "/", rotulo: "Meus relatórios" });
   }
+  if (perfis.includes(Perfil.COORDENADOR)) {
+    links.push({ href: "/avaliacao", rotulo: "Fila de avaliação" });
+  }
   if (perfis.includes(Perfil.SECRETARIA)) {
     links.push(
       { href: "/admin/cursos", rotulo: "Cursos" },
