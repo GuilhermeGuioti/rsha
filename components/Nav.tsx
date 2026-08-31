@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { acaoSair } from "../lib/auth/acoes";
@@ -31,12 +32,7 @@ export function Nav({
             aria-hidden
             className="flex h-9 w-9 flex-none items-center justify-center rounded-md border border-white/35 bg-white/[.16]"
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12,4 22,9 12,14 2,9" />
-              <path d="M7 11.3v3.8c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5v-3.8" />
-              <line x1="22" y1="9" x2="22" y2="15" />
-              <circle cx="22" cy="16" r="1" fill="currentColor" stroke="none" />
-            </svg>
+            <Image src="/logo-barao.png" alt="" width={24} height={24} className="h-6 w-6 object-contain" />
           </span>
           {/* <span className="whitespace-nowrap font-serif text-[15px] font-semibold text-white">
             Horas Atividades

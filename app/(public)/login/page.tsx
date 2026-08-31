@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { acaoEntrar, acaoEntrarComEmail } from "./acoes";
 
 export default async function LoginPage(props: PageProps<"/login">) {
@@ -20,9 +21,9 @@ export default async function LoginPage(props: PageProps<"/login">) {
             <div className="relative flex flex-col gap-5">
               <div
                 aria-hidden
-                className="flex h-28 w-28 items-center justify-center rounded-[10px] border-2 border-dashed border-white/40 text-center text-xs font-medium leading-tight text-white/70"
+                className="flex h-28 w-28 items-center justify-center rounded-[10px] bg-white/95 p-3"
               >
-                Brasão da instituição
+                <Image src="/logo-barao.png" alt="" width={96} height={96} className="h-full w-full object-contain" />
               </div>
               <div>
                 <p className="font-serif text-[22px] font-semibold leading-snug">
