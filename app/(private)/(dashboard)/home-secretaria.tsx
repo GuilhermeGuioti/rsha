@@ -5,6 +5,7 @@ const ATALHOS: { href: string; titulo: string; descricao: string }[] = [
   { href: "/admin/usuarios", titulo: "Usuários", descricao: "Pessoas com acesso ao sistema e seus perfis." },
   { href: "/admin/vinculos", titulo: "Vínculos", descricao: "Quem dá aula e quem coordena em cada curso." },
   { href: "/admin/periodos", titulo: "Períodos letivos", descricao: "Prazos de submissão de cada semestre." },
+  { href: "/arquivo", titulo: "Arquivo", descricao: "Relatórios aprovados, por ano, semestre e curso." },
 ];
 
 // Tela de partida da secretaria: não tem lista pra rolar, só os atalhos —
