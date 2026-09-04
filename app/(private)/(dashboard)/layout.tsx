@@ -25,6 +25,13 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   if (perfis.includes(Perfil.COORDENADOR)) {
     links.push({ href: "/avaliacao", rotulo: "Fila de avaliação" });
   }
+  // /arquivo é "todos" na tabela de rotas, mas quem só tem perfil secretaria
+  // não tem barra com links de conteúdo — o atalho fica no hub (ver
+  // HomeSecretaria), junto dos outros cadastros. Docente e/ou coordenador
+  // ganham o link aqui mesmo.
+  if (perfis.includes(Perfil.DOCENTE) || perfis.includes(Perfil.COORDENADOR)) {
+    links.push({ href: "/arquivo", rotulo: "Arquivo" });
+  }
   // Secretaria não tem links de admin na barra — o logo leva pro "/", que já
   // mostra os atalhos grandes (HomeSecretaria). Um menu duplicado ali só
   // adicionaria ruído.
