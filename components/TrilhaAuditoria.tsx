@@ -1,5 +1,5 @@
 import { TipoEvento } from "../generated/prisma/enums";
-import { formatarDataHora, formatarHoras } from "../lib/formato";
+import { formatarDataHora, formatarHoras, ROTULO_EVENTO } from "../lib/formato";
 
 type Evento = {
   id: number;
@@ -9,23 +9,15 @@ type Evento = {
   usuario: { nome: string };
 };
 
-const APARENCIA_EVENTO: Record<TipoEvento, { rotulo: string; cor: string; forma: string }> = {
-  CRIACAO: { rotulo: "Relatório criado", cor: "text-tinta", forma: "h-2.5 w-2.5 rounded-full border-2 border-borda" },
-  SUBMISSAO: {
-    rotulo: "Enviado para avaliação",
-    cor: "text-estado-aguardando",
-    forma: "h-2.5 w-2.5 bg-estado-aguardando",
-  },
+// Só o visual mora aqui; o rótulo vem de lib/formato para não divergir do PDF.
+const APARENCIA_EVENTO: Record<TipoEvento, { cor: string; forma: string }> = {
+  CRIACAO: { cor: "text-tinta", forma: "h-2.5 w-2.5 rounded-full border-2 border-borda" },
+  SUBMISSAO: { cor: "text-estado-aguardando", forma: "h-2.5 w-2.5 bg-estado-aguardando" },
   DEVOLUCAO: {
-    rotulo: "Devolvido para ajuste",
     cor: "text-estado-devolvido",
     forma: "h-2.5 w-3 bg-estado-devolvido [clip-path:polygon(50%_0,100%_100%,0_100%)]",
   },
-  APROVACAO: {
-    rotulo: "Aprovado",
-    cor: "text-estado-aprovado",
-    forma: "h-2.5 w-2.5 rounded-full bg-estado-aprovado",
-  },
+  APROVACAO: { cor: "text-estado-aprovado", forma: "h-2.5 w-2.5 rounded-full bg-estado-aprovado" },
 };
 
 // Coluna permanente ao lado do relatório, nunca escondida atrás de aba ou
@@ -56,7 +48,7 @@ export function TrilhaAuditoria({
                 {indice < eventos.length - 1 && <span aria-hidden className="mt-1.5 w-px flex-1 bg-borda" />}
               </div>
               <div className="pb-5">
-                <div className={`text-[15px] font-medium ${aparencia.cor}`}>{aparencia.rotulo}</div>
+                <div className={`text-[15px] font-medium ${aparencia.cor}`}>{ROTULO_EVENTO[evento.tipo]}</div>
                 <div className="mt-1 text-[13px] leading-relaxed text-tinta-suave">
                   {evento.usuario.nome} · <span className="font-mono font-medium">{formatarDataHora(evento.ocorridoEm)}</span>
                 </div>

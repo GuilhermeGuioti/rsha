@@ -244,7 +244,7 @@ export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
             )}
           </div>
 
-          <div className="grid grid-cols-[2fr_1.2fr_.7fr_1fr_90px] gap-4 border-b border-borda px-5 py-2.5 text-[13px] font-medium text-tinta-suave">
+          <div className="grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] gap-4 border-b border-borda px-5 py-2.5 text-[13px] font-medium text-tinta-suave">
             <span>Docente</span>
             <span>Estado final</span>
             <span className="text-right">Horas</span>
@@ -258,7 +258,7 @@ export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
             grupoAtual.map((linha, indice) => (
               <div
                 key={linha.vinculoId}
-                className={`grid grid-cols-[2fr_1.2fr_.7fr_1fr_90px] items-center gap-4 px-5 py-3.5 ${
+                className={`grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] items-center gap-4 px-5 py-3.5 ${
                   indice < grupoAtual.length - 1 ? "border-b border-borda" : ""
                 }`}
               >
@@ -276,16 +276,27 @@ export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
                 <span className="font-mono text-[13px] text-tinta-suave">
                   {linha.aprovadoEm ? linha.aprovadoEm.toLocaleDateString("pt-BR") : "—"}
                 </span>
-                {linha.relatorioId ? (
-                  <Link
-                    href={linha.podeAvaliar ? `/avaliacao/${linha.relatorioId}` : `/relatorios/${linha.relatorioId}`}
-                    className="text-right text-[15px] text-azul-interativo hover:underline"
-                  >
-                    Abrir
-                  </Link>
-                ) : (
-                  <span />
-                )}
+                <div className="flex items-center justify-end gap-4">
+                  {linha.relatorioId && (
+                    <Link
+                      href={linha.podeAvaliar ? `/avaliacao/${linha.relatorioId}` : `/relatorios/${linha.relatorioId}`}
+                      className="inline-flex min-h-11 items-center text-[15px] text-azul-interativo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+                    >
+                      Abrir
+                    </Link>
+                  )}
+                  {/* Só relatório aprovado exporta (RF15) — é a única situação
+                      em que autoria e aprovação da trilha estão completas. */}
+                  {linha.relatorioId && linha.situacao === "APROVADO" && (
+                    <a
+                      href={`/api/relatorios/${linha.relatorioId}/pdf`}
+                      className="inline-flex min-h-11 items-center text-[15px] text-azul-interativo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+                    >
+                      PDF
+                      <span className="sr-only"> do relatório de {linha.docenteNome}</span>
+                    </a>
+                  )}
+                </div>
               </div>
             ))
           )}

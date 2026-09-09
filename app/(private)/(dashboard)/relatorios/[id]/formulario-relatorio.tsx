@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, useTransition, type FormEvent } from "react";
+import type { DiaSemana } from "../../../../../generated/prisma/enums";
 import { useRouter } from "next/navigation";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
@@ -8,17 +9,10 @@ import { Campo, classeCampo, classeCampoSelect } from "../../../../../components
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeRemover } from "../../../../../components/Icones";
 import { MensagemErro } from "../../../../../components/MensagemErro";
-import { formatarHoras } from "../../../../../lib/formato";
+import { formatarHoras, ROTULO_DIA_SEMANA } from "../../../../../lib/formato";
 import { acaoSalvarItens, acaoSubmeter } from "../acoes";
 
-const DIAS: [string, string][] = [
-  ["SEGUNDA", "Segunda"],
-  ["TERCA", "Terça"],
-  ["QUARTA", "Quarta"],
-  ["QUINTA", "Quinta"],
-  ["SEXTA", "Sexta"],
-  ["SABADO", "Sábado"],
-];
+const DIAS = Object.entries(ROTULO_DIA_SEMANA);
 
 export type LinhaItem = {
   tipoAtividadeId: number;
@@ -130,7 +124,7 @@ export function FormularioRelatorio({
               {tipos.find((tipo) => tipo.id === item.tipoAtividadeId)?.descricao ?? "—"}
             </ValorLido>
             <ValorLido rotulo="Dia da semana">
-              {DIAS.find(([valor]) => valor === item.diaSemana)?.[1] ?? item.diaSemana}
+              {ROTULO_DIA_SEMANA[item.diaSemana as DiaSemana] ?? item.diaSemana}
             </ValorLido>
             <ValorLido rotulo="Horário" mono>
               {item.horario}
