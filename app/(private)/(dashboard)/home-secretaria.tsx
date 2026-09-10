@@ -5,6 +5,7 @@ const ATALHOS: { href: string; titulo: string; descricao: string }[] = [
   { href: "/admin/usuarios", titulo: "Usuários", descricao: "Pessoas com acesso ao sistema e seus perfis." },
   { href: "/admin/vinculos", titulo: "Vínculos", descricao: "Quem dá aula e quem coordena em cada curso." },
   { href: "/admin/periodos", titulo: "Períodos letivos", descricao: "Prazos de submissão de cada semestre." },
+  { href: "/acompanhamento", titulo: "Acompanhamento", descricao: "Situação de entrega por curso no período corrente." },
   { href: "/arquivo", titulo: "Arquivo", descricao: "Relatórios aprovados, por ano, semestre e curso." },
 ];
 

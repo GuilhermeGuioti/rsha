@@ -24,7 +24,11 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   }
   if (perfis.includes(Perfil.COORDENADOR)) {
     links.push({ href: "/avaliacao", rotulo: "Fila de avaliação" });
+    links.push({ href: "/acompanhamento", rotulo: "Acompanhamento" });
   }
+  // Secretaria também acompanha (mesmo perfil de acesso de /acompanhamento),
+  // mas segue a mesma regra do /arquivo logo abaixo: sem link na barra,
+  // atalho no hub (ver HomeSecretaria).
   // /arquivo é "todos" na tabela de rotas, mas quem só tem perfil secretaria
   // não tem barra com links de conteúdo — o atalho fica no hub (ver
   // HomeSecretaria), junto dos outros cadastros. Docente e/ou coordenador
