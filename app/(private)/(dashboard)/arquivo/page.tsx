@@ -8,11 +8,14 @@ export default async function ArquivoPage() {
   const sessao = await exigirSessaoPagina();
   const perfis = await obterPerfis(sessao.usuarioId);
 
-  // Secretaria enxerga todos os cursos. Os demais perfis só enxergam os
-  // cursos onde atuam — como docente, como coordenador, ou os dois (união,
-  // pra quem acumula os dois perfis no mesmo curso). "todos" na tabela de
-  // rotas quer dizer "todo usuário autenticado", não "todo curso".
+  // Secretaria enxerga todos os cursos, todos os docentes. Coordenador
+  // enxerga o curso inteiro — é o papel de fiscalização (mesma abrangência
+  // de /acompanhamento e /avaliacao). Docente sem esse chapéu só enxerga o
+  // próprio vínculo: o arquivo não é lugar de ver a submissão do colega.
+  // "todos" na tabela de rotas quer dizer "todo usuário autenticado", não
+  // "todo curso" nem "toda pessoa dentro do curso".
   let cursoIds: number[] | null = null;
+  let cursoIdsCoordenador: Set<number> | null = null;
   if (!perfis.includes(Perfil.SECRETARIA)) {
     const [comoDocente, comoCoordenador] = await Promise.all([
       prisma.vinculoDocenteCurso.findMany({
@@ -25,6 +28,7 @@ export default async function ArquivoPage() {
       }),
     ]);
     cursoIds = [...new Set([...comoDocente, ...comoCoordenador].map((v) => v.cursoId))];
+    cursoIdsCoordenador = new Set(comoCoordenador.map((v) => v.cursoId));
 
     if (cursoIds.length === 0) {
       return (
@@ -53,7 +57,16 @@ export default async function ArquivoPage() {
     }),
   ]);
 
-  if (vinculos.length === 0) {
+  // Dentro dos cursos em escopo, restringe linha a linha: coordenador vê a
+  // turma inteira daquele curso, docente só a própria — mesmo curso pode
+  // aparecer "inteiro" pra quem coordena e "só eu" pra quem só dá aula nele.
+  const vinculosVisiveis = cursoIdsCoordenador
+    ? vinculos.filter(
+        (vinculo) => cursoIdsCoordenador!.has(vinculo.cursoId) || vinculo.docenteId === sessao.usuarioId,
+      )
+    : vinculos;
+
+  if (vinculosVisiveis.length === 0) {
     return <p className="text-[15px] text-tinta-suave">Nenhuma turma cadastrada ainda.</p>;
   }
 
@@ -68,14 +81,14 @@ export default async function ArquivoPage() {
   // avalia o curso usa a mesma tela de avaliação; os demais, a tela de
   // leitura do relatório — a mesma distinção que /avaliacao e /relatorios já
   // fazem (exigirAcessoAoRelatorio cobre os dois casos).
-  const cursosDistintos = [...new Set(vinculos.map((vinculo) => vinculo.cursoId))];
+  const cursosDistintos = [...new Set(vinculosVisiveis.map((vinculo) => vinculo.cursoId))];
   const avaliadorPorCurso = new Map(
     await Promise.all(
       cursosDistintos.map(async (id) => [id, await resolverAvaliadorId(prisma, id)] as const),
     ),
   );
 
-  const linhas: LinhaArquivo[] = vinculos.map((vinculo) => {
+  const linhas: LinhaArquivo[] = vinculosVisiveis.map((vinculo) => {
     const relatorio = relatorioPorChave.get(
       `${vinculo.docenteId}:${vinculo.cursoId}:${vinculo.periodoLetivoId}`,
     );
