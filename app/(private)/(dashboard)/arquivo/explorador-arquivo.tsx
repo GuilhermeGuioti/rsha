@@ -7,7 +7,7 @@ import { CabecalhoAdmin } from "../../../../components/CabecalhoAdmin";
 import { SituacaoPill } from "../../../../components/SituacaoPill";
 import { Pill } from "../../../../components/Pill";
 import { IconeChevron } from "../../../../components/Icones";
-import { formatarHoras } from "../../../../lib/formato";
+import { formatarData, formatarHoras } from "../../../../lib/formato";
 
 export type LinhaArquivo = {
   vinculoId: number;
@@ -101,7 +101,12 @@ export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
   );
 
   const periodoAtual = grupoAtual[0];
-  const totalEntregues = grupoAtual.filter((linha) => linha.relatorioId !== null).length;
+  // Rascunho ainda não saiu das mãos do docente, e devolvido voltou para elas
+  // (a fila chama de "Com o docente") — entregue é o que está com a
+  // coordenação ou já foi aprovado.
+  const totalEntregues = grupoAtual.filter(
+    (linha) => linha.situacao === "AGUARDANDO_AVALIACAO" || linha.situacao === "APROVADO",
+  ).length;
 
   // Um clique só, na própria linha: fecha se já estava aberta, abre e
   // seleciona (filtra o painel) se estava fechada — igual clicar numa pasta.
@@ -234,7 +239,7 @@ export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
                   <>
                     período encerrado em{" "}
                     <span className="font-mono font-medium">
-                      {periodoAtual.encerramentoSubmissao.toLocaleDateString("pt-BR")}
+                      {formatarData(periodoAtual.encerramentoSubmissao)}
                     </span>
                   </>
                 ) : (
@@ -244,62 +249,69 @@ export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
             )}
           </div>
 
-          <div className="grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] gap-4 border-b border-borda px-5 py-2.5 text-[13px] font-medium text-tinta-suave">
-            <span>Docente</span>
-            <span>Estado final</span>
-            <span className="text-right">Horas</span>
-            <span>Aprovado em</span>
-            <span />
-          </div>
-
-          {grupoAtual.length === 0 ? (
-            <p className="px-5 py-8 text-center text-[15px] text-tinta-suave">Nenhum docente vinculado a este curso neste período.</p>
-          ) : (
-            grupoAtual.map((linha, indice) => (
-              <div
-                key={linha.vinculoId}
-                className={`grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] items-center gap-4 px-5 py-3.5 ${
-                  indice < grupoAtual.length - 1 ? "border-b border-borda" : ""
-                }`}
-              >
-                <span className="text-[15px]">{linha.docenteNome}</span>
-                {linha.situacao ? (
-                  <SituacaoPill situacao={linha.situacao} />
-                ) : (
-                  <Pill cor="neutro" forma="circulo-vazado">
-                    Não entregue
-                  </Pill>
-                )}
-                <span className="text-right font-mono text-[15px] font-medium tabular-nums">
-                  {linha.horas !== null ? formatarHoras(linha.horas) : "—"}
-                </span>
-                <span className="font-mono text-[13px] text-tinta-suave">
-                  {linha.aprovadoEm ? linha.aprovadoEm.toLocaleDateString("pt-BR") : "—"}
-                </span>
-                <div className="flex items-center justify-end gap-4">
-                  {linha.relatorioId && (
-                    <Link
-                      href={linha.podeAvaliar ? `/avaliacao/${linha.relatorioId}` : `/relatorios/${linha.relatorioId}`}
-                      className="inline-flex min-h-11 items-center text-[15px] text-azul-interativo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
-                    >
-                      Abrir
-                    </Link>
-                  )}
-                  {/* Só relatório aprovado exporta (RF15) — é a única situação
-                      em que autoria e aprovação da trilha estão completas. */}
-                  {linha.relatorioId && linha.situacao === "APROVADO" && (
-                    <a
-                      href={`/api/relatorios/${linha.relatorioId}/pdf`}
-                      className="inline-flex min-h-11 items-center text-[15px] text-azul-interativo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
-                    >
-                      PDF
-                      <span className="sr-only"> do relatório de {linha.docenteNome}</span>
-                    </a>
-                  )}
-                </div>
+          {/* Mesma saída da Tabela: em tela estreita a grade rola na
+              horizontal em vez de cortar "Abrir" e "PDF" (CLAUDE.md §
+              Interface, 360px). O cabeçalho acima continua quebrando linha. */}
+          <div className="overflow-x-auto">
+            <div className="min-w-[680px]">
+              <div className="grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] gap-4 border-b border-borda px-5 py-2.5 text-[13px] font-medium text-tinta-suave">
+                <span>Docente</span>
+                <span>Estado final</span>
+                <span className="text-right">Horas</span>
+                <span>Aprovado em</span>
+                <span />
               </div>
-            ))
-          )}
+
+              {grupoAtual.length === 0 ? (
+                <p className="px-5 py-8 text-center text-[15px] text-tinta-suave">Nenhum docente vinculado a este curso neste período.</p>
+              ) : (
+                grupoAtual.map((linha, indice) => (
+                  <div
+                    key={linha.vinculoId}
+                    className={`grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] items-center gap-4 px-5 py-3.5 ${
+                      indice < grupoAtual.length - 1 ? "border-b border-borda" : ""
+                    }`}
+                  >
+                    <span className="text-[15px]">{linha.docenteNome}</span>
+                    {linha.situacao ? (
+                      <SituacaoPill situacao={linha.situacao} />
+                    ) : (
+                      <Pill cor="neutro" forma="circulo-vazado">
+                        Não entregue
+                      </Pill>
+                    )}
+                    <span className="text-right font-mono text-[15px] font-medium tabular-nums">
+                      {linha.horas !== null ? formatarHoras(linha.horas) : "—"}
+                    </span>
+                    <span className="font-mono text-[13px] text-tinta-suave">
+                      {linha.aprovadoEm ? formatarData(linha.aprovadoEm) : "—"}
+                    </span>
+                    <div className="flex items-center justify-end gap-4">
+                      {linha.relatorioId && (
+                        <Link
+                          href={linha.podeAvaliar ? `/avaliacao/${linha.relatorioId}` : `/relatorios/${linha.relatorioId}`}
+                          className="inline-flex min-h-11 items-center text-[15px] text-azul-interativo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+                        >
+                          Abrir
+                        </Link>
+                      )}
+                      {/* Só relatório aprovado exporta (RF15) — é a única situação
+                          em que autoria e aprovação da trilha estão completas. */}
+                      {linha.relatorioId && linha.situacao === "APROVADO" && (
+                        <a
+                          href={`/api/relatorios/${linha.relatorioId}/pdf`}
+                          className="inline-flex min-h-11 items-center text-[15px] text-azul-interativo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+                        >
+                          PDF
+                          <span className="sr-only"> do relatório de {linha.docenteNome}</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

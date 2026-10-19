@@ -88,6 +88,18 @@ test("desvincular docente de um curso mantém o perfil DOCENTE se outro vínculo
   expect(await perfisDe(docente.id)).toEqual([Perfil.DOCENTE]);
 });
 
+test("vínculo de docente que já tem relatório no curso e período não pode ser removido", async () => {
+  const { docente, curso, periodo } = await obterAmbiente();
+  await vincularDocente(docente.id, curso.id, periodo.id);
+  await prisma.relatorio.create({ data: { docenteId: docente.id, cursoId: curso.id, periodoLetivoId: periodo.id } });
+  const [vinculo] = await listarVinculosDocente();
+
+  await expect(desvincularDocente(vinculo.id)).rejects.toThrow("o vínculo não pode ser removido");
+
+  expect(await listarVinculosDocente()).toHaveLength(1);
+  expect(await perfisDe(docente.id)).toEqual([Perfil.DOCENTE]);
+});
+
 test("vincular coordenador ao curso cria o vínculo e o perfil COORDENADOR", async () => {
   const { docente: coordenador, curso } = await obterAmbiente();
 

@@ -7,7 +7,7 @@ import { CampoBusca } from "../../../../components/CampoBusca";
 import { AbasFiltro } from "../../../../components/AbasFiltro";
 import { SituacaoPill } from "../../../../components/SituacaoPill";
 import { classeCampoSelect } from "../../../../components/Campo";
-import { formatarHoras } from "../../../../lib/formato";
+import { formatarData, formatarHoras } from "../../../../lib/formato";
 import { useBusca } from "../../../../lib/hooks/useBusca";
 import type { SituacaoRelatorio } from "../../../../generated/prisma/client";
 
@@ -143,9 +143,11 @@ export function ListaAvaliacao({
             : `Nenhum relatório ${ABAS.find((item) => item.valor === aba)!.rotulo.toLowerCase()} nesse período.`}
         </p>
       ) : (
-        <div className="overflow-hidden rounded-md border border-borda bg-superficie">
+        // Mesma saída da Tabela: em tela estreita a grade rola na horizontal
+        // em vez de cortar a coluna "Avaliar" (CLAUDE.md § Interface, 360px).
+        <div className="overflow-x-auto rounded-md border border-borda bg-superficie">
           {grupos.map((grupo) => (
-            <div key={grupo.cursoNome}>
+            <div key={grupo.cursoNome} className="min-w-[640px]">
               <div className="flex items-baseline gap-2.5 border-b border-[#b7dff3] bg-[#e9f6fc] px-5 py-3">
                 <span className="font-serif text-[15px] font-semibold text-azul-interativo">{grupo.cursoNome}</span>
                 <span className="text-[13px] text-tinta-suave">
@@ -182,7 +184,7 @@ export function ListaAvaliacao({
                     {aba === "DEVOLVIDO_PARA_AJUSTE" && <span className="text-[13px] text-tinta-suave">Com o docente</span>}
                     {aba === "APROVADO" && (
                       <span className="font-mono text-[13px] text-tinta-suave">
-                        {item.desde.toLocaleDateString("pt-BR")}
+                        {formatarData(item.desde)}
                       </span>
                     )}
                     <Link

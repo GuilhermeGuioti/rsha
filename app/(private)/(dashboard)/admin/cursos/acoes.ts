@@ -7,6 +7,8 @@ import { Perfil } from "../../../../../generated/prisma/client";
 import { criarCurso, atualizarCurso } from "../../../../../lib/services/cursos";
 import { paraResultadoErro, type Resultado } from "../../../../../lib/tipos";
 
+const SchemaId = z.number().int().positive();
+
 const SchemaCurso = z.object({
   nome: z.string().trim().min(1, "Informe o nome do curso."),
   ativo: z.boolean(),
@@ -32,8 +34,9 @@ export async function acaoAtualizarCurso(
 ): Promise<Resultado<void>> {
   try {
     await exigirPerfil(Perfil.SECRETARIA);
+    const idValidado = SchemaId.parse(id);
     const validado = SchemaCurso.parse(dados);
-    await atualizarCurso(id, validado);
+    await atualizarCurso(idValidado, validado);
     revalidatePath("/admin/cursos");
     return { ok: true, dados: undefined };
   } catch (erro) {

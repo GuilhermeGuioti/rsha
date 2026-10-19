@@ -1,11 +1,15 @@
-import { exigirSessaoPagina } from "../../../../lib/auth/guards";
+import { exigirSessaoPagina, obterPerfis } from "../../../../lib/auth/guards";
 import { prisma } from "../../../../lib/db";
-import { SituacaoRelatorio } from "../../../../generated/prisma/enums";
+import { Perfil, SituacaoRelatorio } from "../../../../generated/prisma/enums";
 import { resolverAvaliadorId } from "../../../../lib/services/workflow";
 import { ListaAvaliacao, type ItemFila } from "./lista-avaliacao";
 
 export default async function AvaliacaoPage() {
   const sessao = await exigirSessaoPagina();
+  const perfis = await obterPerfis(sessao.usuarioId);
+  if (!perfis.includes(Perfil.COORDENADOR)) {
+    throw new Error("Acesso restrito à coordenação.");
+  }
 
   const periodos = await prisma.periodoLetivo.findMany({
     orderBy: [{ ano: "desc" }, { semestre: "desc" }],
@@ -15,12 +19,29 @@ export default async function AvaliacaoPage() {
     return <p className="text-[15px] text-tinta-suave">Nenhum período letivo cadastrado ainda.</p>;
   }
 
+  // O avaliador é o coordenador do curso, independente de quem é o autor
+  // (autoaprovação permitida) — então resolve uma vez por curso que este
+  // usuário coordena, e só os cursos em que ele é o avaliador entram na
+  // consulta (em vez de trazer os relatórios de todos os cursos).
+  const vinculosCoordenador = await prisma.vinculoCoordenadorCurso.findMany({
+    where: { coordenadorId: sessao.usuarioId },
+    select: { cursoId: true },
+  });
+  const cursosAvaliados = (
+    await Promise.all(
+      vinculosCoordenador.map(async ({ cursoId }) =>
+        (await resolverAvaliadorId(prisma, cursoId)) === sessao.usuarioId ? cursoId : null,
+      ),
+    )
+  ).filter((cursoId) => cursoId !== null);
+
   // Traz todos os períodos, não só o mais recente: a avaliação continua
   // depois que a submissão fecha (é o pico que o RNF01 antecipa), e uma
   // pendência de um período anterior não pode sumir da fila só porque um
   // novo período começou. O filtro por período fica por conta do cliente.
-  const relatorios = await prisma.relatorio.findMany({
+  const daFila = await prisma.relatorio.findMany({
     where: {
+      cursoId: { in: cursosAvaliados },
       situacao: {
         in: [
           SituacaoRelatorio.AGUARDANDO_AVALIACAO,
@@ -37,19 +58,6 @@ export default async function AvaliacaoPage() {
     },
     orderBy: { curso: { nome: "asc" } },
   });
-
-  // O avaliador é o coordenador do curso, independente de quem é o autor
-  // (autoaprovação permitida) — então resolve uma vez por curso, não por
-  // relatório.
-  const todosCursoIds = [...new Set(relatorios.map((relatorio) => relatorio.cursoId))];
-  const avaliadorPorCurso = new Map(
-    await Promise.all(
-      todosCursoIds.map(async (cursoId) => [cursoId, await resolverAvaliadorId(prisma, cursoId)] as const),
-    ),
-  );
-  const daFila = relatorios.filter(
-    (relatorio) => avaliadorPorCurso.get(relatorio.cursoId) === sessao.usuarioId,
-  );
 
   // Total de docentes no curso é por período (a turma muda de semestre a
   // semestre), não um número único por curso.

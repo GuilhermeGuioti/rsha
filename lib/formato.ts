@@ -11,8 +11,18 @@ export function codigoRelatorio(ano: number, semestre: number, id: number): stri
   return `REL-${ano}-${semestre}-${String(id).padStart(3, "0")}`;
 }
 
+// Datas ficam em UTC no banco e são convertidas na exibição — sempre para o
+// fuso da instituição, nunca o do processo: na Vercel o servidor roda em UTC,
+// e um prazo às 23:59 de Brasília apareceria como o dia seguinte. Fixar o fuso
+// também faz o HTML do servidor e a hidratação no navegador concordarem.
+const FUSO = "America/Sao_Paulo";
+
+export function formatarData(data: Date): string {
+  return data.toLocaleDateString("pt-BR", { timeZone: FUSO });
+}
+
 export function formatarDataHora(data: Date): string {
-  return data.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  return data.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: FUSO });
 }
 
 // Rótulo de cada dia da semana. Fonte única — a mesma leitura no formulário

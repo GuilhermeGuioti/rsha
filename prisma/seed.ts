@@ -20,12 +20,32 @@ async function darPerfil(usuarioId: number, perfil: Perfil) {
   });
 }
 
+/**
+ * Em produção o login é pelo Entra ID, então a primeira secretaria precisa
+ * ser um e-mail institucional real — vem do ambiente, nunca do código. Fora
+ * de produção é a conta fixa do login falso (o botão de /login entra com ela).
+ */
+function secretariaInicial(): { nome: string; email: string } {
+  if (process.env.NODE_ENV !== "production") {
+    return { nome: "Secretaria Acadêmica", email: "admin@srha.dev" };
+  }
+  const email = process.env.SECRETARIA_INICIAL_EMAIL?.trim().toLowerCase();
+  if (!email) {
+    throw new Error(
+      "Defina SECRETARIA_INICIAL_EMAIL (e, opcionalmente, SECRETARIA_INICIAL_NOME) com a conta institucional de quem vai administrar o sistema.",
+    );
+  }
+  return { nome: process.env.SECRETARIA_INICIAL_NOME?.trim() || "Secretaria Acadêmica", email };
+}
+
 export async function seed() {
+  const inicial = secretariaInicial();
+
   for (const descricao of TIPOS_ATIVIDADE) {
     await prisma.tipoAtividade.upsert({ where: { descricao }, update: {}, create: { descricao } });
   }
 
-  const secretaria = await criarUsuario("Secretaria Acadêmica", "admin@srha.dev");
+  const secretaria = await criarUsuario(inicial.nome, inicial.email);
   await darPerfil(secretaria.id, Perfil.SECRETARIA);
 
   if (process.env.NODE_ENV !== "production") {

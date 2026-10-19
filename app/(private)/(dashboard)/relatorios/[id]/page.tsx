@@ -4,6 +4,7 @@ import { exigirAcessoAoRelatorio } from "../../../../../lib/auth/guards";
 import { prisma } from "../../../../../lib/db";
 import { SituacaoRelatorio, TipoEvento } from "../../../../../generated/prisma/enums";
 import { codigoRelatorio, formatarDataHora } from "../../../../../lib/formato";
+import { prazoDeEntrega } from "../../../../../lib/services/workflow";
 import { SituacaoPill } from "../../../../../components/SituacaoPill";
 import { TrilhaAuditoria } from "../../../../../components/TrilhaAuditoria";
 import { FormularioRelatorio } from "./formulario-relatorio";
@@ -32,11 +33,20 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
   });
 
   const ehAutor = relatorio.docenteId === sessao.usuarioId;
-  const editavel =
-    ehAutor &&
-    (relatorio.situacao === SituacaoRelatorio.RASCUNHO ||
-      relatorio.situacao === SituacaoRelatorio.DEVOLVIDO_PARA_AJUSTE);
   const devolucao = relatorio.eventos.find((evento) => evento.tipo === TipoEvento.DEVOLUCAO);
+  // Mesmo prazo que o serviço aplica ao salvar e enviar: fora dele o
+  // formulário vira leitura, em vez de aceitar edição que o servidor recusaria.
+  const prazo = prazoDeEntrega(
+    relatorio.situacao,
+    relatorio.periodo.encerramentoSubmissao,
+    devolucao?.ocorridoEm ?? null,
+  );
+  const agora = new Date();
+  const dentroDoPrazo = agora >= relatorio.periodo.aberturaSubmissao && agora <= prazo;
+  const aguardaDocente =
+    relatorio.situacao === SituacaoRelatorio.RASCUNHO ||
+    relatorio.situacao === SituacaoRelatorio.DEVOLVIDO_PARA_AJUSTE;
+  const editavel = ehAutor && aguardaDocente && dentroDoPrazo;
 
   return (
     <div className="flex flex-col gap-5">
@@ -62,9 +72,7 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
               </h1>
               <p className="mt-1.5 text-[15px] text-tinta-suave">
                 {relatorio.periodo.semestre}º semestre de {relatorio.periodo.ano} · entrega até{" "}
-                <span className="font-mono font-medium">
-                  {relatorio.periodo.encerramentoSubmissao.toLocaleDateString("pt-BR")}
-                </span>
+                <span className="font-mono font-medium">{formatarDataHora(prazo)}</span>
               </p>
             </div>
             <SituacaoPill situacao={relatorio.situacao} />
@@ -81,6 +89,14 @@ export default async function RelatorioPage({ params }: { params: Promise<{ id: 
                 <span className="font-mono font-medium">{formatarDataHora(devolucao.ocorridoEm)}</span>
               </p>
             </div>
+          )}
+
+          {ehAutor && aguardaDocente && !dentroDoPrazo && (
+            <p className="text-[15px] text-tinta-suave">
+              {agora < relatorio.periodo.aberturaSubmissao
+                ? `A entrega deste relatório abre em ${formatarDataHora(relatorio.periodo.aberturaSubmissao)}.`
+                : `O prazo de entrega encerrou em ${formatarDataHora(prazo)}. O relatório continua disponível para consulta.`}
+            </p>
           )}
 
           <FormularioRelatorio

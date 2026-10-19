@@ -13,6 +13,7 @@ import { AbasFiltro } from "../../../../../components/AbasFiltro";
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeEditar } from "../../../../../components/Icones";
 import { MensagemErro } from "../../../../../components/MensagemErro";
+import { formatarDataHora } from "../../../../../lib/formato";
 import { acaoCriarPeriodo, acaoAtualizarPeriodo } from "./acoes";
 
 type PeriodoLinha = {
@@ -28,10 +29,6 @@ function paraCampoData(iso: string): string {
   const data = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${data.getFullYear()}-${pad(data.getMonth() + 1)}-${pad(data.getDate())}T${pad(data.getHours())}:${pad(data.getMinutes())}`;
-}
-
-function formatarData(iso: string): string {
-  return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
 type SituacaoPeriodo = "AGENDADO" | "ABERTO" | "ENCERRADO";
@@ -144,12 +141,12 @@ export function ListaPeriodos({ periodos }: { periodos: PeriodoLinha[] }) {
           {
             cabecalho: "Abertura",
             classeCelula: "font-mono font-medium tabular-nums text-tinta-suave",
-            render: (periodo) => formatarData(periodo.aberturaSubmissao),
+            render: (periodo) => formatarDataHora(new Date(periodo.aberturaSubmissao)),
           },
           {
             cabecalho: "Encerramento",
             classeCelula: "font-mono font-medium tabular-nums",
-            render: (periodo) => formatarData(periodo.encerramentoSubmissao),
+            render: (periodo) => formatarDataHora(new Date(periodo.encerramentoSubmissao)),
           },
           {
             cabecalho: "Situação",

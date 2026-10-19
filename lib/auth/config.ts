@@ -15,7 +15,7 @@ const providerDev = Credentials({
   name: "Login de desenvolvimento",
   credentials: { email: { label: "E-mail", type: "text" } },
   async authorize(credentials) {
-    const email = typeof credentials?.email === "string" ? credentials.email : undefined;
+    const email = typeof credentials?.email === "string" ? credentials.email.trim().toLowerCase() : undefined;
     if (!email) return null;
     // Não achou de jeito nenhum: nega o acesso. Nunca cria usuário automaticamente.
     const usuario = await prisma.usuario.findUnique({ where: { email, ativo: true } });

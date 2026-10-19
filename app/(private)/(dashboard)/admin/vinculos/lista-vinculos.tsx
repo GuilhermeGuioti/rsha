@@ -109,7 +109,13 @@ export function ListaVinculos({
   function remover(tipoVinculo: Modo, id: number, rotulo: string) {
     if (!window.confirm(`Remover o vínculo de ${rotulo}?`)) return;
     startTransition(async () => {
-      await (tipoVinculo === "docente" ? acaoDesvincularDocente(id) : acaoDesvincularCoordenador(id));
+      const resultado = await (tipoVinculo === "docente" ? acaoDesvincularDocente(id) : acaoDesvincularCoordenador(id));
+      if (!resultado.ok) {
+        // Fora do modal não há onde pendurar MensagemErro — mesmo canal nativo
+        // do confirm acima.
+        window.alert(resultado.erro);
+        return;
+      }
       router.refresh();
     });
   }
@@ -271,7 +277,7 @@ export function ListaVinculos({
         titulo={modo === "docente" ? "Vincular docente a um curso" : "Vincular coordenador a um curso"}
         descricao={
           modo === "coordenador"
-            ? "O coordenador cadastrado primeiro para o curso é quem recebe os relatórios para avaliação."
+            ? "O primeiro coordenador ativo cadastrado para o curso é quem recebe os relatórios para avaliação."
             : undefined
         }
         onFechar={() => setModo(null)}

@@ -21,7 +21,7 @@ Docentes de um centro universitário precisam declarar, a cada semestre, as hora
 | Banco | PostgreSQL gerenciado (Neon ou Supabase) |
 | Acesso a dados | Prisma |
 | Autenticação | Auth.js v5, provider Microsoft Entra ID |
-| Interface | Tailwind + shadcn/ui |
+| Interface | Tailwind, com componentes próprios (sem biblioteca de componentes) |
 | PDF | `@react-pdf/renderer` |
 | Planilha | CSV gerado no servidor |
 | Hospedagem | Vercel |
@@ -216,8 +216,11 @@ model EventoAuditoria {
 
 - **Um relatório por docente, curso e período.** Já garantido pelo `@@unique`.
 - **`cargaHorariaTotal` sempre igual à soma dos itens.** Recalcule dentro da mesma transação que altera itens; nunca deixe o cliente enviar o total.
-- **Relatório aprovado e evento de auditoria não sofrem update nem delete.** Não exponha operação capaz disso em lugar nenhum.
+- **Relatório aprovado e evento de auditoria não sofrem update nem delete.** Não exponha operação capaz disso em lugar nenhum. O próprio banco recusa, por triggers, inclusive alteração nos itens de relatório aprovado.
 - **Inativar, nunca excluir** curso, usuário ou tipo de atividade que já tenha registro vinculado.
+- **Vínculo docente-curso com relatório não pode ser removido** — arquivo e painel partem dos vínculos, e o relatório sumiria da consulta.
+- **Sempre há ao menos uma secretaria ativa** — inativar ou tirar o perfil da última é recusado.
+- **Horas em múltiplos de 0,5** (no máximo 999,5 por item); o total é somado em centésimos.
 
 ---
 
@@ -249,11 +252,14 @@ Nunca altere `situacao` fora dessas funções.
 
 ### Regras do workflow
 
-- **Roteamento automático.** Ao submeter, o avaliador é o coordenador vinculado ao curso do relatório. O docente não escolhe destinatário.
-- **Autoaprovação permitida.** Se o autor for o próprio coordenador do curso, ele mesmo é o avaliador — não existe avaliador alternativo. **Decisão revisada em 2026-08-31: diverge do RF22 original do `rsha-docreq.pdf`**, que descrevia a autoaprovação como proibida (requisito marcado "Essencial") e previa o campo `avaliadorAlternativo` em `Curso`. Sem coordenador vinculado ao curso, bloqueie a submissão com mensagem clara em vez de deixar o relatório órfão.
+- **Roteamento automático.** Ao submeter, o avaliador é o primeiro coordenador **ativo** vinculado ao curso do relatório. Coordenador inativado sai da fila e o próximo ativo assume. O docente não escolhe destinatário.
+- **Autoaprovação permitida.** Se o autor for o próprio coordenador do curso, ele mesmo é o avaliador — não existe avaliador alternativo. **Decisão revisada em 2026-08-31: diverge do RF22 original do `rsha-docreq.pdf`**, que descrevia a autoaprovação como proibida (requisito marcado "Essencial") e previa o campo `avaliadorAlternativo` em `Curso`. Sem coordenador ativo vinculado ao curso, bloqueie a submissão com mensagem clara em vez de deixar o relatório órfão.
+- **Submissão exige ao menos um item** (RF05), validado no servidor.
+- **Rascunho é visível só ao autor e à secretaria** (RF07). A coordenação enxerga o relatório a partir da submissão; qualquer coordenador do curso lê, só o avaliador aprova ou devolve.
 - **Devolução exige justificativa** não vazia.
 - **Sem limite de devoluções.** Cada ciclo gera seu próprio evento.
-- **Submissão fora do prazo do período letivo é bloqueada**, mas consulta a períodos encerrados continua livre.
+- **Submissão fora do prazo do período letivo é bloqueada**, com indicação da data limite, mas consulta a períodos encerrados continua livre. Criar relatório e editar rascunho também só valem dentro da janela do período; a avaliação não tem prazo.
+- **Devolvido ganha prazo extra.** Pode ser corrigido e reenviado até o maior entre o encerramento do período e a última devolução + 7 dias. **Decisão de 2026-10-19**: sem isso, devolução feita depois do encerramento travava o relatório, já que o RF19 só previa o prazo do período.
 
 ---
 
@@ -310,7 +316,7 @@ Do item 1 ao 7 você tem o fluxo principal fechado de ponta a ponta. O que vier 
 - Validação de entrada com **Zod** em toda Server Action, antes de tocar no banco
 - Migrações versionadas com `prisma migrate`, nunca `db push` em produção
 - Credenciais só em variáveis de ambiente, nunca no código
-- Datas em UTC no banco, convertidas na exibição
+- Datas em UTC no banco, convertidas na exibição para o fuso `America/Sao_Paulo`
 
 ---
 
@@ -319,7 +325,7 @@ Do item 1 ao 7 você tem o fluxo principal fechado de ponta a ponta. O que vier 
 Priorize estes, que cobrem onde os erros doem:
 
 - Docente vinculado a dois cursos gera dois relatórios independentes, roteados a coordenadores diferentes
-- Coordenador não consegue aprovar relatório do qual é autor
+- Coordenador consegue aprovar relatório do qual é autor (autoaprovação permitida — ver §5)
 - Coordenador não enxerga relatório de curso que não é dele
 - Submissão fora do prazo é bloqueada
 - Devolução sem justificativa é bloqueada

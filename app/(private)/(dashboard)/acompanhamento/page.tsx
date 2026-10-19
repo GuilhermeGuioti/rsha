@@ -30,8 +30,9 @@ export default async function AcompanhamentoPage() {
   // Secretaria acompanha todos os cursos; coordenador só os que coordena —
   // mesmo recorte de "quem enxerga o quê" já usado no /arquivo. O vínculo de
   // coordenador não é por período, então esse recorte vale pra todos eles.
+  const ehSecretaria = perfis.includes(Perfil.SECRETARIA);
   let cursoIds: number[] | null = null;
-  if (!perfis.includes(Perfil.SECRETARIA)) {
+  if (!ehSecretaria) {
     const vinculosCoordenador = await prisma.vinculoCoordenadorCurso.findMany({
       where: { coordenadorId: sessao.usuarioId },
       select: { cursoId: true },
@@ -118,11 +119,16 @@ export default async function AcompanhamentoPage() {
     const relatorio = relatorioPorChave.get(
       `${vinculo.docenteId}:${vinculo.cursoId}:${vinculo.periodoLetivoId}`,
     );
+    // Rascunho alheio não é visível à coordenação (RF07): o painel conta que
+    // ele existe, mas sem horas nem link para o conteúdo.
+    const conteudoVisivel =
+      relatorio !== undefined &&
+      (relatorio.situacao !== SituacaoRelatorio.RASCUNHO || ehSecretaria || vinculo.docenteId === sessao.usuarioId);
     const docente: DocenteAcompanhamento = {
       docenteId: vinculo.docenteId,
       docenteNome: vinculo.docente.nome,
-      relatorioId: relatorio?.id ?? null,
-      horas: relatorio ? relatorio.cargaHorariaTotal.toNumber() : null,
+      relatorioId: conteudoVisivel ? relatorio.id : null,
+      horas: conteudoVisivel ? relatorio.cargaHorariaTotal.toNumber() : null,
       atualizadoEm: relatorio?.atualizadoEm ?? null,
       podeAvaliar: avaliadorPorCurso.get(vinculo.cursoId) === sessao.usuarioId,
     };

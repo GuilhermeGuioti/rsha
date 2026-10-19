@@ -36,7 +36,14 @@ const SchemaSalvarItens = z.object({
   itens: z.array(
     z.object({
       tipoAtividadeId: z.number().int().positive(),
-      horas: z.number().positive("As horas de cada item precisam ser maiores que zero."),
+      // Granularidade de meia hora, a mesma do campo na tela (step 0,5). O
+      // teto cabe na coluna Decimal(5,2) — acima dele o banco recusaria com
+      // um erro cru em vez desta mensagem.
+      horas: z
+        .number()
+        .positive("As horas de cada item precisam ser maiores que zero.")
+        .max(999.5, "As horas de cada item não podem passar de 999,5.")
+        .multipleOf(0.5, "Informe as horas em múltiplos de meia hora (0,5)."),
       diaSemana: z.enum(DiaSemana),
       horario: z.string().trim().min(1, "Informe o horário da atividade."),
       descricao: z.string().trim().min(1, "Descreva a atividade."),

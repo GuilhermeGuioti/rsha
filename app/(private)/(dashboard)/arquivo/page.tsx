@@ -1,6 +1,6 @@
 import { exigirSessaoPagina, obterPerfis } from "../../../../lib/auth/guards";
 import { prisma } from "../../../../lib/db";
-import { Perfil, TipoEvento } from "../../../../generated/prisma/enums";
+import { Perfil, SituacaoRelatorio, TipoEvento } from "../../../../generated/prisma/enums";
 import { resolverAvaliadorId } from "../../../../lib/services/workflow";
 import { ExploradorArquivo, type LinhaArquivo } from "./explorador-arquivo";
 
@@ -93,6 +93,11 @@ export default async function ArquivoPage() {
       `${vinculo.docenteId}:${vinculo.cursoId}:${vinculo.periodoLetivoId}`,
     );
     const aprovacao = relatorio?.eventos.find((evento) => evento.tipo === TipoEvento.APROVACAO);
+    // Rascunho alheio não é visível à coordenação (RF07): a linha mostra a
+    // situação, mas sem horas nem link para o conteúdo.
+    const conteudoVisivel =
+      relatorio !== undefined &&
+      (relatorio.situacao !== SituacaoRelatorio.RASCUNHO || !cursoIdsCoordenador || vinculo.docenteId === sessao.usuarioId);
 
     return {
       vinculoId: vinculo.id,
@@ -105,9 +110,9 @@ export default async function ArquivoPage() {
       cursoNome: vinculo.curso.nome,
       docenteId: vinculo.docenteId,
       docenteNome: vinculo.docente.nome,
-      relatorioId: relatorio?.id ?? null,
+      relatorioId: conteudoVisivel ? relatorio.id : null,
       situacao: relatorio?.situacao ?? null,
-      horas: relatorio ? relatorio.cargaHorariaTotal.toNumber() : null,
+      horas: conteudoVisivel ? relatorio.cargaHorariaTotal.toNumber() : null,
       aprovadoEm: aprovacao?.ocorridoEm ?? null,
       podeAvaliar: avaliadorPorCurso.get(vinculo.cursoId) === sessao.usuarioId,
     };

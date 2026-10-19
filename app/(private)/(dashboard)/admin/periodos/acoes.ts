@@ -7,6 +7,8 @@ import { Perfil } from "../../../../../generated/prisma/client";
 import { criarPeriodo, atualizarPeriodo } from "../../../../../lib/services/periodos";
 import { paraResultadoErro, type Resultado } from "../../../../../lib/tipos";
 
+const SchemaId = z.number().int().positive();
+
 const SchemaPeriodo = z.object({
   ano: z.number().int().min(2000, "Informe um ano válido."),
   semestre: z.number().int().min(1, "Semestre deve ser 1 ou 2.").max(2, "Semestre deve ser 1 ou 2."),
@@ -36,8 +38,9 @@ export async function acaoAtualizarPeriodo(
 ): Promise<Resultado<void>> {
   try {
     await exigirPerfil(Perfil.SECRETARIA);
+    const idValidado = SchemaId.parse(id);
     const validado = SchemaPeriodo.parse(dados);
-    await atualizarPeriodo(id, validado);
+    await atualizarPeriodo(idValidado, validado);
     revalidatePath("/admin/periodos");
     return { ok: true, dados: undefined };
   } catch (erro) {

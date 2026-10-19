@@ -7,7 +7,7 @@ import { BotaoSecundario } from "../../../../components/BotaoSecundario";
 import { Modal } from "../../../../components/Modal";
 import { Tabela, type ColunaTabela } from "../../../../components/Tabela";
 import { classeCampoSelect } from "../../../../components/Campo";
-import { formatarHoras } from "../../../../lib/formato";
+import { formatarData, formatarHoras } from "../../../../lib/formato";
 
 export type DocenteAcompanhamento = {
   docenteId: number;
@@ -169,7 +169,7 @@ export function PainelAcompanhamento({ grupos }: { grupos: GrupoPeriodo[] }) {
         subtitulo={
           <p className="text-[15px] text-tinta-suave">
             {periodoRotulo} · prazo em{" "}
-            <span className="font-mono font-medium text-tinta">{prazo.toLocaleDateString("pt-BR")}</span>
+            <span className="font-mono font-medium text-tinta">{formatarData(prazo)}</span>
           </p>
         }
         acao={

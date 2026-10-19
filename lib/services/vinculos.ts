@@ -36,7 +36,28 @@ export async function vincularDocente(docenteId: number, cursoId: number, period
 
 export async function desvincularDocente(vinculoId: number): Promise<void> {
   await prisma.$transaction(async (tx) => {
-    const vinculo = await tx.vinculoDocenteCurso.delete({ where: { id: vinculoId } });
+    const vinculo = await tx.vinculoDocenteCurso.findUnique({ where: { id: vinculoId } });
+    if (!vinculo) {
+      throw new Error("Vínculo não encontrado.");
+    }
+    // Arquivo e painel partem dos vínculos: sem ele, o relatório — mesmo
+    // aprovado — sumiria da consulta (RNF09). Mesma regra do RF03 para curso
+    // com relatório: bloqueia com mensagem em vez de excluir.
+    const relatorio = await tx.relatorio.findUnique({
+      where: {
+        docenteId_cursoId_periodoLetivoId: {
+          docenteId: vinculo.docenteId,
+          cursoId: vinculo.cursoId,
+          periodoLetivoId: vinculo.periodoLetivoId,
+        },
+      },
+    });
+    if (relatorio) {
+      throw new Error(
+        "Este docente já começou o relatório deste curso neste período — o vínculo não pode ser removido.",
+      );
+    }
+    await tx.vinculoDocenteCurso.delete({ where: { id: vinculoId } });
     const restam = await tx.vinculoDocenteCurso.count({ where: { docenteId: vinculo.docenteId } });
     await sincronizarPerfil(tx, vinculo.docenteId, Perfil.DOCENTE, restam > 0);
   });

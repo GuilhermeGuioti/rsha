@@ -28,7 +28,7 @@ silêncio custa mais que uma pergunta.
 | Banco | PostgreSQL — **container Docker local no desenvolvimento**; provedor gerenciado a definir para produção |
 | Acesso a dados | Prisma |
 | Autenticação | Auth.js v5 (beta, versão exata fixada), provider Microsoft Entra ID |
-| Interface | Tailwind + shadcn/ui |
+| Interface | Tailwind, com componentes próprios em `components/` (sem biblioteca de componentes) |
 | PDF | `@react-pdf/renderer` |
 | CSV | `papaparse` (`parse` na importação, `unparse` na extração) |
 | Testes | **Jest**, configurado via `next/jest` |
@@ -53,14 +53,11 @@ está instalado. Em dúvida sobre a API de uma biblioteca, leia o que está em
    `Content-Disposition`. Não contorne isso com base64 no cliente.
 
 2. **Duas connection strings desde o primeiro dia**, mesmo que hoje apontem para o
-   mesmo lugar:
-   ```prisma
-   datasource db {
-     provider  = "postgresql"
-     url       = env("DATABASE_URL")   // runtime — em produção, com pooler
-     directUrl = env("DIRECT_URL")     // usada pelo migrate — sempre direta
-   }
-   ```
+   mesmo lugar. No Prisma 7 nenhuma delas fica no `schema.prisma`:
+   - `DATABASE_URL` — runtime, lida em `lib/db.ts` pelo adapter `@prisma/adapter-pg`.
+     Em produção, com pooler.
+   - `DIRECT_URL` — usada pelo `prisma migrate`, em `prisma.config.ts`. Sempre direta.
+
    Em desenvolvimento as duas apontam para o container local e são idênticas. A separação
    existe agora porque **em produção o runtime precisa passar por pooler** — sem isso o
    sistema cai no pico do fechamento de semestre, que é exatamente o RNF01 — e o
@@ -71,7 +68,7 @@ está instalado. Em dúvida sobre a API de uma biblioteca, leia o que está em
    Se uma migration falhar, **nunca** "resolva" apontando `DATABASE_URL` para a conexão
    direta.
 
-6. **Nenhum código conhece o provedor de banco.** Não instale SDK de provedor
+3. **Nenhum código conhece o provedor de banco.** Não instale SDK de provedor
    (`@supabase/supabase-js`, `@neondatabase/serverless` ou equivalente), não use
    autenticação, storage, RLS ou funções de plataforma de ninguém. O acesso ao banco é
    Prisma e só Prisma; a diferença entre ambientes é a variável de ambiente e nada mais.
@@ -81,12 +78,12 @@ está instalado. Em dúvida sobre a API de uma biblioteca, leia o que está em
    requisitos proíbe base de senhas própria — nenhum sistema de auth de provedor entra
    aqui, por mais conveniente que pareça.
 
-3. **Nada de Puppeteer ou Chromium.** Não cabe em função serverless.
+4. **Nada de Puppeteer ou Chromium.** Não cabe em função serverless.
 
-4. **Toda Server Action que altera dado chama `revalidatePath()`.** Sem isso o
+5. **Toda Server Action que altera dado chama `revalidatePath()`.** Sem isso o
    coordenador aprova e a tela continua mostrando "Aguardando Avaliação".
 
-5. **Sem `localStorage` para estado de negócio.** A verdade está no banco.
+6. **Sem `localStorage` para estado de negócio.** A verdade está no banco.
 
 ---
 
@@ -110,6 +107,10 @@ São coisas separadas. Confundi-las é o erro mais provável neste projeto.
    Qualquer aluno com conta institucional passa pela Microsoft; é esta checagem que barra.
 5. **Coloque apenas `usuarioId` no token da sessão.** Perfis e vínculos são carregados
    por requisição, com `cache()` do React para não repetir a query no mesmo render.
+   `ativo` também: usuário inativado pela secretaria perde o acesso na requisição
+   seguinte, não quando a sessão expirar.
+
+E-mail é gravado e comparado em minúsculas — o `@unique` do banco diferencia caixa.
 
 > O passo 5 diverge do que está em `docs/`, que manda colocar vínculos no token.
 > Corrigido de propósito: o token é imutável até o próximo login, e num sistema usado
@@ -143,6 +144,14 @@ exigirPerfil(perfil)
 exigirAcessoAoRelatorio(relatorioId, acao)  // valida vínculo, não só perfil
 ```
 
+Quem enxerga o quê (`exigirAcessoAoRelatorio`):
+
+- **autor** lê sempre e edita enquanto a situação e o prazo permitirem;
+- **rascunho é visível só ao autor e à secretaria** (RF07, quadro 10) — a coordenação
+  enxerga o relatório a partir da primeira submissão;
+- **qualquer coordenador do curso lê**; só o avaliador aprova ou devolve;
+- **secretaria lê tudo** e não edita nem avalia (RF17).
+
 ---
 
 ## Modelo de dados
@@ -168,7 +177,15 @@ Schema completo em `docs/SRHA-especificacao-desenvolvimento.md` §4. Copie de l�
   transação que altera itens. O cliente nunca envia o total.
 - **Relatório aprovado e evento de auditoria não sofrem update nem delete.**
   Não exponha operação capaz disso em lugar nenhum (RNF09, retenção de 5 anos).
+  O próprio Postgres recusa, por triggers (migration `imutabilidade_aprovado_e_auditoria`),
+  que também travam incluir, alterar ou remover item de relatório aprovado.
 - **Inativar, nunca excluir** curso, usuário ou tipo de atividade já referenciado.
+- **Vínculo docente-curso com relatório não pode ser removido.** Arquivo e painel partem
+  dos vínculos — sem ele, o relatório (mesmo aprovado) sumiria da consulta.
+- **Sempre há ao menos uma secretaria ativa.** Inativar ou tirar o perfil da última é
+  recusado — sem ela, ninguém mais cadastra nem reativa.
+- **Horas em múltiplos de 0,5**, no máximo 999,5 por item (zod da action, igual ao
+  `step` do campo). O total é somado em centésimos no serviço.
 
 ---
 
@@ -201,16 +218,27 @@ Cada função, dentro de **uma transação**:
 
 ### Regras do workflow
 
-- **Roteamento automático.** O avaliador é o coordenador vinculado ao curso do relatório.
-  O docente não escolhe destinatário.
+- **Roteamento automático.** O avaliador é o primeiro coordenador **ativo** vinculado ao
+  curso do relatório (ordem de cadastro do vínculo). Coordenador inativado sai da fila e o
+  próximo ativo assume. O docente não escolhe destinatário.
 - **Autoaprovação permitida, de propósito.** Se o autor for o próprio coordenador do
   curso, ele mesmo é o avaliador — não existe mais avaliador alternativo (decisão
   revisada; diverge do RF22 original do `docs/rsha-docreq.pdf`, que marcava a
   autoaprovação como proibida e "Essencial"). **Sem coordenador vinculado ao curso,
-  bloqueie a submissão** com mensagem clara, em vez de deixar o relatório órfão.
+  bloqueie a submissão** com mensagem clara, em vez de deixar o relatório órfão. O mesmo
+  vale quando nenhum coordenador do curso está ativo.
+- **Submissão exige ao menos um item** (RF05) — no serviço, não só no botão da tela.
 - **Devolução exige justificativa** não vazia.
 - **Sem limite de devoluções.** Cada ciclo gera seu próprio evento.
-- **Submissão fora do prazo é bloqueada**; consulta a período encerrado continua livre.
+- **Prazo de entrega.** Criar relatório, editar rascunho e submeter só valem entre
+  `aberturaSubmissao` e `encerramentoSubmissao`; a mensagem de bloqueio indica a data
+  limite (RF19). Consulta a período encerrado continua livre, e a avaliação (aprovar,
+  devolver) não tem prazo.
+- **Devolvido ganha prazo extra.** Pode ser corrigido e reenviado até o maior entre o
+  encerramento do período e a última devolução + 7 dias (`DIAS_PRAZO_APOS_DEVOLUCAO` e
+  `prazoDeEntrega` em `lib/services/workflow.ts`). Sem isso, devolução depois do
+  encerramento travava o relatório. Decisão de 2026-10-19 — o RF19 original só fala do
+  prazo do período. A home do docente lista esses devolvidos de períodos encerrados.
 
 ---
 
@@ -263,7 +291,8 @@ chamada + revalidação.
 `/` não é uma tela única — é um roteador por perfil (`app/(private)/(dashboard)/page.tsx`),
 porque quem não é docente não tem relatório nenhum pra ver ali:
 
-- **docente** → `HomeDocente`: cursos do período aberto e situação do relatório de cada um.
+- **docente** → `HomeDocente`: cursos do período aberto e situação do relatório de cada um,
+  mais os devolvidos de períodos encerrados que ainda estão no prazo extra.
   Prioridade sobre os outros perfis por ser o caso mais comum (302 vs. 17 coordenadores) —
   quem acumula docente + coordenador no mesmo curso cai aqui e chega na fila pelo nav.
 - **coordenador** (sem ser também docente) → `redirect("/avaliacao")`: a fila é trabalho
@@ -352,6 +381,11 @@ DIRECT_URL="postgresql://srha:srha@localhost:5432/srha"
 
 Iguais em desenvolvimento, diferentes em produção. Ver regra 2.
 
+O seed cria a secretaria inicial. Fora de produção é `admin@srha.dev` (a conta do login
+falso). Em produção — seed rodado com `NODE_ENV=production` — vem de
+`SECRETARIA_INICIAL_EMAIL` (e, opcional, `SECRETARIA_INICIAL_NOME`), porque o login é
+pelo Entra ID e precisa ser uma conta institucional real; sem a variável, o seed falha.
+
 O volume nomeado preserva os dados entre `docker compose down` e `up`. Para começar do
 zero, `docker compose down -v` e rode migrate e seed de novo — o seed é idempotente.
 
@@ -376,7 +410,8 @@ anos do RNF09.
 - **Zod em toda Server Action**, antes de tocar no banco
 - Migrações com `prisma migrate`, **nunca `db push` em produção**
 - Credenciais só em variável de ambiente, nunca no código
-- Datas em UTC no banco, convertidas na exibição
+- Datas em UTC no banco, convertidas na exibição — sempre para `America/Sao_Paulo`, pelos
+  helpers de `lib/formato.ts`. Nunca `toLocale*` direto: na Vercel o servidor roda em UTC
 - Commits pequenos, um assunto por commit, mensagem em português no imperativo
 - **Sempre modularizar componentes.** JSX que se repete em duas ou mais telas vira
   componente compartilhado em `components/` assim que aparecer pela segunda vez —
@@ -389,11 +424,11 @@ anos do RNF09.
 
 ## Interface
 
-**O layout já existe em `docs/layout/`. Use-o.** Não redesenhe, não invente componente
+**O layout já existe em `docs/rsha-layout/` (`SRHA Telas.dc.html`). Use-o.** Não redesenhe, não invente componente
 novo quando já houver equivalente, não troque paleta nem tipografia. Se faltar algo,
 pergunte antes de criar.
 
-Brief completo em `docs/SRHA-brief-design.md`. O que não pode ser violado:
+Brief completo em `docs/rsha-layout/uploads/SRHA-brief-design.md`. O que não pode ser violado:
 
 - Responsivo real até **360px** — o fluxo inteiro precisa funcionar no celular
 - Alvos de toque de no mínimo **44px**

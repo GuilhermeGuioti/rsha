@@ -7,9 +7,14 @@ import { Perfil } from "../../../../../generated/prisma/client";
 import { criarUsuario, atualizarUsuario } from "../../../../../lib/services/usuarios";
 import { paraResultadoErro, type Resultado } from "../../../../../lib/tipos";
 
+const SchemaId = z.number().int().positive();
+
 const SchemaUsuario = z.object({
   nome: z.string().trim().min(1, "Informe o nome."),
-  email: z.string().trim().pipe(z.email("Informe um e-mail válido.")),
+  // Minúsculo antes de gravar: o @unique do banco diferencia caixa, e o mesmo
+  // endereço digitado de dois jeitos viraria duas pessoas — além de não casar
+  // com o e-mail que o login devolve.
+  email: z.string().trim().toLowerCase().pipe(z.email("Informe um e-mail válido.")),
   ativo: z.boolean(),
   secretaria: z.boolean(),
 });
@@ -36,8 +41,9 @@ export async function acaoAtualizarUsuario(
 ): Promise<Resultado<void>> {
   try {
     await exigirPerfil(Perfil.SECRETARIA);
+    const idValidado = SchemaId.parse(id);
     const validado = SchemaUsuario.parse(dados);
-    await atualizarUsuario(id, validado);
+    await atualizarUsuario(idValidado, validado);
     revalidatePath("/admin/usuarios");
     return { ok: true, dados: undefined };
   } catch (erro) {

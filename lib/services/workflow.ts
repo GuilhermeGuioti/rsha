@@ -1,20 +1,83 @@
 import { prisma } from "../db";
 import { Prisma, SituacaoRelatorio, TipoEvento } from "../../generated/prisma/client";
+import { formatarDataHora } from "../formato";
 
 /**
- * Roteamento automático: o avaliador é o coordenador vinculado ao curso —
- * mesmo quando o autor do relatório é esse coordenador. Autoaprovação é
- * permitida de propósito. Sem coordenador vinculado, não há avaliador.
+ * Roteamento automático: o avaliador é o primeiro coordenador ativo vinculado
+ * ao curso — mesmo quando o autor do relatório é esse coordenador.
+ * Autoaprovação é permitida de propósito. Coordenador inativado não entra
+ * mais no sistema, então o próximo ativo assume a fila do curso. Sem nenhum
+ * coordenador ativo, não há avaliador.
  */
 export async function resolverAvaliadorId(
   cliente: Prisma.TransactionClient,
   cursoId: number,
 ): Promise<number | null> {
   const vinculo = await cliente.vinculoCoordenadorCurso.findFirst({
-    where: { cursoId },
+    where: { cursoId, coordenador: { ativo: true } },
     orderBy: { id: "asc" },
   });
   return vinculo?.coordenadorId ?? null;
+}
+
+// Devolvido ganha este prazo, contado da devolução, para corrigir e reenviar.
+export const DIAS_PRAZO_APOS_DEVOLUCAO = 7;
+
+/**
+ * Até quando o docente pode mexer no relatório e enviá-lo (RF19). Rascunho
+ * segue o encerramento do período. Devolvido vai até o maior entre o
+ * encerramento e a última devolução + DIAS_PRAZO_APOS_DEVOLUCAO: a avaliação
+ * continua depois que a submissão fecha, e uma devolução no último dia (ou
+ * depois dele) não pode deixar o docente sem tempo de corrigir.
+ */
+export function prazoDeEntrega(
+  situacao: SituacaoRelatorio,
+  encerramentoSubmissao: Date,
+  ultimaDevolucao: Date | null,
+): Date {
+  if (situacao !== SituacaoRelatorio.DEVOLVIDO_PARA_AJUSTE || !ultimaDevolucao) {
+    return encerramentoSubmissao;
+  }
+  const prazoDevolucao = new Date(ultimaDevolucao.getTime() + DIAS_PRAZO_APOS_DEVOLUCAO * 86_400_000);
+  return prazoDevolucao > encerramentoSubmissao ? prazoDevolucao : encerramentoSubmissao;
+}
+
+/**
+ * Barra escrita do docente fora da janela de entrega: criar, editar e enviar
+ * só valem entre a abertura do período e o prazo de entrega. Consulta
+ * continua livre. O RF19 pede a indicação da data limite junto do bloqueio.
+ */
+export async function exigirDentroDoPrazo(
+  cliente: Prisma.TransactionClient,
+  relatorio: {
+    id: number;
+    situacao: SituacaoRelatorio;
+    periodo: { aberturaSubmissao: Date; encerramentoSubmissao: Date };
+  },
+): Promise<void> {
+  const devolucao =
+    relatorio.situacao === SituacaoRelatorio.DEVOLVIDO_PARA_AJUSTE
+      ? await cliente.eventoAuditoria.findFirst({
+          where: { relatorioId: relatorio.id, tipo: TipoEvento.DEVOLUCAO },
+          orderBy: { ocorridoEm: "desc" },
+        })
+      : null;
+  const prazo = prazoDeEntrega(
+    relatorio.situacao,
+    relatorio.periodo.encerramentoSubmissao,
+    devolucao?.ocorridoEm ?? null,
+  );
+  exigirJanelaAberta(relatorio.periodo.aberturaSubmissao, prazo);
+}
+
+function exigirJanelaAberta(abertura: Date, prazo: Date): void {
+  const agora = new Date();
+  if (agora < abertura) {
+    throw new Error(`A entrega deste relatório abre em ${formatarDataHora(abertura)}.`);
+  }
+  if (agora > prazo) {
+    throw new Error(`O prazo de entrega deste relatório encerrou em ${formatarDataHora(prazo)}.`);
+  }
 }
 
 /**
@@ -29,6 +92,7 @@ export async function obterOuCriarRascunho(
 ): Promise<number> {
   const vinculo = await prisma.vinculoDocenteCurso.findUnique({
     where: { docenteId_cursoId_periodoLetivoId: { docenteId, cursoId, periodoLetivoId } },
+    include: { periodo: true },
   });
   if (!vinculo) {
     throw new Error("Docente não está vinculado a este curso neste período.");
@@ -43,6 +107,9 @@ export async function obterOuCriarRascunho(
     if (existente) {
       return existente.id;
     }
+    // Abrir relatório já existente é consulta e vale sempre; criar é escrita
+    // e só vale dentro da janela do período.
+    exigirJanelaAberta(vinculo.periodo.aberturaSubmissao, vinculo.periodo.encerramentoSubmissao);
     const criado = await tx.relatorio.create({ data: { docenteId, cursoId, periodoLetivoId } });
     await tx.eventoAuditoria.create({
       data: { relatorioId: criado.id, tipo: TipoEvento.CRIACAO, usuarioId: docenteId },
@@ -69,15 +136,19 @@ export async function submeter(relatorioId: number, usuarioId: number): Promise<
     ) {
       throw new Error(`Não é possível submeter um relatório em situação ${relatorio.situacao}.`);
     }
-    const agora = new Date();
-    if (agora < relatorio.periodo.aberturaSubmissao || agora > relatorio.periodo.encerramentoSubmissao) {
-      throw new Error("Fora do prazo de submissão deste período letivo.");
+    await exigirDentroDoPrazo(tx, relatorio);
+
+    // RF05: relatório sem item não é submetido — a tela já desabilita o
+    // botão, mas a action é chamável direto.
+    const totalItens = await tx.itemAtividade.count({ where: { relatorioId } });
+    if (totalItens === 0) {
+      throw new Error("Adicione ao menos um item de atividade antes de enviar o relatório.");
     }
 
     const avaliadorId = await resolverAvaliadorId(tx, relatorio.cursoId);
     if (avaliadorId === null) {
       throw new Error(
-        "Nenhum coordenador vinculado a este curso — a secretaria precisa cadastrar um antes da submissão.",
+        "Nenhum coordenador ativo vinculado a este curso — a secretaria precisa cadastrar um antes da submissão.",
       );
     }
 

@@ -35,12 +35,44 @@ test("marcar secretaria ao criar grava UsuarioPerfil(SECRETARIA)", async () => {
 });
 
 test("desmarcar secretaria ao atualizar remove o UsuarioPerfil", async () => {
+  // Outra secretaria ativa: tirar o perfil da única é bloqueado (teste abaixo).
+  await criarUsuario({ nome: "Ana", email: "ana@srha.dev", ativo: true, secretaria: true });
   const id = await criarUsuario({ nome: "Paulo", email: "paulo@srha.dev", ativo: true, secretaria: true });
 
   await atualizarUsuario(id, { nome: "Paulo", email: "paulo@srha.dev", ativo: true, secretaria: false });
 
-  const usuarios = await listarUsuarios();
-  expect(usuarios[0].perfis).toHaveLength(0);
+  const paulo = (await listarUsuarios()).find((usuario) => usuario.id === id)!;
+  expect(paulo.perfis).toHaveLength(0);
+});
+
+test("a última secretaria ativa não pode ser inativada nem perder o perfil", async () => {
+  const id = await criarUsuario({ nome: "Paulo", email: "paulo@srha.dev", ativo: true, secretaria: true });
+
+  await expect(
+    atualizarUsuario(id, { nome: "Paulo", email: "paulo@srha.dev", ativo: false, secretaria: true }),
+  ).rejects.toThrow("ao menos uma pessoa ativa na secretaria");
+  await expect(
+    atualizarUsuario(id, { nome: "Paulo", email: "paulo@srha.dev", ativo: true, secretaria: false }),
+  ).rejects.toThrow("ao menos uma pessoa ativa na secretaria");
+
+  // A transação desfaz tudo: continua ativo e com o perfil.
+  const [paulo] = await listarUsuarios();
+  expect(paulo.ativo).toBe(true);
+  expect(paulo.perfis.map((perfil) => perfil.perfil)).toEqual([Perfil.SECRETARIA]);
+
+  // Editar o resto da ficha continua livre.
+  await atualizarUsuario(id, { nome: "Paulo Tavares", email: "paulo@srha.dev", ativo: true, secretaria: true });
+  expect((await listarUsuarios())[0].nome).toBe("Paulo Tavares");
+});
+
+test("com outra secretaria ativa, uma pode ser inativada", async () => {
+  await criarUsuario({ nome: "Ana", email: "ana@srha.dev", ativo: true, secretaria: true });
+  const id = await criarUsuario({ nome: "Paulo", email: "paulo@srha.dev", ativo: true, secretaria: true });
+
+  await atualizarUsuario(id, { nome: "Paulo", email: "paulo@srha.dev", ativo: false, secretaria: true });
+
+  const paulo = (await listarUsuarios()).find((usuario) => usuario.id === id)!;
+  expect(paulo.ativo).toBe(false);
 });
 
 test("marcar secretaria duas vezes não duplica o perfil", async () => {
