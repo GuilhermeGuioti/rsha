@@ -179,6 +179,9 @@ Schema completo em `docs/SRHA-especificacao-desenvolvimento.md` §4. Copie de l�
   O próprio Postgres recusa, por triggers (migration `imutabilidade_aprovado_e_auditoria`),
   que também travam incluir, alterar ou remover item de relatório aprovado.
 - **Inativar, nunca excluir** curso, usuário ou tipo de atividade já referenciado.
+- **Renomear tipo de atividade é livre**, mesmo usado em relatório aprovado — o item guarda
+  só o `tipoAtividadeId`, então o nome novo aparece também nos aprovados. Aceito de
+  propósito (decisão de 2026-10-22); não bloqueie nem copie o nome para o item.
 - **Vínculo docente-curso com relatório não pode ser removido.** Arquivo e painel partem
   dos vínculos — sem ele, o relatório (mesmo aprovado) sumiria da consulta.
 - **Sempre há ao menos uma secretaria ativa.** Inativar ou tirar o perfil da última é
@@ -286,7 +289,11 @@ chamada + revalidação.
 | `/admin/vinculos` | secretaria | Vínculos docente-curso e coordenador-curso — os dois lados da relação |
 | `/admin/periodos` | secretaria | Períodos letivos e prazos |
 | `/admin/tipos-atividade` | secretaria | Tipos de atividade dos itens do relatório (RF03) — cadastrar, alterar, inativar |
-| `/admin/auditoria/[id]` | secretaria | Trilha completa de um relatório |
+
+Não existe tela própria de auditoria. A secretaria consulta a trilha de qualquer relatório
+(RF17, UC11) em `/relatorios/[id]`, onde ela já é coluna permanente — a rota
+`/admin/auditoria/[id]` da especificação original foi descartada em 2026-10-22 por
+repetir os mesmos dados.
 
 `/` não é uma tela única — é um roteador por perfil (`app/(private)/(dashboard)/page.tsx`),
 porque quem não é docente não tem relatório nenhum pra ver ali:
@@ -464,10 +471,16 @@ Brief completo em `docs/rsha-layout/uploads/SRHA-brief-design.md`. O que não po
 Do 1 ao 7 o fluxo principal está fechado ponta a ponta. O que vier depois é melhoria,
 não buraco.
 
-**Fora da versão inicial: notificações por e-mail (RF13)** — aviso de relatório recebido
-para avaliação, devolvido, aprovado e de prazo perto do fim. Decisão de 2026-10-22; o
-RF13 do `docs/rsha-docreq.pdf` é "Desejável". Não implemente envio de e-mail nem lembrete
-de prazo.
+**Fora da versão inicial** (decisões de 2026-10-22 — não implemente):
+
+- **Notificações por e-mail (RF13)** — aviso de relatório recebido para avaliação,
+  devolvido, aprovado e de prazo perto do fim. O RF13 do `docs/rsha-docreq.pdf` é
+  "Desejável".
+- **Expiração de sessão por inatividade** (parte do RNF07) — fica o padrão do Auth.js,
+  30 dias sem uso. Diverge do RNF07, marcado "Essencial"; o resto dele (canal cifrado,
+  acesso por perfil, LGPD) continua valendo.
+- **Reuso do relatório do período anterior (RF20)** — importar os itens do aprovado no
+  período anterior como base do novo. O RF20 é "Desejável".
 
 **Um passo por vez.** Não adiante etapa. Ao terminar um passo, pare e relate o que foi
 feito e como verificar.
