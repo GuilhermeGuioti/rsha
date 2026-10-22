@@ -4,10 +4,14 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { SituacaoRelatorio } from "../../../../generated/prisma/client";
 import { CabecalhoAdmin } from "../../../../components/CabecalhoAdmin";
+import { CampoBusca } from "../../../../components/CampoBusca";
+import { AbasFiltro } from "../../../../components/AbasFiltro";
+import { classeCampoSelect } from "../../../../components/Campo";
 import { SituacaoPill } from "../../../../components/SituacaoPill";
 import { Pill } from "../../../../components/Pill";
 import { IconeChevron } from "../../../../components/Icones";
 import { formatarData, formatarHoras } from "../../../../lib/formato";
+import { useBusca } from "../../../../lib/hooks/useBusca";
 
 export type LinhaArquivo = {
   vinculoId: number;
@@ -23,9 +27,22 @@ export type LinhaArquivo = {
   relatorioId: number | null;
   situacao: SituacaoRelatorio | null;
   horas: number | null;
+  tipoAtividadeIds: number[];
   aprovadoEm: Date | null;
   podeAvaliar: boolean;
 };
+
+// "nao-entregue" é a linha sem relatório — vínculo sem linha em Relatorio.
+type AbaSituacao = "todos" | "nao-entregue" | SituacaoRelatorio;
+
+const ABAS_SITUACAO: { valor: AbaSituacao; rotulo: string }[] = [
+  { valor: "todos", rotulo: "Todos" },
+  { valor: "nao-entregue", rotulo: "Não entregues" },
+  { valor: "RASCUNHO", rotulo: "Rascunhos" },
+  { valor: "AGUARDANDO_AVALIACAO", rotulo: "Aguardando" },
+  { valor: "DEVOLVIDO_PARA_AJUSTE", rotulo: "Devolvidos" },
+  { valor: "APROVADO", rotulo: "Aprovados" },
+];
 
 type Selecao = { ano: number; semestre: number; cursoId: number };
 
@@ -49,8 +66,19 @@ function chaveSemestre(ano: number, semestre: number): string {
   return `${ano}:${semestre}`;
 }
 
-export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
+export function ExploradorArquivo({
+  linhas,
+  tipos,
+}: {
+  linhas: LinhaArquivo[];
+  tipos: { id: number; descricao: string }[];
+}) {
   const [selecao, setSelecao] = useState<Selecao>(() => primeiraSelecao(linhas));
+  // Os filtros somam à seleção da árvore (RF16) e continuam valendo ao
+  // trocar de curso ou período.
+  const busca = useBusca();
+  const [tipoId, setTipoId] = useState<number | "todos">("todos");
+  const [aba, setAba] = useState<AbaSituacao>("todos");
   // Expandir/recolher é independente de selecionar — a árvore é navegável
   // como pasta (abre vários ramos ao mesmo tempo), mesmo que o filtro
   // aplicado no painel seja sempre um único ano/semestre/curso.
@@ -98,6 +126,30 @@ export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
         )
         .sort((a, b) => a.docenteNome.localeCompare(b.docenteNome, "pt-BR")),
     [linhas, selecao],
+  );
+
+  // Contagem de cada aba já com busca e tipo aplicados — o número é o que
+  // aparece ao clicar nela.
+  const filtradoSemAba = useMemo(
+    () =>
+      grupoAtual.filter(
+        (linha) =>
+          linha.docenteNome.toLowerCase().includes(busca.normalizado) &&
+          (tipoId === "todos" || linha.tipoAtividadeIds.includes(tipoId)),
+      ),
+    [grupoAtual, busca.normalizado, tipoId],
+  );
+  const contagens = useMemo(() => {
+    const porAba = new Map<AbaSituacao, number>([["todos", filtradoSemAba.length]]);
+    for (const linha of filtradoSemAba) {
+      const situacao = linha.situacao ?? "nao-entregue";
+      porAba.set(situacao, (porAba.get(situacao) ?? 0) + 1);
+    }
+    return porAba;
+  }, [filtradoSemAba]);
+  const visiveis = useMemo(
+    () => (aba === "todos" ? filtradoSemAba : filtradoSemAba.filter((linha) => (linha.situacao ?? "nao-entregue") === aba)),
+    [filtradoSemAba, aba],
   );
 
   const periodoAtual = grupoAtual[0];
@@ -157,6 +209,37 @@ export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
           <p className="text-[15px] text-tinta-suave">Ano › Semestre › Curso. Parece pasta, é filtro.</p>
         }
       />
+
+      <div className="flex flex-wrap gap-2">
+        <CampoBusca
+          id="busca-arquivo"
+          rotuloAcessivel="Buscar por nome do docente"
+          placeholder="Buscar por docente…"
+          valor={busca.valor}
+          onChange={busca.definir}
+        />
+        <label htmlFor="filtro-tipo-arquivo" className="sr-only">
+          Filtrar por tipo de atividade
+        </label>
+        <select
+          id="filtro-tipo-arquivo"
+          value={tipoId}
+          onChange={(evento) => setTipoId(evento.target.value === "todos" ? "todos" : Number(evento.target.value))}
+          className={`${classeCampoSelect} min-h-10`}
+        >
+          <option value="todos">Todos os tipos de atividade</option>
+          {tipos.map((tipo) => (
+            <option key={tipo.id} value={tipo.id}>
+              {tipo.descricao}
+            </option>
+          ))}
+        </select>
+        <AbasFiltro
+          aba={aba}
+          onMudar={setAba}
+          opcoes={ABAS_SITUACAO.map((item) => ({ ...item, contagem: contagens.get(item.valor) ?? 0 }))}
+        />
+      </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[300px_1fr]">
         <nav aria-label="Navegação do arquivo" className="overflow-hidden rounded-md border border-borda bg-superficie">
@@ -262,14 +345,11 @@ export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
                 <span />
               </div>
 
-              {grupoAtual.length === 0 ? (
-                <p className="px-5 py-8 text-center text-[15px] text-tinta-suave">Nenhum docente vinculado a este curso neste período.</p>
-              ) : (
-                grupoAtual.map((linha, indice) => (
+              {visiveis.map((linha, indice) => (
                   <div
                     key={linha.vinculoId}
                     className={`grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] items-center gap-4 px-5 py-3.5 ${
-                      indice < grupoAtual.length - 1 ? "border-b border-borda" : ""
+                      indice < visiveis.length - 1 ? "border-b border-borda" : ""
                     }`}
                   >
                     <span className="text-[15px]">{linha.docenteNome}</span>
@@ -308,10 +388,19 @@ export function ExploradorArquivo({ linhas }: { linhas: LinhaArquivo[] }) {
                       )}
                     </div>
                   </div>
-                ))
-              )}
+                ))}
             </div>
           </div>
+
+          {/* Fora da grade: dentro dela a frase ficaria cortada pela
+              rolagem horizontal em 360px. */}
+          {visiveis.length === 0 && (
+            <p className="px-5 py-8 text-center text-[15px] text-tinta-suave">
+              {grupoAtual.length === 0
+                ? "Nenhum docente vinculado a este curso neste período."
+                : "Nenhum docente encontrado com esses filtros."}
+            </p>
+          )}
         </div>
       </div>
     </div>

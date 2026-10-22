@@ -46,14 +46,24 @@ export default async function ArquivoPage() {
   // O vínculo docente-curso-período é quem define a "turma esperada"; o
   // relatório, quando existe, preenche a linha — quando não existe, a linha
   // aparece como "não entregue".
-  const [vinculos, relatorios] = await Promise.all([
+  const [vinculos, relatorios, tipos] = await Promise.all([
     prisma.vinculoDocenteCurso.findMany({
       where: filtroCurso,
       include: { curso: true, periodo: true, docente: true },
     }),
     prisma.relatorio.findMany({
       where: filtroCurso,
-      include: { eventos: { orderBy: { ocorridoEm: "desc" } } },
+      include: {
+        eventos: { orderBy: { ocorridoEm: "desc" } },
+        itens: { select: { tipoAtividadeId: true } },
+      },
+    }),
+    // Tipo inativado continua no filtro enquanto houver item dele — é o
+    // arquivo de períodos passados, quando o tipo ainda valia.
+    prisma.tipoAtividade.findMany({
+      where: { OR: [{ ativo: true }, { itens: { some: {} } }] },
+      select: { id: true, descricao: true },
+      orderBy: { descricao: "asc" },
     }),
   ]);
 
@@ -113,10 +123,13 @@ export default async function ArquivoPage() {
       relatorioId: conteudoVisivel ? relatorio.id : null,
       situacao: relatorio?.situacao ?? null,
       horas: conteudoVisivel ? relatorio.cargaHorariaTotal.toNumber() : null,
+      // Pelo mesmo motivo, rascunho alheio não entra no filtro por tipo —
+      // casar com ele revelaria o que o docente está declarando.
+      tipoAtividadeIds: conteudoVisivel ? [...new Set(relatorio.itens.map((item) => item.tipoAtividadeId))] : [],
       aprovadoEm: aprovacao?.ocorridoEm ?? null,
       podeAvaliar: avaliadorPorCurso.get(vinculo.cursoId) === sessao.usuarioId,
     };
   });
 
-  return <ExploradorArquivo linhas={linhas} />;
+  return <ExploradorArquivo linhas={linhas} tipos={tipos} />;
 }
