@@ -1,7 +1,7 @@
 import { exigirSessaoPagina, obterPerfis } from "../../../../lib/auth/guards";
 import { prisma } from "../../../../lib/db";
 import { Perfil, SituacaoRelatorio, TipoEvento } from "../../../../generated/prisma/enums";
-import { resolverAvaliadorId } from "../../../../lib/services/workflow";
+import { estaComODocente, resolverAvaliadorId } from "../../../../lib/services/workflow";
 import { ExploradorArquivo, type LinhaArquivo } from "./explorador-arquivo";
 
 export default async function ArquivoPage() {
@@ -127,7 +127,12 @@ export default async function ArquivoPage() {
       // casar com ele revelaria o que o docente está declarando.
       tipoAtividadeIds: conteudoVisivel ? [...new Set(relatorio.itens.map((item) => item.tipoAtividadeId))] : [],
       aprovadoEm: aprovacao?.ocorridoEm ?? null,
-      podeAvaliar: avaliadorPorCurso.get(vinculo.cursoId) === sessao.usuarioId,
+      // O próprio relatório que ainda está com o docente (rascunho, devolvido)
+      // abre no formulário mesmo para quem avalia o curso — na tela de
+      // avaliação ele seria só leitura, sem como continuar preenchendo.
+      podeAvaliar:
+        avaliadorPorCurso.get(vinculo.cursoId) === sessao.usuarioId &&
+        !(vinculo.docenteId === sessao.usuarioId && estaComODocente(relatorio?.situacao)),
     };
   });
 

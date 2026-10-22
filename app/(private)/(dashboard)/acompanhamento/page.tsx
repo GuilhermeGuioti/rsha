@@ -1,7 +1,7 @@
 import { exigirSessaoPagina, obterPerfis } from "../../../../lib/auth/guards";
 import { prisma } from "../../../../lib/db";
 import { Perfil, SituacaoRelatorio } from "../../../../generated/prisma/enums";
-import { resolverAvaliadorId } from "../../../../lib/services/workflow";
+import { estaComODocente, resolverAvaliadorId } from "../../../../lib/services/workflow";
 import {
   PainelAcompanhamento,
   type DocenteAcompanhamento,
@@ -130,7 +130,11 @@ export default async function AcompanhamentoPage() {
       relatorioId: conteudoVisivel ? relatorio.id : null,
       horas: conteudoVisivel ? relatorio.cargaHorariaTotal.toNumber() : null,
       atualizadoEm: relatorio?.atualizadoEm ?? null,
-      podeAvaliar: avaliadorPorCurso.get(vinculo.cursoId) === sessao.usuarioId,
+      // Mesma regra do /arquivo: o próprio relatório que ainda está com o
+      // docente abre no formulário, não na tela de avaliação (só leitura).
+      podeAvaliar:
+        avaliadorPorCurso.get(vinculo.cursoId) === sessao.usuarioId &&
+        !(vinculo.docenteId === sessao.usuarioId && estaComODocente(relatorio?.situacao)),
     };
 
     switch (relatorio?.situacao) {

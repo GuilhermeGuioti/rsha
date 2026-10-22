@@ -31,6 +31,12 @@ export async function travarRelatorio(cliente: Prisma.TransactionClient, relator
   await cliente.$queryRaw`SELECT 1 FROM "Relatorio" WHERE "id" = ${relatorioId} FOR UPDATE`;
 }
 
+// Rascunho e devolvido são as situações em que o relatório está nas mãos do
+// docente — as únicas em que ele edita e envia.
+export function estaComODocente(situacao: SituacaoRelatorio | undefined): boolean {
+  return situacao === SituacaoRelatorio.RASCUNHO || situacao === SituacaoRelatorio.DEVOLVIDO_PARA_AJUSTE;
+}
+
 // Devolvido ganha este prazo, contado da devolução, para corrigir e reenviar.
 export const DIAS_PRAZO_APOS_DEVOLUCAO = 7;
 
