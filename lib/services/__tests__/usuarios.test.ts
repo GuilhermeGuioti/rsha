@@ -75,6 +75,20 @@ test("com outra secretaria ativa, uma pode ser inativada", async () => {
   expect(paulo.ativo).toBe(false);
 });
 
+test("duas secretarias inativadas ao mesmo tempo: a segunda é recusada", async () => {
+  const ana = await criarUsuario({ nome: "Ana", email: "ana@srha.dev", ativo: true, secretaria: true });
+  const paulo = await criarUsuario({ nome: "Paulo", email: "paulo@srha.dev", ativo: true, secretaria: true });
+
+  // Cada transação, sozinha, ainda via a outra secretaria ativa.
+  const resultados = await Promise.allSettled([
+    atualizarUsuario(ana, { nome: "Ana", email: "ana@srha.dev", ativo: false, secretaria: true }),
+    atualizarUsuario(paulo, { nome: "Paulo", email: "paulo@srha.dev", ativo: false, secretaria: true }),
+  ]);
+
+  expect(resultados.filter((resultado) => resultado.status === "fulfilled")).toHaveLength(1);
+  expect((await listarUsuarios()).filter((usuario) => usuario.ativo)).toHaveLength(1);
+});
+
 test("marcar secretaria duas vezes não duplica o perfil", async () => {
   const id = await criarUsuario({ nome: "Paulo", email: "paulo@srha.dev", ativo: true, secretaria: false });
 

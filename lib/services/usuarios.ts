@@ -43,6 +43,10 @@ const SECRETARIA_ATIVA = { ativo: true, perfis: { some: { perfil: Perfil.SECRETA
 export async function atualizarUsuario(id: number, dados: DadosUsuario): Promise<void> {
   await exigirEmailDisponivel(dados.email, id);
   await prisma.$transaction(async (tx) => {
+    // Duas secretarias se inativando ao mesmo tempo: cada transação ainda via
+    // a outra ativa e as duas passavam. Travando os perfis de secretaria, a
+    // segunda espera a primeira e já conta o que sobrou.
+    await tx.$queryRaw`SELECT 1 FROM "UsuarioPerfil" WHERE "perfil" = 'SECRETARIA' FOR UPDATE`;
     const eraSecretariaAtiva = await tx.usuario.count({ where: { id, ...SECRETARIA_ATIVA } });
     await tx.usuario.update({
       where: { id },
