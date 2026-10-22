@@ -20,6 +20,17 @@ export async function resolverAvaliadorId(
   return vinculo?.coordenadorId ?? null;
 }
 
+/**
+ * Trava a linha do relatório até o fim da transação. No READ COMMITTED do
+ * Postgres, duas transações simultâneas (duas abas, clique duplo) liam a mesma
+ * situação e as duas gravavam a transição — o mesmo relatório chegava a ser
+ * devolvido e aprovado. Com a trava, a segunda espera a primeira terminar e
+ * já lê a situação nova. Vem antes de qualquer leitura do relatório.
+ */
+export async function travarRelatorio(cliente: Prisma.TransactionClient, relatorioId: number): Promise<void> {
+  await cliente.$queryRaw`SELECT 1 FROM "Relatorio" WHERE "id" = ${relatorioId} FOR UPDATE`;
+}
+
 // Devolvido ganha este prazo, contado da devolução, para corrigir e reenviar.
 export const DIAS_PRAZO_APOS_DEVOLUCAO = 7;
 
@@ -120,6 +131,7 @@ export async function obterOuCriarRascunho(
 
 export async function submeter(relatorioId: number, usuarioId: number): Promise<void> {
   await prisma.$transaction(async (tx) => {
+    await travarRelatorio(tx, relatorioId);
     const relatorio = await tx.relatorio.findUnique({
       where: { id: relatorioId },
       include: { periodo: true },
@@ -164,6 +176,7 @@ export async function submeter(relatorioId: number, usuarioId: number): Promise<
 
 export async function aprovar(relatorioId: number, usuarioId: number): Promise<void> {
   await prisma.$transaction(async (tx) => {
+    await travarRelatorio(tx, relatorioId);
     const relatorio = await tx.relatorio.findUnique({ where: { id: relatorioId } });
     if (!relatorio) {
       throw new Error("Relatório não encontrado.");
@@ -197,6 +210,7 @@ export async function devolver(
   }
 
   await prisma.$transaction(async (tx) => {
+    await travarRelatorio(tx, relatorioId);
     const relatorio = await tx.relatorio.findUnique({ where: { id: relatorioId } });
     if (!relatorio) {
       throw new Error("Relatório não encontrado.");

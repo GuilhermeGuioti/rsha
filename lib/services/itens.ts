@@ -1,6 +1,6 @@
 import { prisma } from "../db";
 import { DiaSemana, Prisma, SituacaoRelatorio } from "../../generated/prisma/client";
-import { exigirDentroDoPrazo } from "./workflow";
+import { exigirDentroDoPrazo, travarRelatorio } from "./workflow";
 
 export type DadosItem = {
   tipoAtividadeId: number;
@@ -11,6 +11,9 @@ export type DadosItem = {
 };
 
 async function exigirRelatorioEditavel(cliente: Prisma.TransactionClient, relatorioId: number) {
+  // Sem a trava, salvar e enviar ao mesmo tempo (duas abas) trocava os itens
+  // de um relatório que já tinha saído para a coordenação.
+  await travarRelatorio(cliente, relatorioId);
   const relatorio = await cliente.relatorio.findUnique({ where: { id: relatorioId }, include: { periodo: true } });
   if (!relatorio) {
     throw new Error("Relatório não encontrado.");

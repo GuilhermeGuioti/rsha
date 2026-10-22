@@ -463,6 +463,53 @@ test("sem coordenador ativo no curso, a submissão é bloqueada", async () => {
   await expect(submeter(relatorio.id, ambiente.docente.id)).rejects.toThrow("Nenhum coordenador ativo");
 });
 
+describe("concorrência", () => {
+  // Duas abas, ou clique duplo: as duas transações leem a mesma situação
+  // antes de qualquer uma gravar. Só a primeira transição pode valer.
+  test("duas submissões simultâneas do mesmo relatório gravam um evento só", async () => {
+    const ambiente = await obterAmbiente();
+    const relatorio = await criarRelatorioComItem(ambiente, {
+      docenteId: ambiente.docente.id,
+      cursoId: ambiente.cursoCienciaComp.id,
+      periodoLetivoId: ambiente.periodo.id,
+    });
+
+    const resultados = await Promise.allSettled([
+      submeter(relatorio.id, ambiente.docente.id),
+      submeter(relatorio.id, ambiente.docente.id),
+    ]);
+
+    expect(resultados.filter((resultado) => resultado.status === "fulfilled")).toHaveLength(1);
+    const eventos = await prisma.eventoAuditoria.findMany({ where: { relatorioId: relatorio.id } });
+    expect(eventos.map((evento) => evento.tipo)).toEqual([TipoEvento.SUBMISSAO]);
+  });
+
+  test("aprovar e devolver ao mesmo tempo: só uma decisão vale, e a trilha bate com a situação", async () => {
+    const ambiente = await obterAmbiente();
+    const relatorio = await criarRelatorioComItem(ambiente, {
+      docenteId: ambiente.docente.id,
+      cursoId: ambiente.cursoCienciaComp.id,
+      periodoLetivoId: ambiente.periodo.id,
+    });
+    await submeter(relatorio.id, ambiente.docente.id);
+
+    const resultados = await Promise.allSettled([
+      devolver(relatorio.id, ambiente.coordenador.id, "Detalhar os horários."),
+      aprovar(relatorio.id, ambiente.coordenador.id),
+    ]);
+
+    expect(resultados.filter((resultado) => resultado.status === "fulfilled")).toHaveLength(1);
+    const final = await prisma.relatorio.findUniqueOrThrow({ where: { id: relatorio.id } });
+    const eventos = await prisma.eventoAuditoria.findMany({
+      where: { relatorioId: relatorio.id },
+      orderBy: { ocorridoEm: "asc" },
+    });
+    expect(eventos).toHaveLength(2);
+    const decisao = { [TipoEvento.APROVACAO]: SituacaoRelatorio.APROVADO, [TipoEvento.DEVOLUCAO]: SituacaoRelatorio.DEVOLVIDO_PARA_AJUSTE };
+    expect(final.situacao).toBe(decisao[eventos[1].tipo as keyof typeof decisao]);
+  });
+});
+
 describe("prazo de entrega", () => {
   // Relógio simulado: o Prisma gera os @default(now()) em JS, então os
   // eventos gravados (inclusive a devolução) ficam na data simulada.
