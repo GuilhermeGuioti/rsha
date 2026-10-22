@@ -303,9 +303,10 @@ Nunca altere `situacao` fora dessas funções.
 10. Painel de acompanhamento
 11. Extração CSV
 12. Auth.js com Entra ID real
-13. Notificações por e-mail
 
 Do item 1 ao 7 você tem o fluxo principal fechado de ponta a ponta. O que vier depois é melhoria, não buraco.
+
+**Fora da versão inicial: notificações por e-mail (RF13).** Decisão de 2026-10-22 — o RF13 do `rsha-docreq.pdf` é "Desejável". Nenhum envio de e-mail nem lembrete de prazo nesta versão.
 
 ---
 

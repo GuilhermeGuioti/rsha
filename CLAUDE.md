@@ -33,7 +33,6 @@ silêncio custa mais que uma pergunta.
 | CSV | `papaparse` (`parse` na importação, `unparse` na extração) |
 | Testes | **Jest**, configurado via `next/jest` |
 | Pacotes | **npm** |
-| E-mail (RF13) | Microsoft Graph, mesmo tenant do Entra ID — passo 13 |
 | Hospedagem | Vercel |
 
 **Versões são as que estão no `package.json`, e elas são fixas — sem `^`, sem `~`.**
@@ -461,10 +460,14 @@ Brief completo em `docs/rsha-layout/uploads/SRHA-brief-design.md`. O que não po
 10. Painel de acompanhamento
 11. Extração CSV
 12. Auth.js com Entra ID real
-13. Notificações por e-mail
 
 Do 1 ao 7 o fluxo principal está fechado ponta a ponta. O que vier depois é melhoria,
 não buraco.
+
+**Fora da versão inicial: notificações por e-mail (RF13)** — aviso de relatório recebido
+para avaliação, devolvido, aprovado e de prazo perto do fim. Decisão de 2026-10-22; o
+RF13 do `docs/rsha-docreq.pdf` é "Desejável". Não implemente envio de e-mail nem lembrete
+de prazo.
 
 **Um passo por vez.** Não adiante etapa. Ao terminar um passo, pare e relate o que foi
 feito e como verificar.
