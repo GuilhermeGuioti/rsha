@@ -45,6 +45,8 @@ async function exigirTiposPermitidos(cliente: Prisma.TransactionClient, relatori
   }
 }
 
+const TOTAL_MAXIMO_CENTESIMOS = 999_950;
+
 /**
  * Grava a lista inteira de itens do relatório: o que o docente vê na tela é o
  * que fica no banco. Substituir tudo evita rastrear id de linha na interface —
@@ -57,6 +59,12 @@ export async function salvarItens(relatorioId: number, itens: DadosItem[]): Prom
   // valores não arredondados (0,125 + 0,125 gravaria itens 0,13 + 0,13 e total
   // 0,25). Arredondando aqui, o total é exatamente a soma do que é gravado.
   const centesimos = itens.map((item) => Math.round(item.horas * 100));
+  const totalCentesimos = centesimos.reduce((soma, valor) => soma + valor, 0);
+  // O total é Decimal(6,2): cada item cabe no teto de 999,5, mas onze deles
+  // já estouram a coluna, e o banco recusaria com um erro cru em inglês.
+  if (totalCentesimos > TOTAL_MAXIMO_CENTESIMOS) {
+    throw new Error("A carga horária total do relatório não pode passar de 9.999,5 horas.");
+  }
   await prisma.$transaction(async (tx) => {
     await exigirRelatorioEditavel(tx, relatorioId);
     await exigirTiposPermitidos(tx, relatorioId, itens);
@@ -66,7 +74,7 @@ export async function salvarItens(relatorioId: number, itens: DadosItem[]): Prom
     });
     await tx.relatorio.update({
       where: { id: relatorioId },
-      data: { cargaHorariaTotal: centesimos.reduce((soma, valor) => soma + valor, 0) / 100 },
+      data: { cargaHorariaTotal: totalCentesimos / 100 },
     });
   });
 }

@@ -335,6 +335,29 @@ test("cargaHorariaTotal bate com a soma dos itens gravados mesmo quando o banco 
   expect(Math.round(atual.cargaHorariaTotal.toNumber() * 100)).toBe(centesimos);
 });
 
+test("total acima do que a coluna comporta é recusado com mensagem, sem gravar nada", async () => {
+  const ambiente = await obterAmbiente();
+  const relatorio = await criarRelatorioComItem(ambiente, {
+    docenteId: ambiente.docente.id,
+    cursoId: ambiente.cursoCienciaComp.id,
+    periodoLetivoId: ambiente.periodo.id,
+  });
+  const item = {
+    tipoAtividadeId: ambiente.tipoAtividade.id,
+    horas: 999.5,
+    diaSemana: DiaSemana.SEGUNDA,
+    horario: "14:00-16:00",
+    descricao: "Orientação de TCC",
+  };
+
+  // Cada item cabe no teto de 999,5; onze somam 10.994,5, acima de Decimal(6,2).
+  await expect(salvarItens(relatorio.id, Array(11).fill(item))).rejects.toThrow("9.999,5");
+
+  const atual = await prisma.relatorio.findUniqueOrThrow({ where: { id: relatorio.id }, include: { itens: true } });
+  expect(atual.cargaHorariaTotal.toNumber()).toBe(2);
+  expect(atual.itens).toHaveLength(1);
+});
+
 test("relatório aprovado não aceita alteração por nenhum caminho", async () => {
   const ambiente = await obterAmbiente();
   const relatorio = await prisma.relatorio.create({
