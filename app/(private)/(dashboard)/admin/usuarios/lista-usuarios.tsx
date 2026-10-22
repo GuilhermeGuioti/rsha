@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Pill } from "../../../../../components/Pill";
+import { PillAtivo } from "../../../../../components/PillAtivo";
 import { Modal } from "../../../../../components/Modal";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
@@ -181,12 +182,7 @@ export function ListaUsuarios({ usuarios }: { usuarios: UsuarioLinha[] }) {
             classeCelula: "whitespace-nowrap font-mono text-[13px] font-medium text-tinta-suave",
             render: (usuario) => usuario.email,
           },
-          {
-            cabecalho: "Situação",
-            render: (usuario) => (
-              <Pill cor={usuario.ativo ? "aprovado" : "neutro"}>{usuario.ativo ? "Ativo" : "Inativo"}</Pill>
-            ),
-          },
+          { cabecalho: "Situação", render: (usuario) => <PillAtivo ativo={usuario.ativo} /> },
           {
             cabecalho: "",
             alinhado: "direita",

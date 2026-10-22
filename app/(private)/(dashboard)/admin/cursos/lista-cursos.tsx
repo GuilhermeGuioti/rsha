@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Pill } from "../../../../../components/Pill";
+import { PillAtivo } from "../../../../../components/PillAtivo";
 import { Modal } from "../../../../../components/Modal";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
@@ -131,12 +131,7 @@ export function ListaCursos({ cursos }: { cursos: CursoLinha[] }) {
             classeCelula: "font-mono font-medium tabular-nums",
             render: (curso) => curso.totalDocentes,
           },
-          {
-            cabecalho: "Situação",
-            render: (curso) => (
-              <Pill cor={curso.ativo ? "aprovado" : "neutro"}>{curso.ativo ? "Ativo" : "Inativo"}</Pill>
-            ),
-          },
+          { cabecalho: "Situação", render: (curso) => <PillAtivo ativo={curso.ativo} /> },
           {
             cabecalho: "",
             alinhado: "direita",

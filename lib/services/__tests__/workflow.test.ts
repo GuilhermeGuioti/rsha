@@ -276,6 +276,39 @@ test("cargaHorariaTotal bate com a soma dos itens após adicionar e remover item
   expect(atual.cargaHorariaTotal.toNumber()).toBe(somaEsperada);
 });
 
+test("tipo de atividade inativado não entra em item novo, mas o item que já o usava continua", async () => {
+  const ambiente = await obterAmbiente();
+  const relatorio = await criarRelatorioComItem(ambiente, {
+    docenteId: ambiente.docente.id,
+    cursoId: ambiente.cursoCienciaComp.id,
+    periodoLetivoId: ambiente.periodo.id,
+  });
+  const [tipoAtivo, tipoInativo] = await Promise.all([
+    prisma.tipoAtividade.create({ data: { descricao: "Supervisão de Estágio" } }),
+    prisma.tipoAtividade.create({ data: { descricao: "Participação em NBE", ativo: false } }),
+  ]);
+  await prisma.tipoAtividade.update({ where: { id: ambiente.tipoAtividade.id }, data: { ativo: false } });
+
+  const dadosItem = (tipoAtividadeId: number) => ({
+    tipoAtividadeId,
+    horas: 2,
+    diaSemana: DiaSemana.SEGUNDA,
+    horario: "14:00-16:00",
+    descricao: "Atividade",
+  });
+
+  // O item original foi declarado antes da inativação: regravar a lista não o derruba.
+  await salvarItens(relatorio.id, [dadosItem(ambiente.tipoAtividade.id), dadosItem(tipoAtivo.id)]);
+
+  await expect(salvarItens(relatorio.id, [dadosItem(tipoInativo.id)])).rejects.toThrow(
+    "Tipo de atividade inativo ou inexistente",
+  );
+  const itens = await prisma.itemAtividade.findMany({ where: { relatorioId: relatorio.id } });
+  expect(itens.map((item) => item.tipoAtividadeId).sort()).toEqual(
+    [ambiente.tipoAtividade.id, tipoAtivo.id].sort(),
+  );
+});
+
 test("cargaHorariaTotal bate com a soma dos itens gravados mesmo quando o banco arredonda as horas", async () => {
   const ambiente = await obterAmbiente();
   const relatorio = await prisma.relatorio.create({

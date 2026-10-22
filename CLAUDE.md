@@ -286,6 +286,7 @@ chamada + revalidação.
 | `/admin/usuarios` | secretaria | CRUD de usuários, perfis e importação CSV |
 | `/admin/vinculos` | secretaria | Vínculos docente-curso e coordenador-curso — os dois lados da relação |
 | `/admin/periodos` | secretaria | Períodos letivos e prazos |
+| `/admin/tipos-atividade` | secretaria | Tipos de atividade dos itens do relatório (RF03) — cadastrar, alterar, inativar |
 | `/admin/auditoria/[id]` | secretaria | Trilha completa de um relatório |
 
 `/` não é uma tela única — é um roteador por perfil (`app/(private)/(dashboard)/page.tsx`),

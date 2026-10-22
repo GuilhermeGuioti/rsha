@@ -29,6 +29,19 @@ async function exigirRelatorioEditavel(cliente: Prisma.TransactionClient, relato
   return relatorio;
 }
 
+// Tipo inativado sai das opções, mas item que já o usava neste relatório
+// continua valendo — a mesma regra do <select> da tela, repetida aqui porque a
+// Server Action é chamável sem passar por ela.
+async function exigirTiposPermitidos(cliente: Prisma.TransactionClient, relatorioId: number, itens: DadosItem[]) {
+  const ids = [...new Set(itens.map((item) => item.tipoAtividadeId))];
+  const permitidos = await cliente.tipoAtividade.count({
+    where: { id: { in: ids }, OR: [{ ativo: true }, { itens: { some: { relatorioId } } }] },
+  });
+  if (permitidos !== ids.length) {
+    throw new Error("Tipo de atividade inativo ou inexistente. Escolha outro tipo para o item.");
+  }
+}
+
 /**
  * Grava a lista inteira de itens do relatório: o que o docente vê na tela é o
  * que fica no banco. Substituir tudo evita rastrear id de linha na interface —
@@ -43,6 +56,7 @@ export async function salvarItens(relatorioId: number, itens: DadosItem[]): Prom
   const centesimos = itens.map((item) => Math.round(item.horas * 100));
   await prisma.$transaction(async (tx) => {
     await exigirRelatorioEditavel(tx, relatorioId);
+    await exigirTiposPermitidos(tx, relatorioId, itens);
     await tx.itemAtividade.deleteMany({ where: { relatorioId } });
     await tx.itemAtividade.createMany({
       data: itens.map((item, indice) => ({ relatorioId, ...item, horas: centesimos[indice] / 100 })),

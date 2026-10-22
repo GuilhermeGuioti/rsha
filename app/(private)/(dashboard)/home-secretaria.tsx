@@ -3,6 +3,7 @@ import Link from "next/link";
 const ATALHOS: { href: string; titulo: string; descricao: string }[] = [
   { href: "/admin/cursos", titulo: "Cursos", descricao: "Cadastro de cursos." },
   { href: "/admin/usuarios", titulo: "Usuários", descricao: "Pessoas com acesso ao sistema e seus perfis." },
+  { href: "/admin/tipos-atividade", titulo: "Tipos de atividade", descricao: "Opções de atividade dos itens do relatório." },
   { href: "/admin/vinculos", titulo: "Vínculos", descricao: "Quem dá aula e quem coordena em cada curso." },
   { href: "/admin/periodos", titulo: "Períodos letivos", descricao: "Prazos de submissão de cada semestre." },
   { href: "/acompanhamento", titulo: "Acompanhamento", descricao: "Situação de entrega por curso no período corrente." },
