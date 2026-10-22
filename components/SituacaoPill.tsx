@@ -1,4 +1,5 @@
 import { SituacaoRelatorio } from "../generated/prisma/enums";
+import { ROTULO_SITUACAO } from "../lib/formato";
 import { Pill } from "./Pill";
 
 type Aparencia = {
@@ -11,20 +12,20 @@ type Aparencia = {
 // Fonte única de como cada situação aparece — a mesma leitura na home, no
 // formulário e na fila do coordenador.
 export const aparenciaSituacao: Record<SituacaoRelatorio, Aparencia> = {
-  RASCUNHO: { rotulo: "Rascunho", cor: "neutro", forma: "circulo-vazado", borda: "border-t-estado-rascunho" },
+  RASCUNHO: { rotulo: ROTULO_SITUACAO.RASCUNHO, cor: "neutro", forma: "circulo-vazado", borda: "border-t-estado-rascunho" },
   AGUARDANDO_AVALIACAO: {
-    rotulo: "Aguardando avaliação",
+    rotulo: ROTULO_SITUACAO.AGUARDANDO_AVALIACAO,
     cor: "aguardando",
     forma: "quadrado",
     borda: "border-t-estado-aguardando",
   },
   DEVOLVIDO_PARA_AJUSTE: {
-    rotulo: "Devolvido para ajuste",
+    rotulo: ROTULO_SITUACAO.DEVOLVIDO_PARA_AJUSTE,
     cor: "devolvido",
     forma: "triangulo",
     borda: "border-t-estado-devolvido",
   },
-  APROVADO: { rotulo: "Aprovado", cor: "aprovado", forma: "circulo", borda: "border-t-estado-aprovado" },
+  APROVADO: { rotulo: ROTULO_SITUACAO.APROVADO, cor: "aprovado", forma: "circulo", borda: "border-t-estado-aprovado" },
 };
 
 export function SituacaoPill({ situacao }: { situacao: SituacaoRelatorio }) {

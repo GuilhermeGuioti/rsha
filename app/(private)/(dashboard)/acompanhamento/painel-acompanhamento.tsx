@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CabecalhoAdmin } from "../../../../components/CabecalhoAdmin";
-import { BotaoSecundario } from "../../../../components/BotaoSecundario";
+import { BotaoSecundario, classeBotaoSecundario } from "../../../../components/BotaoSecundario";
 import { Modal } from "../../../../components/Modal";
 import { Tabela, type ColunaTabela } from "../../../../components/Tabela";
 import { classeCampoSelect } from "../../../../components/Campo";
@@ -77,7 +77,7 @@ function BarraProporcao({ linha }: { linha: LinhaAcompanhamento }) {
 
 type Selecao = { linha: LinhaAcompanhamento; segmento: (typeof SEGMENTOS)[number] };
 
-export function PainelAcompanhamento({ grupos }: { grupos: GrupoPeriodo[] }) {
+export function PainelAcompanhamento({ grupos, podeExtrair }: { grupos: GrupoPeriodo[]; podeExtrair: boolean }) {
   // grupos já vem ordenado do mais recente pro mais antigo — esse é o
   // período corrente; os demais ficam a um clique de distância (mesmo
   // padrão do seletor de período da fila de avaliação).
@@ -173,7 +173,7 @@ export function PainelAcompanhamento({ grupos }: { grupos: GrupoPeriodo[] }) {
           </p>
         }
         acao={
-          <div>
+          <div className="flex flex-wrap items-center gap-2">
             <label htmlFor="filtro-periodo-acompanhamento" className="sr-only">
               Filtrar por período letivo
             </label>
@@ -189,6 +189,13 @@ export function PainelAcompanhamento({ grupos }: { grupos: GrupoPeriodo[] }) {
                 </option>
               ))}
             </select>
+            {/* Extração é da secretaria (RF21); a rota confere o perfil de novo. */}
+            {podeExtrair && (
+              <a href={`/api/periodos/${periodoLetivoId}/csv`} className={classeBotaoSecundario}>
+                Extrair planilha
+                <span className="sr-only"> do {periodoRotulo} (CSV)</span>
+              </a>
+            )}
           </div>
         }
       />

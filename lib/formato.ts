@@ -1,4 +1,4 @@
-import type { DiaSemana, TipoEvento } from "../generated/prisma/enums";
+import type { DiaSemana, SituacaoRelatorio, TipoEvento } from "../generated/prisma/enums";
 
 // Números sempre com vírgula e uma casa — as colunas de horas alinham por
 // casa decimal (ver CLAUDE.md § Interface).
@@ -25,6 +25,12 @@ export function formatarDataHora(data: Date): string {
   return data.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: FUSO });
 }
 
+// Sem a vírgula entre data e hora: assim o Excel em português reconhece a
+// célula como data, em vez de tratá-la como texto.
+export function formatarDataHoraPlanilha(data: Date): string {
+  return formatarDataHora(data).replace(", ", " ");
+}
+
 // Rótulo de cada dia da semana. Fonte única — a mesma leitura no formulário
 // da tela e no PDF exportado.
 export const ROTULO_DIA_SEMANA: Record<DiaSemana, string> = {
@@ -34,6 +40,15 @@ export const ROTULO_DIA_SEMANA: Record<DiaSemana, string> = {
   QUINTA: "Quinta",
   SEXTA: "Sexta",
   SABADO: "Sábado",
+};
+
+// Como cada situação se chama por extenso. Fonte única — a mesma palavra no
+// selo da tela e na planilha extraída.
+export const ROTULO_SITUACAO: Record<SituacaoRelatorio, string> = {
+  RASCUNHO: "Rascunho",
+  AGUARDANDO_AVALIACAO: "Aguardando avaliação",
+  DEVOLVIDO_PARA_AJUSTE: "Devolvido para ajuste",
+  APROVADO: "Aprovado",
 };
 
 // Como cada evento da auditoria se chama para quem lê. Fonte única — a mesma

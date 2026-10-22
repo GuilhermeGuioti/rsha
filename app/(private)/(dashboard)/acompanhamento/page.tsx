@@ -177,5 +177,5 @@ export default async function AcompanhamentoPage() {
     };
   });
 
-  return <PainelAcompanhamento grupos={grupos} />;
+  return <PainelAcompanhamento grupos={grupos} podeExtrair={ehSecretaria} />;
 }
