@@ -21,7 +21,7 @@ export function CabecalhoAdmin({
         )}
         {subtitulo}
       </div>
-      {acao}
+      {acao && <div className="flex flex-wrap items-center gap-2">{acao}</div>}
     </div>
   );
 }

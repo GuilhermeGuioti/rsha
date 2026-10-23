@@ -173,7 +173,7 @@ export function PainelAcompanhamento({ grupos, podeExtrair }: { grupos: GrupoPer
           </p>
         }
         acao={
-          <div className="flex flex-wrap items-center gap-2">
+          <>
             <label htmlFor="filtro-periodo-acompanhamento" className="sr-only">
               Filtrar por período letivo
             </label>
@@ -196,7 +196,7 @@ export function PainelAcompanhamento({ grupos, podeExtrair }: { grupos: GrupoPer
                 <span className="sr-only"> do {periodoRotulo} (CSV)</span>
               </a>
             )}
-          </div>
+          </>
         }
       />
 
