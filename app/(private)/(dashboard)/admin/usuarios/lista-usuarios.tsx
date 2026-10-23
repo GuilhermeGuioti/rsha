@@ -16,8 +16,10 @@ import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeEditar } from "../../../../../components/Icones";
 import { CampoCheckbox } from "../../../../../components/CampoCheckbox";
 import { MensagemErro } from "../../../../../components/MensagemErro";
+import { ImportadorPlanilha } from "../../../../../components/ImportadorPlanilha";
+import { MODELOS_IMPORTACAO } from "../../../../../lib/importacao";
 import { useBusca } from "../../../../../lib/hooks/useBusca";
-import { acaoCriarUsuario, acaoAtualizarUsuario } from "./acoes";
+import { acaoCriarUsuario, acaoAtualizarUsuario, acaoImportarUsuarios } from "./acoes";
 import type { Perfil as TipoPerfil } from "../../../../../generated/prisma/client";
 
 type UsuarioLinha = {
@@ -119,9 +121,18 @@ export function ListaUsuarios({ usuarios }: { usuarios: UsuarioLinha[] }) {
           </p>
         }
         acao={
-          <BotaoPrimario onClick={abrirNovo} icone>
-            Novo usuário
-          </BotaoPrimario>
+          <>
+            <ImportadorPlanilha
+              modelo={MODELOS_IMPORTACAO.usuarios}
+              eyebrow="ADMINISTRAÇÃO · USUÁRIOS"
+              titulo="Importar usuários"
+              descricao="Uma pessoa por linha. E-mail já cadastrado é ignorado, sem alterar o cadastro existente. Docente e coordenação vêm dos vínculos."
+              acao={acaoImportarUsuarios}
+            />
+            <BotaoPrimario onClick={abrirNovo} icone>
+              Novo usuário
+            </BotaoPrimario>
+          </>
         }
       />
 

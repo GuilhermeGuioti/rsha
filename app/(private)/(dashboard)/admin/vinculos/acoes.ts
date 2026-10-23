@@ -10,6 +10,8 @@ import {
   vincularCoordenador,
   desvincularCoordenador,
 } from "../../../../../lib/services/vinculos";
+import { SchemaArquivoPlanilha, type ResultadoImportacao } from "../../../../../lib/importacao";
+import { importarVinculosDocente, importarVinculosCoordenador } from "../../../../../lib/services/importacao";
 import { paraResultadoErro, type Resultado } from "../../../../../lib/tipos";
 
 const SchemaId = z.object({ id: z.number().int().positive() });
@@ -72,6 +74,30 @@ export async function acaoDesvincularCoordenador(id: number): Promise<Resultado<
     await desvincularCoordenador(validado.id);
     revalidatePath("/admin/vinculos");
     return { ok: true, dados: undefined };
+  } catch (erro) {
+    return paraResultadoErro(erro);
+  }
+}
+
+export async function acaoImportarVinculosDocente(formulario: FormData): Promise<Resultado<ResultadoImportacao>> {
+  try {
+    await exigirPerfil(Perfil.SECRETARIA);
+    const arquivo = SchemaArquivoPlanilha.parse(formulario.get("arquivo"));
+    const resultado = await importarVinculosDocente(new Uint8Array(await arquivo.arrayBuffer()));
+    revalidatePath("/admin/vinculos");
+    return { ok: true, dados: resultado };
+  } catch (erro) {
+    return paraResultadoErro(erro);
+  }
+}
+
+export async function acaoImportarVinculosCoordenador(formulario: FormData): Promise<Resultado<ResultadoImportacao>> {
+  try {
+    await exigirPerfil(Perfil.SECRETARIA);
+    const arquivo = SchemaArquivoPlanilha.parse(formulario.get("arquivo"));
+    const resultado = await importarVinculosCoordenador(new Uint8Array(await arquivo.arrayBuffer()));
+    revalidatePath("/admin/vinculos");
+    return { ok: true, dados: resultado };
   } catch (erro) {
     return paraResultadoErro(erro);
   }

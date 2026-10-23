@@ -5,6 +5,8 @@ import { z } from "zod";
 import { exigirPerfil } from "../../../../../lib/auth/guards";
 import { Perfil } from "../../../../../generated/prisma/client";
 import { criarTipoAtividade, atualizarTipoAtividade } from "../../../../../lib/services/tipos-atividade";
+import { SchemaArquivoPlanilha, type ResultadoImportacao } from "../../../../../lib/importacao";
+import { importarTiposAtividade } from "../../../../../lib/services/importacao";
 import { paraResultadoErro, type Resultado } from "../../../../../lib/tipos";
 
 const SchemaId = z.number().int().positive();
@@ -41,6 +43,18 @@ export async function acaoAtualizarTipoAtividade(
     await atualizarTipoAtividade(idValidado, validado);
     revalidatePath("/admin/tipos-atividade");
     return { ok: true, dados: undefined };
+  } catch (erro) {
+    return paraResultadoErro(erro);
+  }
+}
+
+export async function acaoImportarTiposAtividade(formulario: FormData): Promise<Resultado<ResultadoImportacao>> {
+  try {
+    await exigirPerfil(Perfil.SECRETARIA);
+    const arquivo = SchemaArquivoPlanilha.parse(formulario.get("arquivo"));
+    const resultado = await importarTiposAtividade(new Uint8Array(await arquivo.arrayBuffer()));
+    revalidatePath("/admin/tipos-atividade");
+    return { ok: true, dados: resultado };
   } catch (erro) {
     return paraResultadoErro(erro);
   }

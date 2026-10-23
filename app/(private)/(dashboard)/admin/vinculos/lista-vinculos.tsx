@@ -13,12 +13,16 @@ import { CampoBusca } from "../../../../../components/CampoBusca";
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeRemover } from "../../../../../components/Icones";
 import { MensagemErro } from "../../../../../components/MensagemErro";
+import { ImportadorPlanilha } from "../../../../../components/ImportadorPlanilha";
+import { MODELOS_IMPORTACAO } from "../../../../../lib/importacao";
 import { useBusca } from "../../../../../lib/hooks/useBusca";
 import {
   acaoVincularDocente,
   acaoDesvincularDocente,
   acaoVincularCoordenador,
   acaoDesvincularCoordenador,
+  acaoImportarVinculosDocente,
+  acaoImportarVinculosCoordenador,
 } from "./acoes";
 
 type Periodo = { id: number; rotulo: string };
@@ -148,9 +152,19 @@ export function ListaVinculos({
               nivel={2}
               titulo="Docentes por curso"
               acao={
-                <BotaoPrimario onClick={() => abrirNovo("docente")} icone>
-                  Vincular docente
-                </BotaoPrimario>
+                <>
+                  <ImportadorPlanilha
+                    modelo={MODELOS_IMPORTACAO.vinculosDocente}
+                    eyebrow="ADMINISTRAÇÃO · VÍNCULOS"
+                    titulo="Importar vínculos de docentes"
+                    descricao="Um vínculo por linha. Docente, curso e período precisam estar cadastrados e ativos; vínculo que já existe é ignorado."
+                    complementoAcessivel="de vínculos de docentes"
+                    acao={acaoImportarVinculosDocente}
+                  />
+                  <BotaoPrimario onClick={() => abrirNovo("docente")} icone>
+                    Vincular docente
+                  </BotaoPrimario>
+                </>
               }
             />
 
@@ -224,9 +238,19 @@ export function ListaVinculos({
             nivel={2}
             titulo="Coordenadores por curso"
             acao={
-              <BotaoPrimario onClick={() => abrirNovo("coordenador")} icone>
-                Vincular coordenador
-              </BotaoPrimario>
+              <>
+                <ImportadorPlanilha
+                  modelo={MODELOS_IMPORTACAO.vinculosCoordenador}
+                  eyebrow="ADMINISTRAÇÃO · VÍNCULOS"
+                  titulo="Importar vínculos de coordenadores"
+                  descricao="O primeiro coordenador ativo cadastrado para o curso recebe os relatórios para avaliação — as linhas são gravadas na ordem da planilha. Vínculo que já existe é ignorado."
+                  complementoAcessivel="de vínculos de coordenadores"
+                  acao={acaoImportarVinculosCoordenador}
+                />
+                <BotaoPrimario onClick={() => abrirNovo("coordenador")} icone>
+                  Vincular coordenador
+                </BotaoPrimario>
+              </>
             }
           />
 

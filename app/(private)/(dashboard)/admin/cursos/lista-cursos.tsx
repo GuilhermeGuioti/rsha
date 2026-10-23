@@ -15,8 +15,10 @@ import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeEditar } from "../../../../../components/Icones";
 import { CampoCheckbox } from "../../../../../components/CampoCheckbox";
 import { MensagemErro } from "../../../../../components/MensagemErro";
+import { ImportadorPlanilha } from "../../../../../components/ImportadorPlanilha";
+import { MODELOS_IMPORTACAO } from "../../../../../lib/importacao";
 import { useBusca } from "../../../../../lib/hooks/useBusca";
-import { acaoCriarCurso, acaoAtualizarCurso } from "./acoes";
+import { acaoCriarCurso, acaoAtualizarCurso, acaoImportarCursos } from "./acoes";
 
 type CursoLinha = {
   id: number;
@@ -84,9 +86,18 @@ export function ListaCursos({ cursos }: { cursos: CursoLinha[] }) {
           <p className="text-[15px] text-tinta-suave">Cada curso gera um relatório por docente e por semestre.</p>
         }
         acao={
-          <BotaoPrimario onClick={abrirNovo} icone>
-            Novo curso
-          </BotaoPrimario>
+          <>
+            <ImportadorPlanilha
+              modelo={MODELOS_IMPORTACAO.cursos}
+              eyebrow="ADMINISTRAÇÃO · CURSOS"
+              titulo="Importar cursos"
+              descricao="Um curso por linha. Curso já cadastrado é ignorado, sem alterar o existente."
+              acao={acaoImportarCursos}
+            />
+            <BotaoPrimario onClick={abrirNovo} icone>
+              Novo curso
+            </BotaoPrimario>
+          </>
         }
       />
 

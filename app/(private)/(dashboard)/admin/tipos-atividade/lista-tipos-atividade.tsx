@@ -15,8 +15,10 @@ import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeEditar } from "../../../../../components/Icones";
 import { CampoCheckbox } from "../../../../../components/CampoCheckbox";
 import { MensagemErro } from "../../../../../components/MensagemErro";
+import { ImportadorPlanilha } from "../../../../../components/ImportadorPlanilha";
+import { MODELOS_IMPORTACAO } from "../../../../../lib/importacao";
 import { useBusca } from "../../../../../lib/hooks/useBusca";
-import { acaoCriarTipoAtividade, acaoAtualizarTipoAtividade } from "./acoes";
+import { acaoCriarTipoAtividade, acaoAtualizarTipoAtividade, acaoImportarTiposAtividade } from "./acoes";
 
 type TipoAtividadeLinha = {
   id: number;
@@ -86,9 +88,18 @@ export function ListaTiposAtividade({ tipos }: { tipos: TipoAtividadeLinha[] }) 
           </p>
         }
         acao={
-          <BotaoPrimario onClick={abrirNovo} icone>
-            Novo tipo
-          </BotaoPrimario>
+          <>
+            <ImportadorPlanilha
+              modelo={MODELOS_IMPORTACAO.tiposAtividade}
+              eyebrow="ADMINISTRAÇÃO · TIPOS DE ATIVIDADE"
+              titulo="Importar tipos de atividade"
+              descricao="Um tipo por linha. Tipo já cadastrado é ignorado, sem alterar o existente."
+              acao={acaoImportarTiposAtividade}
+            />
+            <BotaoPrimario onClick={abrirNovo} icone>
+              Novo tipo
+            </BotaoPrimario>
+          </>
         }
       />
 

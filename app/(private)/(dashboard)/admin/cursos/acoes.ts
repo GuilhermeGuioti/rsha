@@ -5,6 +5,8 @@ import { z } from "zod";
 import { exigirPerfil } from "../../../../../lib/auth/guards";
 import { Perfil } from "../../../../../generated/prisma/client";
 import { criarCurso, atualizarCurso } from "../../../../../lib/services/cursos";
+import { SchemaArquivoPlanilha, type ResultadoImportacao } from "../../../../../lib/importacao";
+import { importarCursos } from "../../../../../lib/services/importacao";
 import { paraResultadoErro, type Resultado } from "../../../../../lib/tipos";
 
 const SchemaId = z.number().int().positive();
@@ -39,6 +41,18 @@ export async function acaoAtualizarCurso(
     await atualizarCurso(idValidado, validado);
     revalidatePath("/admin/cursos");
     return { ok: true, dados: undefined };
+  } catch (erro) {
+    return paraResultadoErro(erro);
+  }
+}
+
+export async function acaoImportarCursos(formulario: FormData): Promise<Resultado<ResultadoImportacao>> {
+  try {
+    await exigirPerfil(Perfil.SECRETARIA);
+    const arquivo = SchemaArquivoPlanilha.parse(formulario.get("arquivo"));
+    const resultado = await importarCursos(new Uint8Array(await arquivo.arrayBuffer()));
+    revalidatePath("/admin/cursos");
+    return { ok: true, dados: resultado };
   } catch (erro) {
     return paraResultadoErro(erro);
   }
