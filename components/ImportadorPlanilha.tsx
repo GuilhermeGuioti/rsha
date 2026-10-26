@@ -1,12 +1,13 @@
 "use client";
 
-import { useId, useState, useTransition, type ChangeEvent, type FormEvent } from "react";
+import { useId, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "./Modal";
 import { Pill } from "./Pill";
 import { BotaoPrimario } from "./BotaoPrimario";
-import { BotaoSecundario, classeBotaoSecundario } from "./BotaoSecundario";
+import { BotaoSecundario } from "./BotaoSecundario";
 import { MensagemErro } from "./MensagemErro";
+import { SeletorArquivo } from "./SeletorArquivo";
 import {
   TAMANHO_MAXIMO_PLANILHA,
   gerarModeloCsv,
@@ -56,7 +57,6 @@ export function ImportadorPlanilha({
 }: ImportadorPlanilhaProps) {
   const router = useRouter();
   const idFormulario = useId();
-  const idArquivo = useId();
   const [aberto, setAberto] = useState(false);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -81,13 +81,10 @@ export function ImportadorPlanilha({
     URL.revokeObjectURL(url);
   }
 
-  function selecionar(evento: ChangeEvent<HTMLInputElement>) {
-    setArquivo(evento.target.files?.[0] ?? null);
+  function selecionar(selecionado: File | null) {
+    setArquivo(selecionado);
     setErro(null);
     setResultado(null);
-    // Sem isto, escolher de novo o mesmo arquivo depois de corrigi-lo não
-    // dispara onChange.
-    evento.target.value = "";
   }
 
   function importar(evento: FormEvent) {
@@ -176,26 +173,12 @@ export function ImportadorPlanilha({
             <p className="text-[15px] leading-relaxed text-tinta-suave">
               Se alguma linha tiver erro, nada é importado — a lista mostra o que corrigir.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Input nativo escondido atrás do rótulo com cara de botão; o anel de
-                  foco vai no rótulo, já que é o input que recebe o foco. */}
-              <label
-                htmlFor={idArquivo}
-                className={`${classeBotaoSecundario} cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-azul-interativo`}
-              >
-                Selecionar planilha
-                <input
-                  id={idArquivo}
-                  type="file"
-                  accept=".csv,text/csv"
-                  onChange={selecionar}
-                  className="sr-only"
-                />
-              </label>
-              <span className="min-w-0 break-all font-mono text-[13px] text-tinta-suave">
-                {arquivo ? arquivo.name : "Nenhum arquivo selecionado"}
-              </span>
-            </div>
+            <SeletorArquivo
+              rotulo="Selecionar planilha"
+              accept=".csv,text/csv"
+              arquivo={arquivo}
+              onSelecionar={selecionar}
+            />
           </section>
 
           {erro && <MensagemErro>{erro}</MensagemErro>}
