@@ -2,7 +2,6 @@ import { prisma } from "../../db";
 import {
   importarUsuarios,
   importarCursos,
-  importarTiposAtividade,
   importarVinculosDocente,
   importarVinculosCoordenador,
 } from "../importacao";
@@ -11,7 +10,7 @@ import { Perfil } from "../../../generated/prisma/client";
 
 async function limpar() {
   await prisma.$executeRawUnsafe(
-    `TRUNCATE TABLE "VinculoCoordenadorCurso", "VinculoDocenteCurso", "TipoAtividade", "PeriodoLetivo", "Curso", "UsuarioPerfil", "Usuario" RESTART IDENTITY CASCADE`,
+    `TRUNCATE TABLE "VinculoCoordenadorCurso", "VinculoDocenteCurso", "PeriodoLetivo", "Curso", "UsuarioPerfil", "Usuario" RESTART IDENTITY CASCADE`,
   );
 }
 
@@ -73,8 +72,9 @@ describe("leitura da planilha", () => {
     const { linhas } = lerPlanilha("NOME,email\nAna,ana@srha.dev", MODELOS_IMPORTACAO.usuarios);
     expect(linhas[0].valores).toEqual({ nome: "Ana", email: "ana@srha.dev", secretaria: "" });
 
-    const { linhas: tipos } = lerPlanilha("Descricao\nOrientação", MODELOS_IMPORTACAO.tiposAtividade);
-    expect(tipos[0].valores).toEqual({ descricao: "Orientação" });
+    const comAcento = { nomeArquivo: "modelo.csv", colunas: [{ chave: "descricao", rotulo: "Descrição", obrigatoria: true, exemplo: "" }] };
+    const { linhas: semAcento } = lerPlanilha("Descricao\nOrientação", comAcento);
+    expect(semAcento[0].valores).toEqual({ descricao: "Orientação" });
   });
 
   test("planilha de uma coluna não parte o nome na vírgula", () => {
@@ -168,7 +168,7 @@ describe("importarUsuarios", () => {
   });
 });
 
-describe("importarCursos e importarTiposAtividade", () => {
+describe("importarCursos", () => {
   test("curso com o mesmo nome em outra caixa ou com espaço a mais conta como já existente", async () => {
     await prisma.curso.create({ data: { nome: "Engenharia Civil" } });
 
@@ -177,16 +177,6 @@ describe("importarCursos e importarTiposAtividade", () => {
     expect(resultado).toEqual({ gravado: true, importados: 1, jaExistiam: 1 });
     const cursos = await prisma.curso.findMany({ orderBy: { nome: "asc" } });
     expect(cursos.map((curso) => curso.nome)).toEqual(["Direito", "Engenharia Civil"]);
-  });
-
-  test("tipo repetido na planilha recusa a importação", async () => {
-    const resultado = await importarTiposAtividade(planilha("Descrição", "Orientação de TCC", "ORIENTAÇÃO DE TCC"));
-
-    expect(resultado).toEqual({
-      gravado: false,
-      erros: [{ linha: 3, erro: "Tipo de atividade repetido na planilha (já está na linha 2)." }],
-    });
-    expect(await prisma.tipoAtividade.count()).toBe(0);
   });
 });
 

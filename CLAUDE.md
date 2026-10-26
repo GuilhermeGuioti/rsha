@@ -179,9 +179,11 @@ Schema completo em `docs/SRHA-especificacao-desenvolvimento.md` §4. Copie de l�
   O próprio Postgres recusa, por triggers (migration `imutabilidade_aprovado_e_auditoria`),
   que também travam incluir, alterar ou remover item de relatório aprovado.
 - **Inativar, nunca excluir** curso, usuário ou tipo de atividade já referenciado.
-- **Renomear tipo de atividade é livre**, mesmo usado em relatório aprovado — o item guarda
-  só o `tipoAtividadeId`, então o nome novo aparece também nos aprovados. Aceito de
-  propósito (decisão de 2026-10-22); não bloqueie nem copie o nome para o item.
+- **Tipos de atividade são lista fixa**, gravada pela migration `tipos_atividade_fixos` —
+  sem tela de cadastro nem importação (decisão de 2026-10-26; diverge do RF03 do
+  `docs/rsha-docreq.pdf`, que previa cadastrar, alterar e inativar). Mudar a lista é
+  migration nova; tipo retirado é inativado, não excluído. O item guarda só o
+  `tipoAtividadeId` — não copie o nome para o item.
 - **Vínculo docente-curso com relatório não pode ser removido.** Arquivo e painel partem
   dos vínculos — sem ele, o relatório (mesmo aprovado) sumiria da consulta.
 - **Sempre há ao menos uma secretaria ativa.** Inativar ou tirar o perfil da última é
@@ -288,7 +290,6 @@ chamada + revalidação.
 | `/admin/usuarios` | secretaria | CRUD de usuários, perfis e importação CSV |
 | `/admin/vinculos` | secretaria | Vínculos docente-curso e coordenador-curso — os dois lados da relação |
 | `/admin/periodos` | secretaria | Períodos letivos e prazos |
-| `/admin/tipos-atividade` | secretaria | Tipos de atividade dos itens do relatório (RF03) — cadastrar, alterar, inativar |
 
 Não existe tela própria de auditoria. A secretaria consulta a trilha de qualquer relatório
 (RF17, UC11) em `/relatorios/[id]`, onde ela já é coluna permanente — a rota

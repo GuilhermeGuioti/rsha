@@ -179,23 +179,6 @@ export async function importarCursos(bytes: Uint8Array): Promise<ResultadoImport
   return { gravado: true, importados: count, jaExistiam: validas.length - count };
 }
 
-const SchemaLinhaTipoAtividade = z.object({ descricao: z.string() });
-
-export async function importarTiposAtividade(bytes: Uint8Array): Promise<ResultadoImportacao> {
-  const { linhas, erros } = lerPlanilha(decodificarPlanilha(bytes), MODELOS_IMPORTACAO.tiposAtividade);
-  apontarRepetidas(linhas, (valores) => chaveNome(valores.descricao), "Tipo de atividade", erros);
-  const validas = validarLinhas(linhas, SchemaLinhaTipoAtividade, erros);
-  if (erros.length > 0) return falhou(erros);
-
-  const existentes = await prisma.tipoAtividade.findMany({ select: { descricao: true } });
-  const jaCadastrados = new Set(existentes.map((tipo) => chaveNome(tipo.descricao)));
-  const { count } = await prisma.tipoAtividade.createMany({
-    data: validas.filter(({ dados }) => !jaCadastrados.has(chaveNome(dados.descricao))).map(({ dados }) => dados),
-    skipDuplicates: true,
-  });
-  return { gravado: true, importados: count, jaExistiam: validas.length - count };
-}
-
 const SchemaLinhaVinculoDocente = z.object({
   email: Email,
   curso: z.string(),

@@ -33,10 +33,6 @@ export const MODELOS_IMPORTACAO = {
     nomeArquivo: "modelo-cursos.csv",
     colunas: [{ chave: "nome", rotulo: "Nome", obrigatoria: true, exemplo: "Engenharia Civil" }],
   },
-  tiposAtividade: {
-    nomeArquivo: "modelo-tipos-atividade.csv",
-    colunas: [{ chave: "descricao", rotulo: "Descrição", obrigatoria: true, exemplo: "Orientação de TCC" }],
-  },
   vinculosDocente: {
     nomeArquivo: "modelo-vinculos-docente.csv",
     colunas: [

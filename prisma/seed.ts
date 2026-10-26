@@ -2,11 +2,10 @@ import "dotenv/config";
 import { Perfil } from "../generated/prisma/enums";
 import { prisma } from "../lib/db";
 
-// A secretaria inicial e os tipos de atividade (lista fixa do formulário de
-// papel — docs/prompts-iniciais-srha.txt). Cursos, período letivo e os demais
-// usuários são cadastrados pela secretaria via UI (app/admin/*) — fora de
-// produção, o cenário de desenvolvimento abaixo poupa esse cadastro à mão.
-const TIPOS_ATIVIDADE = ["Orientação de TCC", "Supervisão de Estágio", "Participação em NBE"];
+// A secretaria inicial. Os tipos de atividade são lista fixa e vêm da
+// migration tipos_atividade_fixos, não daqui. Cursos, período letivo e os
+// demais usuários são cadastrados pela secretaria via UI (app/admin/*) — fora
+// de produção, o cenário de desenvolvimento abaixo poupa esse cadastro à mão.
 
 async function criarUsuario(nome: string, email: string) {
   return prisma.usuario.upsert({ where: { email }, update: { nome }, create: { nome, email } });
@@ -40,10 +39,6 @@ function secretariaInicial(): { nome: string; email: string } {
 
 export async function seed() {
   const inicial = secretariaInicial();
-
-  for (const descricao of TIPOS_ATIVIDADE) {
-    await prisma.tipoAtividade.upsert({ where: { descricao }, update: {}, create: { descricao } });
-  }
 
   const secretaria = await criarUsuario(inicial.nome, inicial.email);
   await darPerfil(secretaria.id, Perfil.SECRETARIA);
