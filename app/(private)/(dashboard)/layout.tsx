@@ -2,6 +2,7 @@ import { exigirSessaoPagina, obterPerfis } from "../../../lib/auth/guards";
 import { prisma } from "../../../lib/db";
 import { Perfil } from "../../../generated/prisma/enums";
 import { Nav, type LinkNav } from "../../../components/Nav";
+import { BotaoVoltar } from "../../../components/BotaoVoltar";
 
 const ROTULOS_PERFIL: Record<Perfil, string> = {
   DOCENTE: "Docente",
@@ -40,6 +41,10 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   // mostra os atalhos grandes (HomeSecretaria). Um menu duplicado ali só
   // adicionaria ruído.
 
+  // A tela inicial de cada perfil, a mesma que o "/" escolhe (ver page.tsx):
+  // coordenador que não é docente cai direto na fila. Nela não há "Voltar".
+  const inicio = !perfis.includes(Perfil.DOCENTE) && perfis.includes(Perfil.COORDENADOR) ? "/avaliacao" : "/";
+
   return (
     <div className="flex flex-1 flex-col">
       <Nav
@@ -47,7 +52,10 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
         perfilRotulo={perfis.map((perfil) => ROTULOS_PERFIL[perfil]).join(" · ")}
         links={links}
       />
-      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-8 lg:px-10">{children}</main>
+      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-8 lg:px-10">
+        <BotaoVoltar inicio={inicio} />
+        {children}
+      </main>
     </div>
   );
 }

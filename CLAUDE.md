@@ -439,6 +439,11 @@ anos do RNF09.
 novo quando já houver equivalente, não troque paleta nem tipografia. Se faltar algo,
 pergunte antes de criar.
 
+Fora do mockup, a pedido (2026-10-26): **botão "Voltar" em toda tela do `(dashboard)`**
+menos o início do perfil — `components/BotaoVoltar.tsx`, desenhado no layout. Volta
+pelo histórico só quando a tela anterior é do próprio sistema; página aberta direto
+vai para a tela-mãe.
+
 Brief completo em `docs/rsha-layout/uploads/SRHA-brief-design.md`. O que não pode ser violado:
 
 - Responsivo real até **360px** — o fluxo inteiro precisa funcionar no celular
