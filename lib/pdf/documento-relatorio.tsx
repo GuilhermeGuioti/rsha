@@ -1,6 +1,6 @@
 import path from "node:path";
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { codigoRelatorio, formatarData, formatarDataHora, formatarHoras, ROTULO_DIA_SEMANA, ROTULO_EVENTO } from "../formato";
+import { codigoRelatorio, formatarDataHora, formatarHoras, ROTULO_DIA_SEMANA, ROTULO_EVENTO } from "../formato";
 import { MARCADOR_PDF } from "../services/autenticidade";
 import type { RelatorioExportado } from "../services/relatorios";
 
@@ -121,10 +121,8 @@ const estilos = StyleSheet.create({
   quadroRotulo: { fontSize: 7.5, fontWeight: 600, letterSpacing: 0.6, textTransform: "uppercase", color: COR.tintaSuave },
   quadroNome: { fontSize: 10.5, fontWeight: 600, marginTop: 5 },
   quadroAto: { marginTop: 3, color: COR.tintaSuave },
-  nota: { marginTop: 8, fontSize: 8, color: COR.tintaSuave, lineHeight: 1.4, textAlign: "justify" },
-  data: { marginTop: 10 },
   carimbo: {
-    marginTop: 10,
+    marginTop: 12,
     borderWidth: 0.75,
     borderColor: COR.tinta,
     paddingVertical: 8,
@@ -268,14 +266,6 @@ export function DocumentoRelatorio({
               nome={dados.aprovadoPor}
               ato={`Aprovado em ${formatarDataHora(dados.aprovadoEm)}`}
             />
-          </View>
-          <Text style={estilos.nota}>
-            Documento validado eletronicamente pelo SRHA, dispensada a assinatura manuscrita. A autoria e a aprovação
-            são comprovadas pela sessão institucional autenticada de cada responsável, registrada na trilha de
-            auditoria a seguir.
-          </Text>
-          <View style={estilos.data}>
-            <Campo rotulo="Data">{formatarData(dados.aprovadoEm)}</Campo>
           </View>
           <View style={estilos.carimbo}>
             <Text style={estilos.quadroRotulo}>Código de autenticidade</Text>
