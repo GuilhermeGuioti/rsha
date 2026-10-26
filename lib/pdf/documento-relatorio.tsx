@@ -1,142 +1,162 @@
-import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { TipoEvento } from "../../generated/prisma/enums";
-import { codigoRelatorio, formatarDataHora, formatarHoras, ROTULO_DIA_SEMANA, ROTULO_EVENTO } from "../formato";
+import path from "node:path";
+import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { codigoRelatorio, formatarData, formatarDataHora, formatarHoras, ROTULO_DIA_SEMANA, ROTULO_EVENTO } from "../formato";
 import type { RelatorioExportado } from "../services/relatorios";
 
-// As mesmas variáveis de app/globals.css — o PDF é a via impressa da mesma
-// tela, não um documento com identidade própria.
+// O PDF segue o modelo de papel da instituição ("Modelo - Relatório de Horas
+// Atividades.docx"): cabeçalho com a logo, título centralizado e os campos no
+// formato "Rótulo: valor". O modelo traz uma atividade por folha; aqui cada
+// item vira uma linha da tabela, com a descrição logo abaixo.
+//
+// As assinaturas do modelo dão lugar à validação eletrônica: a autoria e a
+// aprovação são comprovadas pela sessão autenticada registrada na trilha, sem
+// campo de assinatura manuscrita (RF11; docreq §4.3 descartou o Gov.br).
+
+// Faixa com a logo, recortada do cabeçalho do modelo e convertida de CMYK para
+// RGB. Lida do disco como as fontes — `next.config.ts` inclui a pasta no
+// tracing da rota de download.
+const CABECALHO = path.join(process.cwd(), "lib", "pdf", "imagens", "cabecalho-institucional.jpg");
+
 const COR = {
-  azulInterativo: "#00679e",
-  tinta: "#14181f",
-  tintaSuave: "#5a6572",
-  borda: "#dde3ea",
-  papel: "#f7f8fa",
-  aprovado: "#1e7a46",
-  aguardando: "#b26a00",
-  devolvido: "#b3261e",
+  tinta: "#1a1a1a",
+  tintaSuave: "#4f5660",
+  linha: "#9aa1a9",
+  fundo: "#eef0f2",
 };
+
+// Margens do modelo: 1,5 cm nas laterais; a faixa da logo ocupa a largura útil.
+const MARGEM = 42.5;
+const LARGURA_UTIL = 595.28 - 2 * MARGEM;
+const ALTURA_CABECALHO = LARGURA_UTIL * (225 / 2163);
+
+// Estilo com `lineHeight` declara o próprio `fontSize`: o react-pdf multiplica
+// o valor sem unidade pelo tamanho do mesmo estilo, não pelo herdado — sem ele,
+// usa 18 pt e o parágrafo sai com espaço duplo.
+const CORPO = 9.5;
 
 const estilos = StyleSheet.create({
   // Sem `lineHeight` aqui de propósito: herdado pela página inteira, ele zera a
   // caixa dos nós dinâmicos do react-pdf (a prop `render` do número de página)
   // e o texto some do PDF sem erro nenhum. Vai só onde há parágrafo de fato.
   pagina: {
-    paddingTop: 40,
-    paddingBottom: 56,
-    paddingHorizontal: 44,
+    paddingTop: 21 + ALTURA_CABECALHO + 22,
+    paddingBottom: 60,
+    paddingHorizontal: MARGEM,
     fontFamily: "IBM Plex Sans",
-    fontSize: 9,
+    fontSize: CORPO,
     color: COR.tinta,
   },
 
-  cabecalho: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    borderBottomWidth: 1,
-    borderBottomColor: COR.borda,
-    paddingBottom: 14,
-  },
-  codigo: { fontFamily: "IBM Plex Mono", fontSize: 7.5, letterSpacing: 1, color: COR.tintaSuave },
-  titulo: { fontFamily: "IBM Plex Serif", fontSize: 16, color: COR.azulInterativo, marginTop: 5 },
-  subtitulo: { fontSize: 9.5, color: COR.tintaSuave, marginTop: 3 },
-  selo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    borderWidth: 1,
-    borderColor: COR.aprovado,
-    borderRadius: 3,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-  },
-  seloMarcador: { width: 6, height: 6, borderRadius: 3, backgroundColor: COR.aprovado },
-  seloTexto: { fontSize: 8.5, fontWeight: 600, color: COR.aprovado },
+  cabecalho: { position: "absolute", top: 21, left: MARGEM, width: LARGURA_UTIL, height: ALTURA_CABECALHO },
 
-  identificacao: { flexDirection: "row", flexWrap: "wrap", marginTop: 14 },
-  campo: { width: "50%", paddingRight: 12, marginBottom: 9 },
-  rotulo: { fontSize: 7.5, letterSpacing: 0.4, color: COR.tintaSuave, textTransform: "uppercase" },
-  valor: { fontSize: 10, marginTop: 2 },
-
-  secao: { fontFamily: "IBM Plex Serif", fontSize: 12, color: COR.azulInterativo, marginTop: 16, marginBottom: 7 },
-
-  cabecalhoTabela: {
-    flexDirection: "row",
-    backgroundColor: COR.papel,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: COR.borda,
-    paddingVertical: 5,
-    paddingHorizontal: 7,
-  },
-  colunaRotulo: { fontSize: 7.5, letterSpacing: 0.4, color: COR.tintaSuave, textTransform: "uppercase" },
-  linha: { borderBottomWidth: 1, borderBottomColor: COR.borda, paddingVertical: 6, paddingHorizontal: 7 },
-  linhaTopo: { flexDirection: "row" },
-  colAtividade: { width: "42%", paddingRight: 8 },
-  colDia: { width: "18%", paddingRight: 8 },
-  colHorario: { width: "22%", paddingRight: 8 },
-  colHoras: { width: "18%", textAlign: "right" },
-  mono: { fontFamily: "IBM Plex Mono" },
-  descricao: { color: COR.tintaSuave, marginTop: 3, lineHeight: 1.45 },
-  vazio: { color: COR.tintaSuave, paddingVertical: 10, paddingHorizontal: 7 },
-
-  total: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 7,
-    borderBottomWidth: 2,
-    borderBottomColor: COR.azulInterativo,
-  },
-  totalRotulo: { fontSize: 10, fontWeight: 600 },
-  totalValor: { fontFamily: "IBM Plex Mono", fontSize: 13, fontWeight: 600, color: COR.azulInterativo },
-
-  aprovacao: {
-    marginTop: 16,
-    borderLeftWidth: 3,
-    borderLeftColor: COR.aprovado,
-    backgroundColor: COR.papel,
-    paddingVertical: 9,
-    paddingHorizontal: 12,
-  },
-  aprovacaoTitulo: { fontSize: 10, fontWeight: 600, color: COR.aprovado },
-
-  evento: { flexDirection: "row", marginBottom: 8 },
-  eventoData: { width: 92, fontFamily: "IBM Plex Mono", fontSize: 8, color: COR.tintaSuave, paddingTop: 1 },
-  eventoCorpo: { flex: 1 },
-  eventoRotulo: { fontSize: 9.5, fontWeight: 600 },
-  eventoAutor: { fontSize: 8.5, color: COR.tintaSuave, marginTop: 1 },
-  justificativa: {
-    marginTop: 3,
-    borderLeftWidth: 2,
-    borderLeftColor: COR.borda,
-    paddingLeft: 7,
-    paddingVertical: 2,
+  titulo: { fontSize: 12, fontWeight: 600, textAlign: "center", letterSpacing: 0.6 },
+  codigo: {
+    fontFamily: "IBM Plex Mono",
+    fontSize: 7.5,
+    letterSpacing: 1,
     color: COR.tintaSuave,
-    lineHeight: 1.45,
+    textAlign: "center",
+    marginTop: 4,
+  },
+
+  identificacao: { marginTop: 18 },
+  campo: { fontSize: CORPO, lineHeight: 1.35, marginBottom: 4 },
+  negrito: { fontWeight: 600 },
+
+  secao: {
+    fontSize: CORPO,
+    fontWeight: 600,
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    borderBottomWidth: 1,
+    borderBottomColor: COR.tinta,
+    paddingBottom: 3,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+
+  // Cada linha tem moldura completa e sobe o equivalente a uma borda sobre a
+  // anterior, para as duas não somarem espessura: a tabela que quebra entre
+  // páginas fecha embaixo numa e abre emoldurada na outra.
+  tabelaCabecalho: {
+    flexDirection: "row",
+    backgroundColor: COR.fundo,
+    borderWidth: 0.75,
+    borderColor: COR.linha,
+  },
+  tabelaLinha: { borderWidth: 0.75, borderColor: COR.linha, marginTop: -0.75 },
+  linhaTopo: { flexDirection: "row" },
+  celula: { paddingVertical: 5, paddingHorizontal: 6 },
+  celulaCabecalho: { fontSize: 8, fontWeight: 600 },
+  divisoria: { borderLeftWidth: 0.75, borderLeftColor: COR.linha },
+
+  colNumero: { width: "7%", textAlign: "center" },
+  colAtividade: { width: "41%" },
+  colDiaHorario: { width: "36%" },
+  colHoras: { width: "16%", textAlign: "right" },
+
+  descricao: {
+    borderTopWidth: 0.5,
+    borderTopColor: COR.linha,
+    borderStyle: "dashed",
+    paddingVertical: 5,
+    paddingHorizontal: 6,
+    fontSize: CORPO,
+    lineHeight: 1.4,
+    textAlign: "justify",
+  },
+  // Um ponto abaixo do corpo: a Plex Mono é mais larga e pesada que a Sans.
+  mono: { fontFamily: "IBM Plex Mono", fontSize: 8.5 },
+  vazio: { color: COR.tintaSuave },
+
+  total: { flexDirection: "row", backgroundColor: COR.fundo },
+  totalRotulo: { width: "84%", fontWeight: 600, textAlign: "right" },
+  totalValor: { width: "16%", fontFamily: "IBM Plex Mono", textAlign: "right" },
+
+  validacao: { flexDirection: "row", gap: 12 },
+  quadro: { flex: 1, borderWidth: 0.75, borderColor: COR.linha, paddingVertical: 8, paddingHorizontal: 10 },
+  quadroRotulo: { fontSize: 7.5, fontWeight: 600, letterSpacing: 0.6, textTransform: "uppercase", color: COR.tintaSuave },
+  quadroNome: { fontSize: 10.5, fontWeight: 600, marginTop: 5 },
+  quadroAto: { marginTop: 3, color: COR.tintaSuave },
+  nota: { marginTop: 8, fontSize: 8, color: COR.tintaSuave, lineHeight: 1.4, textAlign: "justify" },
+  data: { marginTop: 10 },
+
+  colEventoData: { width: "21%" },
+  colEventoTipo: { width: "31%" },
+  colEventoAutor: { width: "48%" },
+  justificativa: {
+    borderTopWidth: 0.5,
+    borderTopColor: COR.linha,
+    borderStyle: "dashed",
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    fontSize: CORPO,
+    lineHeight: 1.4,
   },
 
   // Régua e rodapé são posicionados fora do fluxo, repetidos em toda página.
   // A régua precisa de altura própria: View absoluta só com borda não desenha.
-  regua: { position: "absolute", bottom: 38, left: 44, right: 44, height: 1, backgroundColor: COR.borda },
-  rodape: { position: "absolute", bottom: 26, fontSize: 7.5, color: COR.tintaSuave },
-  rodapeEsquerda: { left: 44 },
-  rodapeDireita: { right: 44 },
+  regua: { position: "absolute", bottom: 40, left: MARGEM, right: MARGEM, height: 0.75, backgroundColor: COR.linha },
+  rodape: { position: "absolute", bottom: 27, fontSize: 7.5, color: COR.tintaSuave },
+  rodapeEsquerda: { left: MARGEM },
+  rodapeDireita: { right: MARGEM },
 });
-
-const COR_EVENTO: Record<TipoEvento, string> = {
-  CRIACAO: COR.tinta,
-  SUBMISSAO: COR.aguardando,
-  DEVOLUCAO: COR.devolvido,
-  APROVACAO: COR.aprovado,
-};
 
 function Campo({ rotulo, children }: { rotulo: string; children: string }) {
   return (
-    <View style={estilos.campo}>
-      <Text style={estilos.rotulo}>{rotulo}</Text>
-      <Text style={estilos.valor}>{children}</Text>
+    <Text style={estilos.campo}>
+      <Text style={estilos.negrito}>{rotulo}: </Text>
+      {children}
+    </Text>
+  );
+}
+
+function Quadro({ rotulo, nome, ato }: { rotulo: string; nome: string; ato: string }) {
+  return (
+    <View style={estilos.quadro}>
+      <Text style={estilos.quadroRotulo}>{rotulo}</Text>
+      <Text style={estilos.quadroNome}>{nome}</Text>
+      <Text style={estilos.quadroAto}>{ato}</Text>
     </View>
   );
 }
@@ -154,78 +174,116 @@ export function DocumentoRelatorio({ dados, geradoEm }: { dados: RelatorioExport
       producer="SRHA"
     >
       <Page size="A4" style={estilos.pagina}>
-        <View style={estilos.cabecalho} fixed>
-          <View>
-            <Text style={estilos.codigo}>{codigo}</Text>
-            <Text style={estilos.titulo}>Relatório de Horas Atividades</Text>
-            <Text style={estilos.subtitulo}>
-              {dados.curso} · {periodo}
-            </Text>
-          </View>
-          {/* Cor nunca é o único portador de estado: marcador + palavra. */}
-          <View style={estilos.selo}>
-            <View style={estilos.seloMarcador} />
-            <Text style={estilos.seloTexto}>APROVADO</Text>
-          </View>
-        </View>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- Image do react-pdf não tem alt */}
+        <Image src={CABECALHO} style={estilos.cabecalho} fixed />
+
+        <Text style={estilos.titulo}>RELATÓRIO DE HORAS ATIVIDADES</Text>
+        <Text style={estilos.codigo}>{codigo}</Text>
 
         <View style={estilos.identificacao}>
-          <Campo rotulo="Docente">{dados.docente}</Campo>
-          <Campo rotulo="Correio eletrônico">{dados.emailDocente}</Campo>
-          <Campo rotulo="Curso">{dados.curso}</Campo>
-          <Campo rotulo="Período letivo">{periodo}</Campo>
+          <Campo rotulo="Curso">{dados.curso.toUpperCase()}</Campo>
+          <Campo rotulo="Nome do Docente">{dados.docente}</Campo>
+          <Campo rotulo="E-mail institucional">{dados.emailDocente}</Campo>
+          <Campo rotulo="Período Letivo">{periodo}</Campo>
         </View>
 
-        <Text style={estilos.secao}>Atividades declaradas</Text>
+        <Text style={estilos.secao}>Atividades realizadas</Text>
 
-        <View style={estilos.cabecalhoTabela} fixed>
-          <Text style={[estilos.colunaRotulo, estilos.colAtividade]}>Tipo de atividade</Text>
-          <Text style={[estilos.colunaRotulo, estilos.colDia]}>Dia</Text>
-          <Text style={[estilos.colunaRotulo, estilos.colHorario]}>Horário</Text>
-          <Text style={[estilos.colunaRotulo, estilos.colHoras]}>Horas</Text>
+        <View style={estilos.tabelaCabecalho}>
+          <Text style={[estilos.celula, estilos.celulaCabecalho, estilos.colNumero]}>Nº</Text>
+          <Text style={[estilos.celula, estilos.celulaCabecalho, estilos.colAtividade, estilos.divisoria]}>
+            Tipo de Atividade
+          </Text>
+          <Text style={[estilos.celula, estilos.celulaCabecalho, estilos.colDiaHorario, estilos.divisoria]}>
+            Dia da Semana e Horário
+          </Text>
+          <Text style={[estilos.celula, estilos.celulaCabecalho, estilos.colHoras, estilos.divisoria]}>Horas</Text>
         </View>
 
         {dados.itens.length === 0 ? (
-          <Text style={estilos.vazio}>Nenhuma atividade declarada.</Text>
+          <View style={estilos.tabelaLinha}>
+            <Text style={[estilos.celula, estilos.vazio]}>Nenhuma atividade declarada.</Text>
+          </View>
         ) : (
           dados.itens.map((item, indice) => (
-            <View key={indice} style={estilos.linha} wrap={false}>
+            <View key={indice} style={estilos.tabelaLinha} wrap={false}>
               <View style={estilos.linhaTopo}>
-                <Text style={estilos.colAtividade}>{item.tipoAtividade}</Text>
-                <Text style={estilos.colDia}>{ROTULO_DIA_SEMANA[item.diaSemana]}</Text>
-                <Text style={[estilos.colHorario, estilos.mono]}>{item.horario}</Text>
-                <Text style={[estilos.colHoras, estilos.mono]}>{formatarHoras(item.horas)}</Text>
+                <Text style={[estilos.celula, estilos.colNumero, estilos.mono]}>{indice + 1}</Text>
+                <Text style={[estilos.celula, estilos.colAtividade, estilos.divisoria]}>{item.tipoAtividade}</Text>
+                <Text style={[estilos.celula, estilos.colDiaHorario, estilos.divisoria]}>
+                  {ROTULO_DIA_SEMANA[item.diaSemana]}, <Text style={estilos.mono}>{item.horario}</Text>
+                </Text>
+                <Text style={[estilos.celula, estilos.colHoras, estilos.mono, estilos.divisoria]}>
+                  {formatarHoras(item.horas)}
+                </Text>
               </View>
-              <Text style={estilos.descricao}>{item.descricao}</Text>
+              <Text style={estilos.descricao}>
+                <Text style={estilos.negrito}>Descrição das atividades realizadas: </Text>
+                {item.descricao}
+              </Text>
             </View>
           ))
         )}
 
-        <View style={estilos.total} wrap={false}>
-          <Text style={estilos.totalRotulo}>
-            Total declarado ({dados.itens.length} {dados.itens.length === 1 ? "atividade" : "atividades"})
+        <View style={[estilos.tabelaLinha, estilos.total]} wrap={false}>
+          <Text style={[estilos.celula, estilos.totalRotulo]}>Total de horas atividades</Text>
+          <Text style={[estilos.celula, estilos.totalValor, estilos.divisoria]}>
+            {formatarHoras(dados.cargaHorariaTotal)}
           </Text>
-          <Text style={estilos.totalValor}>{formatarHoras(dados.cargaHorariaTotal)} h</Text>
         </View>
 
-        <View style={estilos.aprovacao} wrap={false}>
-          <Text style={estilos.aprovacaoTitulo}>Aprovado pela coordenação</Text>
-          <Text style={{ marginTop: 3 }}>
-            {dados.aprovadoPor} · <Text style={estilos.mono}>{formatarDataHora(dados.aprovadoEm)}</Text>
+        <View wrap={false}>
+          <Text style={estilos.secao}>Validação eletrônica</Text>
+          <View style={estilos.validacao}>
+            <Quadro
+              rotulo="Docente"
+              nome={dados.docente}
+              ato={`Enviado para avaliação em ${formatarDataHora(dados.enviadoEm)}`}
+            />
+            <Quadro
+              rotulo="Coordenação do curso"
+              nome={dados.aprovadoPor}
+              ato={`Aprovado em ${formatarDataHora(dados.aprovadoEm)}`}
+            />
+          </View>
+          <Text style={estilos.nota}>
+            Documento validado eletronicamente pelo SRHA, dispensada a assinatura manuscrita. A autoria e a aprovação
+            são comprovadas pela sessão institucional autenticada de cada responsável, registrada na trilha de
+            auditoria a seguir.
           </Text>
+          <View style={estilos.data}>
+            <Campo rotulo="Data">{formatarData(dados.aprovadoEm)}</Campo>
+          </View>
         </View>
 
         <Text style={estilos.secao}>Trilha de auditoria</Text>
+
+        <View style={estilos.tabelaCabecalho}>
+          <Text style={[estilos.celula, estilos.celulaCabecalho, estilos.colEventoData]}>Data e hora</Text>
+          <Text style={[estilos.celula, estilos.celulaCabecalho, estilos.colEventoTipo, estilos.divisoria]}>
+            Evento
+          </Text>
+          <Text style={[estilos.celula, estilos.celulaCabecalho, estilos.colEventoAutor, estilos.divisoria]}>
+            Responsável
+          </Text>
+        </View>
         {dados.eventos.map((evento, indice) => (
-          <View key={indice} style={estilos.evento} wrap={false}>
-            <Text style={estilos.eventoData}>{formatarDataHora(evento.ocorridoEm)}</Text>
-            <View style={estilos.eventoCorpo}>
-              <Text style={[estilos.eventoRotulo, { color: COR_EVENTO[evento.tipo] }]}>
+          <View key={indice} style={estilos.tabelaLinha} wrap={false}>
+            <View style={estilos.linhaTopo}>
+              <Text style={[estilos.celula, estilos.colEventoData, estilos.mono]}>
+                {formatarDataHora(evento.ocorridoEm)}
+              </Text>
+              <Text style={[estilos.celula, estilos.colEventoTipo, estilos.divisoria]}>
                 {ROTULO_EVENTO[evento.tipo]}
               </Text>
-              <Text style={estilos.eventoAutor}>{evento.autor}</Text>
-              {evento.justificativa && <Text style={estilos.justificativa}>{evento.justificativa}</Text>}
+              <Text style={[estilos.celula, estilos.colEventoAutor, estilos.divisoria]}>{evento.autor}</Text>
             </View>
+            {evento.justificativa && (
+              <Text style={estilos.justificativa}>
+                <Text style={estilos.negrito}>Justificativa: </Text>
+                {evento.justificativa}
+              </Text>
+            )}
           </View>
         ))}
 
@@ -236,7 +294,7 @@ export function DocumentoRelatorio({ dados, geradoEm }: { dados: RelatorioExport
         <Text
           style={[estilos.rodape, estilos.rodapeDireita]}
           fixed
-          render={({ pageNumber, totalPages }) => `${pageNumber} de ${totalPages}`}
+          render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
         />
       </Page>
     </Document>

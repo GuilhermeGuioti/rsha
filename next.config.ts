@@ -6,10 +6,11 @@ const nextConfig: NextConfig = {
   // sem isso o Jest (e o bundler) tentam carregar ESM puro como CJS e quebram.
   transpilePackages: ["@prisma/client"],
 
-  // Os arquivos da IBM Plex são lidos do disco na hora de gerar o PDF; sem
-  // isto o tracing da Vercel não sobe a pasta junto com a função da rota.
+  // As fontes da IBM Plex e a faixa com a logo são lidas do disco na hora de
+  // gerar o PDF; sem isto o tracing da Vercel não sobe as pastas junto com a
+  // função da rota.
   outputFileTracingIncludes: {
-    "/api/relatorios/[id]/pdf": ["./lib/pdf/fontes/**"],
+    "/api/relatorios/[id]/pdf": ["./lib/pdf/fontes/**", "./lib/pdf/imagens/**"],
   },
 };
 

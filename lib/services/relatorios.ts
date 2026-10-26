@@ -26,6 +26,7 @@ export type RelatorioExportado = {
   cargaHorariaTotal: number;
   itens: ItemExportado[];
   eventos: EventoExportado[];
+  enviadoEm: Date;
   aprovadoPor: string;
   aprovadoEm: Date;
 };
@@ -68,6 +69,11 @@ export async function obterRelatorioAprovadoParaPdf(relatorioId: number): Promis
   if (!aprovacao) {
     throw new Error("Relatório aprovado sem evento de aprovação na trilha de auditoria.");
   }
+  // A versão aprovada é a do último envio — os anteriores foram devolvidos.
+  const envio = [...relatorio.eventos].reverse().find((evento) => evento.tipo === TipoEvento.SUBMISSAO);
+  if (!envio) {
+    throw new Error("Relatório aprovado sem evento de envio na trilha de auditoria.");
+  }
 
   return {
     id: relatorio.id,
@@ -90,6 +96,7 @@ export async function obterRelatorioAprovadoParaPdf(relatorioId: number): Promis
       ocorridoEm: evento.ocorridoEm,
       justificativa: evento.justificativa,
     })),
+    enviadoEm: envio.ocorridoEm,
     aprovadoPor: aprovacao.usuario.nome,
     aprovadoEm: aprovacao.ocorridoEm,
   };

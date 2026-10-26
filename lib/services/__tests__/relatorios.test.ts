@@ -118,6 +118,22 @@ test("a trilha exportada vem em ordem cronológica, do primeiro evento ao últim
   expect(dados.eventos[2].justificativa).toBe("Falta detalhar o horário da extensão.");
 });
 
+test("a data de envio exportada é a do último envio, o que foi aprovado", async () => {
+  const { docente, coordenador, relatorioId } = await obterAmbiente();
+  await submeter(relatorioId, docente.id);
+  await devolver(relatorioId, coordenador.id, "Falta detalhar o horário da extensão.");
+  jest.setSystemTime(new Date("2026-10-03T15:00:00Z"));
+  await submeter(relatorioId, docente.id);
+  jest.setSystemTime(new Date("2026-10-05T13:30:00Z"));
+  await aprovar(relatorioId, coordenador.id);
+  jest.setSystemTime(new Date("2026-10-01T12:00:00Z"));
+
+  const dados = await obterRelatorioAprovadoParaPdf(relatorioId);
+
+  expect(dados.enviadoEm).toEqual(new Date("2026-10-03T15:00:00Z"));
+  expect(dados.aprovadoEm).toEqual(new Date("2026-10-05T13:30:00Z"));
+});
+
 test("relatório que não está aprovado não é exportável", async () => {
   const { docente, relatorioId } = await obterAmbiente();
 
