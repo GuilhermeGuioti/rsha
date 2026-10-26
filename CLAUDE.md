@@ -372,7 +372,7 @@ services:
       POSTGRES_PASSWORD: srha
       POSTGRES_DB: srha
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - srha-dados:/var/lib/postgresql/data
 volumes:
@@ -382,11 +382,14 @@ volumes:
 `.env` (nunca versionado; mantenha um `.env.example` com as chaves e valores vazios):
 
 ```
-DATABASE_URL="postgresql://srha:srha@localhost:5432/srha"
-DIRECT_URL="postgresql://srha:srha@localhost:5432/srha"
+DATABASE_URL="postgresql://srha:srha@localhost:5433/srha"
+DIRECT_URL="postgresql://srha:srha@localhost:5433/srha"
 ```
 
 Iguais em desenvolvimento, diferentes em produção. Ver regra 2.
+
+No host o container fica na **5433**, não na 5432 padrão: assim não disputa a porta com
+outro Postgres rodando na máquina. Dentro do container continua 5432.
 
 O seed cria a secretaria inicial. Fora de produção é `admin@srha.dev` (a conta do login
 falso). Em produção — seed rodado com `NODE_ENV=production` — vem de
