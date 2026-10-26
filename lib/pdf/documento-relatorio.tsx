@@ -1,6 +1,7 @@
 import path from "node:path";
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { codigoRelatorio, formatarData, formatarDataHora, formatarHoras, ROTULO_DIA_SEMANA, ROTULO_EVENTO } from "../formato";
+import { MARCADOR_PDF } from "../services/autenticidade";
 import type { RelatorioExportado } from "../services/relatorios";
 
 // O PDF segue o modelo de papel da instituição ("Modelo - Relatório de Horas
@@ -10,7 +11,9 @@ import type { RelatorioExportado } from "../services/relatorios";
 //
 // As assinaturas do modelo dão lugar à validação eletrônica: a autoria e a
 // aprovação são comprovadas pela sessão autenticada registrada na trilha, sem
-// campo de assinatura manuscrita (RF11; docreq §4.3 descartou o Gov.br).
+// campo de assinatura manuscrita (RF11; docreq §4.3 descartou o Gov.br). O
+// carimbo de autenticidade (código + endereço de validação) deixa quem recebe
+// o papel conferir que ele saiu do SRHA — ver lib/services/autenticidade.ts.
 
 // Faixa com a logo, recortada do cabeçalho do modelo e convertida de CMYK para
 // RGB. Lida do disco como as fontes — `next.config.ts` inclui a pasta no
@@ -120,6 +123,15 @@ const estilos = StyleSheet.create({
   quadroAto: { marginTop: 3, color: COR.tintaSuave },
   nota: { marginTop: 8, fontSize: 8, color: COR.tintaSuave, lineHeight: 1.4, textAlign: "justify" },
   data: { marginTop: 10 },
+  carimbo: {
+    marginTop: 10,
+    borderWidth: 0.75,
+    borderColor: COR.tinta,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  carimboCodigo: { fontFamily: "IBM Plex Mono", fontSize: 12, letterSpacing: 1.5, marginTop: 5 },
+  carimboInstrucao: { marginTop: 4, fontSize: 8, color: COR.tintaSuave, lineHeight: 1.4 },
 
   colEventoData: { width: "21%" },
   colEventoTipo: { width: "31%" },
@@ -161,7 +173,17 @@ function Quadro({ rotulo, nome, ato }: { rotulo: string; nome: string; ato: stri
   );
 }
 
-export function DocumentoRelatorio({ dados, geradoEm }: { dados: RelatorioExportado; geradoEm: Date }) {
+export function DocumentoRelatorio({
+  dados,
+  geradoEm,
+  codigoAutenticidade,
+  enderecoValidacao,
+}: {
+  dados: RelatorioExportado;
+  geradoEm: Date;
+  codigoAutenticidade: string;
+  enderecoValidacao: string;
+}) {
   const codigo = codigoRelatorio(dados.ano, dados.semestre, dados.id);
   const periodo = `${dados.semestre}º semestre de ${dados.ano}`;
 
@@ -170,6 +192,7 @@ export function DocumentoRelatorio({ dados, geradoEm }: { dados: RelatorioExport
       title={`${codigo} — ${dados.docente}`}
       author={dados.docente}
       subject={`Relatório de horas atividades · ${dados.curso} · ${periodo}`}
+      keywords={`${MARCADOR_PDF}${codigoAutenticidade}`}
       creator="SRHA"
       producer="SRHA"
     >
@@ -254,6 +277,13 @@ export function DocumentoRelatorio({ dados, geradoEm }: { dados: RelatorioExport
           <View style={estilos.data}>
             <Campo rotulo="Data">{formatarData(dados.aprovadoEm)}</Campo>
           </View>
+          <View style={estilos.carimbo}>
+            <Text style={estilos.quadroRotulo}>Código de autenticidade</Text>
+            <Text style={estilos.carimboCodigo}>{codigoAutenticidade}</Text>
+            <Text style={estilos.carimboInstrucao}>
+              Confira a autenticidade deste documento em {enderecoValidacao}, anexando este PDF ou digitando o código.
+            </Text>
+          </View>
         </View>
 
         <Text style={estilos.secao}>Trilha de auditoria</Text>
@@ -289,7 +319,7 @@ export function DocumentoRelatorio({ dados, geradoEm }: { dados: RelatorioExport
 
         <View style={estilos.regua} fixed />
         <Text style={[estilos.rodape, estilos.rodapeEsquerda]} fixed>
-          {codigo} · gerado em {formatarDataHora(geradoEm)}
+          {codigo} · autenticidade {codigoAutenticidade} · gerado em {formatarDataHora(geradoEm)}
         </Text>
         <Text
           style={[estilos.rodape, estilos.rodapeDireita]}

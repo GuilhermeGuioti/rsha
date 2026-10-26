@@ -280,6 +280,7 @@ chamada + revalidação.
 | Rota | Perfil | Conteúdo |
 |---|---|---|
 | `/login` | público | Botão único de entrada institucional |
+| `/validar` | público | Validação de autenticidade do PDF — ver §Carimbo de autenticidade |
 | `/` | todos | Conteúdo por perfil — ver nota abaixo da tabela |
 | `/relatorios/[id]` | docente | Formulário com itens, total e ações |
 | `/avaliacao` | coordenador | Fila agrupada por curso |
@@ -314,7 +315,7 @@ porque quem não é docente não tem relatório nenhum pra ver ali:
 a pasta, o que precisa de login e o que não precisa: `app/(public)/...` e
 `app/(private)/...`, lado a lado.
 
-- **`(public)`** — sem guard. Hoje só `/login`.
+- **`(public)`** — sem guard. Hoje `/login` e `/validar`.
 - **`(private)`** — exige sessão (`exigirSessaoPagina`). Hoje só o subgrupo
   `(dashboard)` aninhado dentro dele — não sobrou rota solta direto em `(private)`.
 - **`(private)/(dashboard)`** — é `(private)`, então já exige sessão; além disso
@@ -342,6 +343,35 @@ arquivo órfão.
 
 **Não armazene PDF.** Gere sob demanda a partir dos dados. O relatório aprovado é imutável
 porque o banco impede o update, não porque existe arquivo congelado.
+
+---
+
+## Carimbo de autenticidade
+
+Decisão de 2026-10-26, fora do `docs/`. Todo PDF de relatório aprovado sai com um
+**código de autenticidade**: no quadro da validação eletrônica, no rodapé de cada página e
+nos metadados do arquivo (campo Keywords, prefixo `SRHA-AUTENTICIDADE:`). Em `/validar`,
+pública e sem login, quem recebeu o papel anexa o PDF ou digita o código. Se o código for
+válido, a tela mostra o resumo oficial: docente, curso, período, total de horas e
+aprovação — sem e-mail, itens nem trilha (LGPD).
+
+- **O código é HMAC-SHA256**, com chave que só o servidor conhece (`lib/services/autenticidade.ts`).
+  Nada é gravado: conferir é recalcular e comparar. Mesmo código a cada download.
+- **O código não prova o conteúdo do papel — ele destrava a conferência.** Quem valida
+  compara o resumo com o documento em mãos. O segredo existe para ninguém adivinhar o
+  código de outro relatório: o `REL-…` é sequencial, e a página é pública.
+- **Chaves em `CHAVES_CARIMBO`**, no formato `"1:<base64>,2:<base64>"`. A de maior versão
+  assina, e todas conferem. A versão viaja dentro do código.
+  **Nunca remova nem altere uma versão em produção**: todo papel impresso com ela passa
+  a dar como inválido, e a retenção é de cinco anos (RNF09). Para trocar a chave,
+  acrescente uma versão nova. Guarde cópia das chaves fora da Vercel.
+- **A assinatura cobre o id e o instante da aprovação** (imutável pelo trigger). Com isso,
+  relatório de mesmo id em outra base não confere com papel antigo.
+- **Sem chave configurada o PDF não é emitido**: uma via sem carimbo não teria como ser
+  conferida depois.
+- **Ler o código do PDF anexado dispensa biblioteca de PDF**: o react-pdf grava os
+  metadados como texto puro. PDF escaneado ou salvo de novo por outro programa perde
+  esse campo; nesse caso a tela pede o código digitado.
 
 ---
 
@@ -385,6 +415,7 @@ volumes:
 ```
 DATABASE_URL="postgresql://srha:srha@localhost:5433/srha"
 DIRECT_URL="postgresql://srha:srha@localhost:5433/srha"
+CHAVES_CARIMBO="1:<saída de openssl rand -base64 32>"
 ```
 
 Iguais em desenvolvimento, diferentes em produção. Ver regra 2.
@@ -439,7 +470,9 @@ anos do RNF09.
 novo quando já houver equivalente, não troque paleta nem tipografia. Se faltar algo,
 pergunte antes de criar.
 
-Fora do mockup, a pedido (2026-10-26): **botão "Voltar" em toda tela do `(dashboard)`**
+Fora do mockup, a pedido (2026-10-26): a tela pública **`/validar`** (§Carimbo de
+autenticidade), montada com os componentes existentes no visual da `/login`, e o
+**botão "Voltar" em toda tela do `(dashboard)`**
 menos o início do perfil — `components/BotaoVoltar.tsx`, desenhado no layout. Volta
 pelo histórico só quando a tela anterior é do próprio sistema; página aberta direto
 vai para a tela-mãe.

@@ -3,6 +3,7 @@ import { exigirAcessoAoRelatorio } from "../../../../../lib/auth/guards";
 import { codigoRelatorio } from "../../../../../lib/formato";
 import { DocumentoRelatorio } from "../../../../../lib/pdf/documento-relatorio";
 import { registrarFontes } from "../../../../../lib/pdf/fontes";
+import { gerarCodigoAutenticidade } from "../../../../../lib/services/autenticidade";
 import { obterRelatorioAprovadoParaPdf, type RelatorioExportado } from "../../../../../lib/services/relatorios";
 
 // Uma das três exceções à regra "sem API REST" (ver CLAUDE.md): Server Action
@@ -24,7 +25,7 @@ function semAcento(texto: string): string {
     .replace(/^-|-$/g, "");
 }
 
-export async function GET(_requisicao: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(requisicao: Request, { params }: { params: Promise<{ id: string }> }) {
   const relatorioId = Number((await params).id);
   if (!Number.isInteger(relatorioId)) {
     return new Response("Identificador de relatório inválido.", { status: 400 });
@@ -45,8 +46,27 @@ export async function GET(_requisicao: Request, { params }: { params: Promise<{ 
     return new Response(mensagem(erro), { status: 409 });
   }
 
+  // Sem chave configurada o PDF não sai: uma via sem carimbo não teria como
+  // ser conferida depois.
+  let codigoAutenticidade: string;
+  try {
+    codigoAutenticidade = gerarCodigoAutenticidade(dados.id, dados.aprovadoEm);
+  } catch (erro) {
+    return new Response(mensagem(erro), { status: 500 });
+  }
+  // Endereço do próprio ambiente que emitiu o PDF, sem variável de ambiente a
+  // mais para manter em dia.
+  const enderecoValidacao = new URL("/validar", requisicao.url).toString();
+
   registrarFontes();
-  const pdf = await renderToBuffer(<DocumentoRelatorio dados={dados} geradoEm={new Date()} />);
+  const pdf = await renderToBuffer(
+    <DocumentoRelatorio
+      dados={dados}
+      geradoEm={new Date()}
+      codigoAutenticidade={codigoAutenticidade}
+      enderecoValidacao={enderecoValidacao}
+    />,
+  );
 
   const arquivo = `${codigoRelatorio(dados.ano, dados.semestre, dados.id)}-${semAcento(dados.docente)}.pdf`;
 
