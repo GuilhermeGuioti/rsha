@@ -216,12 +216,13 @@ export function FormularioRelatorio({
             htmlFor={`${idBase}-descricao-${item.chave}`}
             className="sm:col-span-full"
           >
-            <input
+            <textarea
               id={`${idBase}-descricao-${item.chave}`}
               value={item.descricao}
               onChange={(evento) => alterar(item.chave, "descricao", evento.target.value)}
               required
-              className={classeCampo}
+              rows={3}
+              className={`${classeCampo} resize-y py-2.5`}
             />
           </Campo>
         </div>
@@ -300,7 +301,7 @@ function ValorLido({
     <div className={`flex flex-col gap-1.5 ${className ?? ""}`}>
       <span className="text-[13px] font-medium text-tinta-suave">{rotulo}</span>
       <span
-        className={`flex min-h-11 items-center rounded-md border border-borda px-3 text-[15px] ${mono ? "font-mono font-medium tabular-nums" : ""}`}
+        className={`flex min-h-11 items-center whitespace-pre-line rounded-md border border-borda px-3 py-2.5 text-[15px] ${mono ? "font-mono font-medium tabular-nums" : ""}`}
       >
         {children}
       </span>
