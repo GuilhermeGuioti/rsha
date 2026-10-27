@@ -6,26 +6,27 @@ type Aparencia = {
   rotulo: string;
   cor: "neutro" | "aguardando" | "devolvido" | "aprovado";
   forma: "circulo" | "circulo-vazado" | "quadrado" | "triangulo";
-  borda: string;
+  barra: string;
 };
 
 // Fonte única de como cada situação aparece — a mesma leitura na home, no
-// formulário e na fila do coordenador.
+// formulário e na fila do coordenador. `barra` é a faixa colorida no topo do
+// cartão do relatório.
 export const aparenciaSituacao: Record<SituacaoRelatorio, Aparencia> = {
-  RASCUNHO: { rotulo: ROTULO_SITUACAO.RASCUNHO, cor: "neutro", forma: "circulo-vazado", borda: "border-t-estado-rascunho" },
+  RASCUNHO: { rotulo: ROTULO_SITUACAO.RASCUNHO, cor: "neutro", forma: "circulo-vazado", barra: "bg-estado-rascunho" },
   AGUARDANDO_AVALIACAO: {
     rotulo: ROTULO_SITUACAO.AGUARDANDO_AVALIACAO,
     cor: "aguardando",
     forma: "quadrado",
-    borda: "border-t-estado-aguardando",
+    barra: "bg-estado-aguardando",
   },
   DEVOLVIDO_PARA_AJUSTE: {
     rotulo: ROTULO_SITUACAO.DEVOLVIDO_PARA_AJUSTE,
     cor: "devolvido",
     forma: "triangulo",
-    borda: "border-t-estado-devolvido",
+    barra: "bg-estado-devolvido",
   },
-  APROVADO: { rotulo: ROTULO_SITUACAO.APROVADO, cor: "aprovado", forma: "circulo", borda: "border-t-estado-aprovado" },
+  APROVADO: { rotulo: ROTULO_SITUACAO.APROVADO, cor: "aprovado", forma: "circulo", barra: "bg-estado-aprovado" },
 };
 
 export function SituacaoPill({ situacao }: { situacao: SituacaoRelatorio }) {

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { exigirSessaoPagina, obterPerfis } from "../../../lib/auth/guards";
 import { Perfil } from "../../../generated/prisma/enums";
+import { AvisoVazio } from "../../../components/AvisoVazio";
 import { HomeDocente } from "./home-docente";
 import { HomeSecretaria } from "./home-secretaria";
 
@@ -21,12 +22,12 @@ export default async function Home() {
     redirect("/avaliacao");
   }
   if (perfis.includes(Perfil.SECRETARIA)) {
-    return <HomeSecretaria />;
+    return <HomeSecretaria usuarioId={sessao.usuarioId} />;
   }
 
   return (
-    <p className="text-[15px] text-tinta-suave">
+    <AvisoVazio>
       Seu usuário ainda não tem nenhum perfil ou vínculo cadastrado. Procure a secretaria acadêmica.
-    </p>
+    </AvisoVazio>
   );
 }

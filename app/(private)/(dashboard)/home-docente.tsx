@@ -1,11 +1,15 @@
 import { prisma } from "../../../lib/db";
+import { obterUsuario } from "../../../lib/auth/guards";
 import { SituacaoRelatorio, TipoEvento } from "../../../generated/prisma/enums";
 import { codigoRelatorio, formatarData, formatarDataHora, formatarHoras } from "../../../lib/formato";
 import { prazoDeEntrega } from "../../../lib/services/workflow";
 import { CabecalhoAdmin } from "../../../components/CabecalhoAdmin";
+import { AvisoVazio } from "../../../components/AvisoVazio";
 import { BotaoPrimario } from "../../../components/BotaoPrimario";
 import { Pill } from "../../../components/Pill";
 import { SituacaoPill, aparenciaSituacao } from "../../../components/SituacaoPill";
+import { classeCartao } from "../../../components/Cartao";
+import { IconeDocumento, IconeRelogio } from "../../../components/Icones";
 import { acaoAbrirRelatorio } from "./relatorios/acoes";
 
 // Só a última devolução importa: é ela que o card mostra e que define o
@@ -23,7 +27,8 @@ export async function HomeDocente({ usuarioId }: { usuarioId: number }) {
     orderBy: [{ ano: "desc" }, { semestre: "desc" }],
   });
 
-  const [vinculos, relatorios, devolvidosDeOutrosPeriodos] = await Promise.all([
+  const [usuario, vinculos, relatorios, devolvidosDeOutrosPeriodos] = await Promise.all([
+    obterUsuario(usuarioId),
     periodo
       ? prisma.vinculoDocenteCurso.findMany({
           where: { docenteId: usuarioId, periodoLetivoId: periodo.id },
@@ -60,11 +65,17 @@ export async function HomeDocente({ usuarioId }: { usuarioId: number }) {
       ) >= agora,
   );
 
+  const saudacao = `Olá, ${usuario.nome.trim().split(/\s+/)[0]}`;
+
   if (!periodo && devolvidosPendentes.length === 0) {
     return (
-      <p className="text-[15px] text-tinta-suave">
-        Nenhum período letivo está aberto para submissão no momento.
-      </p>
+      <div className="flex flex-col gap-6">
+        <CabecalhoAdmin titulo={saudacao} />
+        <AvisoVazio>
+          Nenhum período letivo está aberto para submissão no momento. Os relatórios já entregues ficam no
+          Arquivo.
+        </AvisoVazio>
+      </div>
     );
   }
 
@@ -74,26 +85,23 @@ export async function HomeDocente({ usuarioId }: { usuarioId: number }) {
     : 0;
 
   return (
-    <div className="flex flex-col gap-6">
-      {periodo && (
-        <>
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded border border-[#e9cfa0] border-l-[3px] border-l-estado-aguardando bg-[#fff6e8] px-4 py-3.5">
-            <p className="text-[15px]">
-              Prazo de entrega do{" "}
-              <strong className="font-semibold">
-                {periodo.semestre}º semestre de {periodo.ano}
-              </strong>
-              :{" "}
-              <span className="font-mono font-semibold tabular-nums">
-                {formatarData(periodo.encerramentoSubmissao)}
-              </span>
-            </p>
-            <Pill cor="aguardando" forma="quadrado">
-              {diasRestantes <= 1 ? "último dia" : `faltam ${diasRestantes} dias`}
-            </Pill>
-          </div>
+    <div className="flex flex-col gap-8">
+      <CabecalhoAdmin
+        titulo={saudacao}
+        subtitulo={
+          <p className="text-[15px] text-tinta-suave">
+            {periodo
+              ? `Estes são os seus relatórios do ${periodo.semestre}º semestre de ${periodo.ano}.`
+              : "Há relatórios devolvidos esperando a sua correção."}
+          </p>
+        }
+        acao={periodo && <PrazoEntrega encerramento={periodo.encerramentoSubmissao} diasRestantes={diasRestantes} />}
+      />
 
+      {periodo && (
+        <section className="flex flex-col gap-4">
           <CabecalhoAdmin
+            nivel={2}
             titulo="Seus relatórios"
             subtitulo={
               <p className="text-[15px] text-tinta-suave">
@@ -105,9 +113,9 @@ export async function HomeDocente({ usuarioId }: { usuarioId: number }) {
           />
 
           {vinculos.length === 0 ? (
-            <p className="text-[15px] text-tinta-suave">
+            <AvisoVazio>
               Você não está vinculado a nenhum curso neste período. Procure a secretaria acadêmica.
-            </p>
+            </AvisoVazio>
           ) : (
             <div className="grid gap-5 lg:grid-cols-2">
               {vinculos.map((vinculo) => (
@@ -121,11 +129,11 @@ export async function HomeDocente({ usuarioId }: { usuarioId: number }) {
               ))}
             </div>
           )}
-        </>
+        </section>
       )}
 
       {devolvidosPendentes.length > 0 && (
-        <>
+        <section className="flex flex-col gap-4">
           <CabecalhoAdmin
             nivel={2}
             titulo="Devolvidos de períodos encerrados"
@@ -147,8 +155,37 @@ export async function HomeDocente({ usuarioId }: { usuarioId: number }) {
               />
             ))}
           </div>
-        </>
+        </section>
       )}
+    </div>
+  );
+}
+
+// Fica no cabeçalho, à vista desde o primeiro segundo; ganha o âmbar (e o
+// relógio âmbar) só na última semana, para o destaque significar alguma coisa.
+function PrazoEntrega({ encerramento, diasRestantes }: { encerramento: Date; diasRestantes: number }) {
+  const urgente = diasRestantes < 7;
+  return (
+    <div
+      className={`flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border px-4 py-3 ${
+        urgente ? "border-estado-aguardando-borda bg-estado-aguardando-suave" : "border-borda bg-superficie-sutil"
+      }`}
+    >
+      <span
+        aria-hidden
+        className={`flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-superficie ${
+          urgente ? "text-estado-aguardando" : "text-azul-interativo"
+        }`}
+      >
+        <IconeRelogio className="h-[22px] w-[22px]" />
+      </span>
+      <div>
+        <div className="text-[13px] font-semibold text-tinta-suave">Prazo de entrega</div>
+        <div className="font-mono text-lg font-semibold tabular-nums">{formatarData(encerramento)}</div>
+      </div>
+      <Pill cor={urgente ? "aguardando" : "neutro"} forma="quadrado">
+        {diasRestantes <= 1 ? "último dia" : `faltam ${diasRestantes} dias`}
+      </Pill>
     </div>
   );
 }
@@ -171,18 +208,25 @@ function CartaoRelatorio({
   } | null;
 }) {
   const devolucao = relatorio?.eventos[0];
-  const borda = relatorio ? aparenciaSituacao[relatorio.situacao].borda : "border-t-estado-rascunho";
+  const barra = relatorio ? aparenciaSituacao[relatorio.situacao].barra : "bg-borda";
 
   return (
-    <article
-      className={`flex flex-col gap-4 rounded-md border border-borda border-t-[3px] bg-superficie p-5 ${borda}`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="font-mono text-xs font-medium tracking-[.1em] text-tinta-suave">
-            {relatorio ? codigoRelatorio(periodo.ano, periodo.semestre, relatorio.id) : "SEM RELATÓRIO INICIADO"}
+    <article className={`relative flex flex-col gap-5 overflow-hidden p-6 ${classeCartao}`}>
+      <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${barra}`} />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          <span
+            aria-hidden
+            className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-azul-suave text-azul-interativo"
+          >
+            <IconeDocumento className="h-6 w-6" />
+          </span>
+          <div className="min-w-0">
+            <div className="font-mono text-xs font-medium tracking-[.1em] text-tinta-suave">
+              {relatorio ? codigoRelatorio(periodo.ano, periodo.semestre, relatorio.id) : "SEM RELATÓRIO INICIADO"}
+            </div>
+            <h3 className="mt-1 text-xl font-bold tracking-tight">{cursoNome}</h3>
           </div>
-          <h2 className="mt-2 font-serif text-lg font-semibold">{cursoNome}</h2>
         </div>
         {relatorio ? (
           <SituacaoPill situacao={relatorio.situacao} />
@@ -194,7 +238,7 @@ function CartaoRelatorio({
       </div>
 
       {devolucao && relatorio?.situacao === SituacaoRelatorio.DEVOLVIDO_PARA_AJUSTE ? (
-        <p className="rounded-sm border-l-[3px] border-estado-devolvido bg-[#fdf0ef] px-3.5 py-3 text-[13px] leading-relaxed">
+        <p className="rounded-xl border border-estado-devolvido-borda bg-estado-devolvido-suave px-4 py-3 text-[13px] leading-relaxed">
           A coordenação pediu ajuste em {formatarData(devolucao.ocorridoEm)}: <q>{devolucao.justificativa}</q>{" "}
           Reenvie até{" "}
           <span className="font-mono font-medium">
@@ -210,10 +254,10 @@ function CartaoRelatorio({
         </p>
       )}
 
-      <div className="mt-auto flex flex-wrap items-end justify-between gap-4 border-t border-borda pt-4">
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-4 border-t border-borda pt-5">
         <div>
-          <div className="text-[13px] text-tinta-suave">Horas declaradas</div>
-          <div className="mt-1.5 font-mono text-2xl font-semibold tabular-nums">
+          <div className="text-[13px] font-semibold text-tinta-suave">Horas declaradas</div>
+          <div className="mt-1 font-mono text-3xl font-semibold tabular-nums">
             {formatarHoras(relatorio ? relatorio.cargaHorariaTotal.toNumber() : 0)}
           </div>
         </div>

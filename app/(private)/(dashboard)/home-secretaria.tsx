@@ -1,35 +1,97 @@
 import Link from "next/link";
+import type { ComponentType } from "react";
+import { obterUsuario } from "../../../lib/auth/guards";
+import { CabecalhoAdmin } from "../../../components/CabecalhoAdmin";
+import { classeCartao } from "../../../components/Cartao";
+import {
+  IconeAcompanhamento,
+  IconeArquivo,
+  IconeCalendario,
+  IconeCursos,
+  IconeUsuarios,
+  IconeVinculos,
+} from "../../../components/Icones";
 
-const ATALHOS: { href: string; titulo: string; descricao: string }[] = [
-  { href: "/admin/cursos", titulo: "Cursos", descricao: "Cadastro de cursos." },
-  { href: "/admin/usuarios", titulo: "Usuários", descricao: "Pessoas com acesso ao sistema e seus perfis." },
-  { href: "/admin/vinculos", titulo: "Vínculos", descricao: "Quem dá aula e quem coordena em cada curso." },
-  { href: "/admin/periodos", titulo: "Períodos letivos", descricao: "Prazos de submissão de cada semestre." },
-  { href: "/acompanhamento", titulo: "Acompanhamento", descricao: "Situação de entrega por curso no período corrente." },
-  { href: "/arquivo", titulo: "Arquivo", descricao: "Relatórios aprovados, por ano, semestre e curso." },
+type Atalho = { href: string; titulo: string; descricao: string; Icone: ComponentType<{ className?: string }> };
+
+const CADASTROS: Atalho[] = [
+  { href: "/admin/cursos", titulo: "Cursos", descricao: "Cadastro de cursos.", Icone: IconeCursos },
+  {
+    href: "/admin/usuarios",
+    titulo: "Usuários",
+    descricao: "Pessoas com acesso ao sistema e seus perfis.",
+    Icone: IconeUsuarios,
+  },
+  {
+    href: "/admin/vinculos",
+    titulo: "Vínculos",
+    descricao: "Quem dá aula e quem coordena em cada curso.",
+    Icone: IconeVinculos,
+  },
+  {
+    href: "/admin/periodos",
+    titulo: "Períodos letivos",
+    descricao: "Prazos de submissão de cada semestre.",
+    Icone: IconeCalendario,
+  },
+];
+
+const CONSULTAS: Atalho[] = [
+  {
+    href: "/acompanhamento",
+    titulo: "Acompanhamento",
+    descricao: "Situação de entrega por curso no período corrente.",
+    Icone: IconeAcompanhamento,
+  },
+  {
+    href: "/arquivo",
+    titulo: "Arquivo",
+    descricao: "Relatórios aprovados, por ano, semestre e curso.",
+    Icone: IconeArquivo,
+  },
 ];
 
 // Tela de partida da secretaria: não tem lista pra rolar, só os atalhos —
-// por isso centralizada como se fosse um launcher, não uma tela de admin.
-export function HomeSecretaria() {
+// cartões grandes, como os módulos do App do Dono.
+export async function HomeSecretaria({ usuarioId }: { usuarioId: number }) {
+  const usuario = await obterUsuario(usuarioId);
+
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-8 py-10 text-center">
-      <div>
-        <h1 className="font-serif text-2xl font-semibold text-azul-interativo">Administração</h1>
-        <p className="mt-1.5 text-[15px] text-tinta-suave">Cadastros mantidos pela secretaria acadêmica.</p>
-      </div>
-      <div className="grid w-full max-w-[760px] gap-5 sm:grid-cols-2">
-        {ATALHOS.map((atalho) => (
+    <div className="flex flex-col gap-8">
+      <CabecalhoAdmin
+        titulo={`Olá, ${usuario.nome.trim().split(/\s+/)[0]}`}
+        subtitulo={<p className="text-[15px] text-tinta-suave">Cadastros e consultas da secretaria acadêmica.</p>}
+      />
+      <GrupoAtalhos titulo="Cadastros" atalhos={CADASTROS} />
+      <GrupoAtalhos titulo="Consultas" atalhos={CONSULTAS} />
+    </div>
+  );
+}
+
+function GrupoAtalhos({ titulo, atalhos }: { titulo: string; atalhos: Atalho[] }) {
+  return (
+    <section className="flex flex-col gap-4">
+      <CabecalhoAdmin nivel={2} titulo={titulo} />
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {atalhos.map(({ href, titulo: rotulo, descricao, Icone }) => (
           <Link
-            key={atalho.href}
-            href={atalho.href}
-            className="flex min-h-[148px] flex-col justify-between gap-3 rounded-md border border-borda bg-superficie p-6 text-left transition-colors hover:border-azul-interativo hover:bg-[#e9f6fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+            key={href}
+            href={href}
+            className={`group flex min-h-[168px] flex-col gap-5 p-6 transition-[translate,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-azul-interativo hover:shadow-cartao-elevado focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo focus-visible:ring-offset-2 ${classeCartao}`}
           >
-            <h2 className="font-serif text-lg font-semibold text-azul-interativo">{atalho.titulo}</h2>
-            <p className="text-[13px] leading-relaxed text-tinta-suave">{atalho.descricao}</p>
+            <span
+              aria-hidden
+              className="flex h-14 w-14 items-center justify-center rounded-2xl bg-azul-suave text-azul-interativo transition-colors group-hover:bg-azul-interativo group-hover:text-white"
+            >
+              <Icone className="h-7 w-7" />
+            </span>
+            <span className="flex flex-col gap-1.5">
+              <span className="text-lg font-bold tracking-tight text-tinta">{rotulo}</span>
+              <span className="text-[13px] leading-relaxed text-tinta-suave">{descricao}</span>
+            </span>
           </Link>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
