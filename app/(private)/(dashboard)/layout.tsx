@@ -1,5 +1,4 @@
-import { exigirSessaoPagina, obterPerfis } from "../../../lib/auth/guards";
-import { prisma } from "../../../lib/db";
+import { exigirSessaoPagina, obterPerfis, obterUsuario } from "../../../lib/auth/guards";
 import { Perfil } from "../../../generated/prisma/enums";
 import { Nav, type LinkNav } from "../../../components/Nav";
 import { BotaoVoltar } from "../../../components/BotaoVoltar";
@@ -13,7 +12,7 @@ const ROTULOS_PERFIL: Record<Perfil, string> = {
 export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   const sessao = await exigirSessaoPagina();
   const [usuario, perfis] = await Promise.all([
-    prisma.usuario.findUniqueOrThrow({ where: { id: sessao.usuarioId } }),
+    obterUsuario(sessao.usuarioId),
     obterPerfis(sessao.usuarioId),
   ]);
 
@@ -49,10 +48,11 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
     <div className="flex flex-1 flex-col">
       <Nav
         nomeUsuario={usuario.nome}
+        emailUsuario={usuario.email}
         perfilRotulo={perfis.map((perfil) => ROTULOS_PERFIL[perfil]).join(" · ")}
         links={links}
       />
-      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-8 lg:px-10">
+      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
         <BotaoVoltar inicio={inicio} />
         {children}
       </main>

@@ -1,96 +1,123 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { acaoSair } from "../lib/auth/acoes";
-import { Modal } from "./Modal";
-import { BotaoSecundario } from "./BotaoSecundario";
+import { IconeSair } from "./Icones";
 import { Pill } from "./Pill";
 
 export type LinkNav = { href: string; rotulo: string };
 
+const ID_MENU_CONTA = "menu-conta";
+
 export function Nav({
   nomeUsuario,
+  emailUsuario,
   perfilRotulo,
   links,
 }: {
   nomeUsuario: string;
+  emailUsuario: string;
   perfilRotulo: string;
   links: LinkNav[];
 }) {
   const pathname = usePathname();
-  const [contaAberta, setContaAberta] = useState(false);
   const inicial = nomeUsuario.trim().charAt(0).toUpperCase();
 
   return (
-    <header className="flex h-16 w-full flex-none items-center justify-between gap-6 bg-azul-institucional px-4 sm:px-6">
-      <div className="flex min-w-0 items-center gap-6">
+    <header className="w-full flex-none border-b border-borda bg-superficie">
+      {/* No celular os links descem para uma segunda linha rolável; do md
+          para cima ficam entre o logo e a conta. */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2.5 sm:px-6">
         <Link
           href="/"
           aria-label="Ir para o início"
-          className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          className="flex items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
         >
           <span
             aria-hidden
-            className="flex h-9 w-9 flex-none items-center justify-center rounded-md border border-white/35 bg-white/[.16]"
+            className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-azul-borda bg-azul-suave"
           >
-            <Image src="/logo-barao.png" alt="" width={24} height={24} className="h-6 w-6 object-contain" />
+            <Image src="/logo-barao.png" alt="" width={28} height={28} className="h-7 w-7 object-contain" />
           </span>
-          {/* <span className="whitespace-nowrap font-serif text-[15px] font-semibold text-white">
+          {/* <span className="whitespace-nowrap text-[15px] font-bold tracking-tight text-tinta">
             Horas Atividades
           </span> */}
         </Link>
-        <nav className="flex gap-5 overflow-x-auto text-[15px]">
+
+        <nav aria-label="Principal" className="order-last -mx-1 flex w-full gap-1 overflow-x-auto px-1 pb-1 md:order-none md:mx-0 md:w-auto md:flex-1 md:px-0 md:pb-0">
           {links.map((link) => {
             const estaAtivo = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={
+                aria-current={estaAtivo ? "page" : undefined}
+                className={`flex min-h-11 items-center whitespace-nowrap rounded-lg px-3.5 text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo ${
                   estaAtivo
-                    ? "whitespace-nowrap border-b-2 border-acento pb-[3px] font-medium text-white"
-                    : "whitespace-nowrap pb-[3px] text-white/80 hover:text-white"
-                }
+                    ? "bg-azul-suave font-semibold text-azul-interativo"
+                    : "font-medium text-tinta-suave hover:bg-papel hover:text-tinta"
+                }`}
               >
                 {link.rotulo}
               </Link>
             );
           })}
         </nav>
-      </div>
-      <button
-        type="button"
-        onClick={() => setContaAberta(true)}
-        aria-label={`Conta de ${nomeUsuario}`}
-        className="flex h-11 w-11 flex-none items-center justify-center rounded-full border border-white/35 bg-white/[.16] font-serif text-base font-semibold text-white transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-      >
-        {inicial}
-      </button>
 
-      <Modal
-        aberto={contaAberta}
-        eyebrow="CONTA"
-        titulo={nomeUsuario}
-        onFechar={() => setContaAberta(false)}
-        rodape={
-          <>
-            <BotaoSecundario onClick={() => setContaAberta(false)}>Fechar</BotaoSecundario>
-            <form action={acaoSair}>
-              <button
-                type="submit"
-                className="flex min-h-11 items-center rounded-md border border-estado-devolvido px-5 text-[15px] font-medium text-estado-devolvido focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
-              >
-                Sair
-              </button>
-            </form>
-          </>
-        }
-      >
-        <Pill cor="neutro">{perfilRotulo}</Pill>
-      </Modal>
+        <button
+          type="button"
+          popoverTarget={ID_MENU_CONTA}
+          aria-label={`Conta de ${nomeUsuario}`}
+          className="ml-auto flex min-h-11 flex-none items-center gap-3 rounded-full p-0.5 text-left transition-colors hover:bg-papel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo lg:pl-4"
+        >
+          <span className="hidden flex-col items-end leading-tight lg:flex">
+            <span className="text-[13px] font-semibold text-tinta">{nomeUsuario}</span>
+            <span className="text-[13px] text-tinta-suave">{perfilRotulo}</span>
+          </span>
+          <span
+            aria-hidden
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-azul-interativo text-base font-semibold text-white shadow-botao"
+          >
+            {inicial}
+          </span>
+        </button>
+
+        {/* Popover nativo: fecha com Esc e com clique fora, sem estado em
+            React. A barra ocupa a largura toda, então o canto direito da
+            tela é sempre o canto do botão da conta. */}
+        <div
+          id={ID_MENU_CONTA}
+          popover="auto"
+          className="inset-auto top-[68px] right-4 m-0 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-borda bg-superficie p-0 text-tinta shadow-flutuante open:animate-surgir sm:right-6"
+        >
+          <div className="flex items-center gap-3 border-b border-borda px-4 py-4">
+            <span
+              aria-hidden
+              className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-azul-interativo text-base font-semibold text-white"
+            >
+              {inicial}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-semibold">{nomeUsuario}</p>
+              <p className="truncate font-mono text-[13px] text-tinta-suave">{emailUsuario}</p>
+            </div>
+          </div>
+          <div className="border-b border-borda px-4 py-3">
+            <Pill cor="neutro">{perfilRotulo}</Pill>
+          </div>
+          <form action={acaoSair} className="p-2">
+            <button
+              type="submit"
+              className="flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 text-[15px] font-semibold text-estado-devolvido transition-colors hover:bg-estado-devolvido-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+            >
+              <IconeSair className="h-5 w-5" />
+              Sair
+            </button>
+          </form>
+        </div>
+      </div>
     </header>
   );
 }

@@ -46,6 +46,12 @@ export const obterPerfis = cache(async (usuarioId: number): Promise<Perfil[]> =>
   return registros.map((registro) => registro.perfil);
 });
 
+// O mesmo usuário é lido pelo layout (barra superior) e pela home (saudação)
+// na mesma requisição.
+export const obterUsuario = cache(async (usuarioId: number) => {
+  return prisma.usuario.findUniqueOrThrow({ where: { id: usuarioId } });
+});
+
 export async function exigirPerfil(perfil: Perfil): Promise<Sessao> {
   const sessao = await exigirSessao();
   const perfis = await obterPerfis(sessao.usuarioId);
