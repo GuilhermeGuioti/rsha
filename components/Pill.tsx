@@ -1,7 +1,7 @@
 // Cor nunca é o único portador de estado: sempre cor + rótulo por extenso +
 // marcador de forma (ver CLAUDE.md § Interface).
 type Cor = "aprovado" | "neutro" | "interativo" | "aguardando" | "devolvido";
-type Forma = "circulo" | "circulo-vazado" | "quadrado" | "triangulo";
+export type Forma = "circulo" | "circulo-vazado" | "quadrado" | "triangulo";
 
 const estilos: Record<Cor, string> = {
   aprovado: "border-estado-aprovado-borda bg-estado-aprovado-suave text-estado-aprovado",
@@ -18,6 +18,12 @@ const formas: Record<Forma, string> = {
   triangulo: "h-2.5 w-3 bg-current [clip-path:polygon(50%_0,100%_100%,0_100%)]",
 };
 
+// O marcador sozinho, para quem precisa da forma fora do selo (trilha,
+// aviso, mensagem de erro). A cor vem do texto de quem usa (bg-current).
+export function Marcador({ forma, className }: { forma: Forma; className?: string }) {
+  return <span aria-hidden className={`flex-none ${formas[forma]} ${className ?? ""}`} />;
+}
+
 export function Pill({
   cor,
   forma = "circulo",
@@ -31,7 +37,7 @@ export function Pill({
     <span
       className={`inline-flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[13px] font-semibold ${estilos[cor]}`}
     >
-      <span aria-hidden className={`flex-none ${formas[forma]}`} />
+      <Marcador forma={forma} />
       {children}
     </span>
   );

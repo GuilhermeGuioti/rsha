@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { CabecalhoAdmin } from "../../../../components/CabecalhoAdmin";
 import { BotaoSecundario, classeBotaoSecundario } from "../../../../components/BotaoSecundario";
 import { Modal } from "../../../../components/Modal";
 import { Tabela, type ColunaTabela } from "../../../../components/Tabela";
-import { classeCampoSelect } from "../../../../components/Campo";
-import { formatarData, formatarHoras } from "../../../../lib/formato";
+import { SeletorFiltro } from "../../../../components/SeletorFiltro";
+import { Horas } from "../../../../components/Horas";
+import { LinkAcao } from "../../../../components/LinkAcao";
+import { formatarData } from "../../../../lib/formato";
 
 export type DocenteAcompanhamento = {
   docenteId: number;
@@ -120,22 +121,17 @@ export function PainelAcompanhamento({ grupos, podeExtrair }: { grupos: GrupoPer
           {
             cabecalho: "Horas",
             alinhado: "direita" as const,
-            render: (docente: DocenteAcompanhamento) => (
-              <span className="font-mono tabular-nums">
-                {docente.horas !== null ? formatarHoras(docente.horas) : "—"}
-              </span>
-            ),
+            render: (docente: DocenteAcompanhamento) => <Horas valor={docente.horas} />,
           },
           {
             cabecalho: "",
             render: (docente: DocenteAcompanhamento) =>
               docente.relatorioId ? (
-                <Link
+                <LinkAcao
                   href={docente.podeAvaliar ? `/avaliacao/${docente.relatorioId}` : `/relatorios/${docente.relatorioId}`}
-                  className="inline-flex min-h-11 items-center rounded-lg px-3 font-semibold text-azul-interativo transition-colors hover:bg-azul-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
                 >
                   Abrir
-                </Link>
+                </LinkAcao>
               ) : null,
           },
         ] satisfies ColunaTabela<DocenteAcompanhamento>[])
@@ -174,21 +170,13 @@ export function PainelAcompanhamento({ grupos, podeExtrair }: { grupos: GrupoPer
         }
         acao={
           <>
-            <label htmlFor="filtro-periodo-acompanhamento" className="sr-only">
-              Filtrar por período letivo
-            </label>
-            <select
+            <SeletorFiltro
               id="filtro-periodo-acompanhamento"
-              value={periodoLetivoId}
-              onChange={(evento) => mudarPeriodo(Number(evento.target.value))}
-              className={classeCampoSelect}
-            >
-              {grupos.map((grupo) => (
-                <option key={grupo.periodoLetivoId} value={grupo.periodoLetivoId}>
-                  {grupo.rotulo}
-                </option>
-              ))}
-            </select>
+              rotuloAcessivel="Filtrar por período letivo"
+              valor={periodoLetivoId}
+              onChange={(valor) => mudarPeriodo(Number(valor))}
+              opcoes={grupos.map((grupo) => ({ valor: grupo.periodoLetivoId, rotulo: grupo.rotulo }))}
+            />
             {/* Extração é da secretaria (RF21); a rota confere o perfil de novo. */}
             {podeExtrair && (
               <a href={`/api/periodos/${periodoLetivoId}/csv`} className={classeBotaoSecundario}>

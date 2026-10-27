@@ -1,8 +1,10 @@
 import Link from "next/link";
 import type { ComponentType } from "react";
 import { obterUsuario } from "../../../lib/auth/guards";
-import { CabecalhoAdmin } from "../../../components/CabecalhoAdmin";
+import { CabecalhoAdmin, classeTituloSecao } from "../../../components/CabecalhoAdmin";
 import { classeCartao } from "../../../components/Cartao";
+import { SeloIcone } from "../../../components/SeloIcone";
+import { saudacao } from "../../../lib/formato";
 import {
   IconeAcompanhamento,
   IconeArquivo,
@@ -59,7 +61,7 @@ export async function HomeSecretaria({ usuarioId }: { usuarioId: number }) {
   return (
     <div className="flex flex-col gap-8">
       <CabecalhoAdmin
-        titulo={`Olá, ${usuario.nome.trim().split(/\s+/)[0]}`}
+        titulo={saudacao(usuario.nome)}
         subtitulo={<p className="text-[15px] text-tinta-suave">Cadastros e consultas da secretaria acadêmica.</p>}
       />
       <GrupoAtalhos titulo="Cadastros" atalhos={CADASTROS} />
@@ -79,14 +81,14 @@ function GrupoAtalhos({ titulo, atalhos }: { titulo: string; atalhos: Atalho[] }
             href={href}
             className={`group flex min-h-[168px] flex-col gap-5 p-6 transition-[translate,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-azul-interativo hover:shadow-cartao-elevado focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo focus-visible:ring-offset-2 ${classeCartao}`}
           >
-            <span
-              aria-hidden
-              className="flex h-14 w-14 items-center justify-center rounded-2xl bg-azul-suave text-azul-interativo transition-colors group-hover:bg-azul-interativo group-hover:text-white"
+            <SeloIcone
+              tamanho="xl"
+              className="transition-colors group-hover:bg-azul-interativo group-hover:text-white"
             >
               <Icone className="h-7 w-7" />
-            </span>
+            </SeloIcone>
             <span className="flex flex-col gap-1.5">
-              <span className="text-lg font-bold tracking-tight text-tinta">{rotulo}</span>
+              <span className={classeTituloSecao}>{rotulo}</span>
               <span className="text-[13px] leading-relaxed text-tinta-suave">{descricao}</span>
             </span>
           </Link>

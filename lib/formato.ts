@@ -6,6 +6,11 @@ export function formatarHoras(horas: number): string {
   return horas.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
+// "Olá, Helena": só o primeiro nome, como a pessoa é chamada no dia a dia.
+export function saudacao(nome: string): string {
+  return `Olá, ${nome.trim().split(/\s+/)[0]}`;
+}
+
 // Identificador que o docente lê na tela e cita no telefone com a coordenação.
 export function codigoRelatorio(ano: number, semestre: number, id: number): string {
   return `REL-${ano}-${semestre}-${String(id).padStart(3, "0")}`;

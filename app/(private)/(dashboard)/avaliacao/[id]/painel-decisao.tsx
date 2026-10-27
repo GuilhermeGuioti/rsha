@@ -4,7 +4,9 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { MensagemErro } from "../../../../../components/MensagemErro";
 import { classeCampo } from "../../../../../components/Campo";
-import { classeCartao } from "../../../../../components/Cartao";
+import { Cartao } from "../../../../../components/Cartao";
+import { classeTituloSecao } from "../../../../../components/CabecalhoAdmin";
+import { Destaque } from "../../../../../components/Destaque";
 import { acaoAprovar, acaoDevolver } from "../acoes";
 
 export function PainelDecisao({ relatorioId }: { relatorioId: number }) {
@@ -39,8 +41,8 @@ export function PainelDecisao({ relatorioId }: { relatorioId: number }) {
   }
 
   return (
-    <div className={`p-5 sm:p-7 ${classeCartao}`}>
-      <h2 className="text-lg font-bold tracking-tight">Sua decisão</h2>
+    <Cartao className="p-5 sm:p-7">
+      <h2 className={classeTituloSecao}>Sua decisão</h2>
       <p className="mt-1 text-[13px] text-tinta-suave">Aprovar encerra o relatório. Devolver manda de volta ao docente.</p>
 
       {erro && (
@@ -70,11 +72,7 @@ export function PainelDecisao({ relatorioId }: { relatorioId: number }) {
       </div>
 
       {devolvendo && (
-        <div className="mt-5 rounded-2xl border border-estado-devolvido-borda bg-estado-devolvido-suave p-5">
-          <div className="flex items-center gap-2 text-[15px] font-bold text-estado-devolvido">
-            <span aria-hidden className="h-2.5 w-3 flex-none bg-estado-devolvido [clip-path:polygon(50%_0,100%_100%,0_100%)]" />
-            Devolver para ajuste
-          </div>
+        <Destaque tom="devolvido" titulo="Devolver para ajuste" nivelTitulo={3} className="mt-5">
           <label htmlFor="justificativa-devolucao" className="mt-4 flex flex-col gap-2">
             <span className="text-[13px] font-semibold">O que precisa ser ajustado (obrigatório)</span>
             <textarea
@@ -102,8 +100,8 @@ export function PainelDecisao({ relatorioId }: { relatorioId: number }) {
               </span>
             )}
           </div>
-        </div>
+        </Destaque>
       )}
-    </div>
+    </Cartao>
   );
 }

@@ -6,10 +6,13 @@ import { CabecalhoAdmin } from "../../../../components/CabecalhoAdmin";
 import { CampoBusca } from "../../../../components/CampoBusca";
 import { AbasFiltro } from "../../../../components/AbasFiltro";
 import { SituacaoPill } from "../../../../components/SituacaoPill";
-import { classeCampoSelect } from "../../../../components/Campo";
-import { classeCartao } from "../../../../components/Cartao";
+import { SeletorFiltro } from "../../../../components/SeletorFiltro";
 import { AvisoVazio } from "../../../../components/AvisoVazio";
-import { formatarData, formatarHoras } from "../../../../lib/formato";
+import { CabecalhoGrade, CartaoGrade, LinhaGrade } from "../../../../components/Grade";
+import { Horas } from "../../../../components/Horas";
+import { LinkAcao } from "../../../../components/LinkAcao";
+import { classeBotaoPrimario } from "../../../../components/BotaoPrimario";
+import { formatarData } from "../../../../lib/formato";
 import { useBusca } from "../../../../lib/hooks/useBusca";
 import type { SituacaoRelatorio } from "../../../../generated/prisma/client";
 
@@ -33,6 +36,8 @@ const ABAS: { valor: Aba; rotulo: string }[] = [
   { valor: "DEVOLVIDO_PARA_AJUSTE", rotulo: "Devolvidos" },
   { valor: "APROVADO", rotulo: "Aprovados" },
 ];
+
+const COLUNAS = "grid-cols-[2fr_1.1fr_.8fr_1fr_100px]";
 
 function diasDesde(data: Date): number {
   return Math.floor((Date.now() - data.getTime()) / 86_400_000);
@@ -116,21 +121,13 @@ export function ListaAvaliacao({
           valor={busca.valor}
           onChange={busca.definir}
         />
-        <label htmlFor="filtro-periodo-avaliacao" className="sr-only">
-          Filtrar por período letivo
-        </label>
-        <select
+        <SeletorFiltro
           id="filtro-periodo-avaliacao"
-          value={periodoId}
-          onChange={(evento) => setPeriodoId(Number(evento.target.value))}
-          className={`${classeCampoSelect} shadow-cartao`}
-        >
-          {periodos.map((periodo) => (
-            <option key={periodo.id} value={periodo.id}>
-              {periodo.rotulo}
-            </option>
-          ))}
-        </select>
+          rotuloAcessivel="Filtrar por período letivo"
+          valor={periodoId}
+          onChange={(valor) => setPeriodoId(Number(valor))}
+          opcoes={periodos.map((periodo) => ({ valor: periodo.id, rotulo: periodo.rotulo }))}
+        />
         <AbasFiltro
           aba={aba}
           onMudar={setAba}
@@ -145,67 +142,55 @@ export function ListaAvaliacao({
             : `Nenhum relatório ${ABAS.find((item) => item.valor === aba)!.rotulo.toLowerCase()} nesse período.`}
         </AvisoVazio>
       ) : (
-        // Um cartão por curso. Mesma saída da Tabela: em tela estreita a grade
-        // rola na horizontal em vez de cortar a coluna "Avaliar" (CLAUDE.md §
-        // Interface, 360px).
+        // Um cartão por curso.
         <div className="flex flex-col gap-5">
           {grupos.map((grupo) => (
-            <section key={grupo.cursoNome} className={`overflow-x-auto ${classeCartao}`}>
-              <div className="min-w-[640px]">
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-borda px-5 py-4">
-                  <h2 className="text-[17px] font-bold tracking-tight text-tinta">{grupo.cursoNome}</h2>
-                  <span className="text-[13px] text-tinta-suave">
-                    {grupo.itens.length} {grupo.itens.length === 1 ? "relatório" : "relatórios"} ·{" "}
-                    {grupo.totalDocentesNoCurso} {grupo.totalDocentesNoCurso === 1 ? "docente" : "docentes"} no curso
-                  </span>
-                </div>
-                <div className="grid grid-cols-[2fr_1.1fr_.8fr_1fr_100px] gap-4 border-b border-borda bg-superficie-sutil px-5 py-3 text-[13px] font-semibold text-tinta-suave">
-                  <span>Docente</span>
-                  <span>Estado</span>
-                  <span className="text-right">Horas</span>
-                  <span>{aba === "AGUARDANDO_AVALIACAO" ? "Esperando" : aba === "DEVOLVIDO_PARA_AJUSTE" ? "Situação" : "Aprovado em"}</span>
-                  <span />
-                </div>
-                {grupo.itens.map((item, indice) => {
-                  const dias = diasDesde(item.desde);
-                  return (
-                    <div
-                      key={item.id}
-                      className={`grid grid-cols-[2fr_1.1fr_.8fr_1fr_100px] items-center gap-4 px-5 py-3 transition-colors hover:bg-superficie-sutil ${
-                        indice < grupo.itens.length - 1 ? "border-b border-borda/70" : ""
-                      }`}
-                    >
-                      <span className="text-[15px] font-medium">{item.docenteNome}</span>
-                      <SituacaoPill situacao={item.situacao} />
-                      <span className="text-right font-mono text-[15px] font-medium tabular-nums">
-                        {formatarHoras(item.horas)}
+            <CartaoGrade
+              key={grupo.cursoNome}
+              titulo={grupo.cursoNome}
+              detalhe={`${grupo.itens.length} ${grupo.itens.length === 1 ? "relatório" : "relatórios"} · ${
+                grupo.totalDocentesNoCurso
+              } ${grupo.totalDocentesNoCurso === 1 ? "docente" : "docentes"} no curso`}
+              classeLargura="min-w-[640px]"
+            >
+              <CabecalhoGrade className={COLUNAS}>
+                <span>Docente</span>
+                <span>Estado</span>
+                <span className="text-right">Horas</span>
+                <span>{aba === "AGUARDANDO_AVALIACAO" ? "Esperando" : aba === "DEVOLVIDO_PARA_AJUSTE" ? "Situação" : "Aprovado em"}</span>
+                <span />
+              </CabecalhoGrade>
+              {grupo.itens.map((item) => {
+                const dias = diasDesde(item.desde);
+                return (
+                  <LinhaGrade key={item.id} className={COLUNAS}>
+                    <span className="text-[15px] font-medium">{item.docenteNome}</span>
+                    <SituacaoPill situacao={item.situacao} />
+                    <Horas valor={item.horas} />
+                    {aba === "AGUARDANDO_AVALIACAO" && (
+                      <span className={`font-mono text-[15px] font-medium ${corUrgencia(dias)}`}>
+                        {dias <= 0 ? "hoje" : dias === 1 ? "1 dia" : `${dias} dias`}
                       </span>
-                      {aba === "AGUARDANDO_AVALIACAO" && (
-                        <span className={`font-mono text-[15px] font-medium ${corUrgencia(dias)}`}>
-                          {dias <= 0 ? "hoje" : dias === 1 ? "1 dia" : `${dias} dias`}
-                        </span>
-                      )}
-                      {aba === "DEVOLVIDO_PARA_AJUSTE" && <span className="text-[13px] text-tinta-suave">Com o docente</span>}
-                      {aba === "APROVADO" && (
-                        <span className="font-mono text-[13px] text-tinta-suave">
-                          {formatarData(item.desde)}
-                        </span>
-                      )}
-                      <Link
-                        href={`/avaliacao/${item.id}`}
-                        className={`ml-auto inline-flex min-h-11 items-center justify-center rounded-lg px-3.5 text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo ${
-                          aba === "AGUARDANDO_AVALIACAO"
-                            ? "bg-azul-interativo font-semibold text-white shadow-botao hover:bg-azul-escuro"
-                            : "font-semibold text-azul-interativo hover:bg-azul-suave"
-                        }`}
-                      >
-                        {aba === "AGUARDANDO_AVALIACAO" ? "Avaliar" : "Ver"}
+                    )}
+                    {aba === "DEVOLVIDO_PARA_AJUSTE" && <span className="text-[13px] text-tinta-suave">Com o docente</span>}
+                    {aba === "APROVADO" && (
+                      <span className="font-mono text-[13px] text-tinta-suave">{formatarData(item.desde)}</span>
+                    )}
+                    {/* O que espera avaliação é o trabalho da tela: ganha o
+                        botão cheio; o resto só se consulta. */}
+                    {aba === "AGUARDANDO_AVALIACAO" ? (
+                      <Link href={`/avaliacao/${item.id}`} className={`${classeBotaoPrimario} justify-self-end`}>
+                        Avaliar
                       </Link>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
+                    ) : (
+                      <LinkAcao href={`/avaliacao/${item.id}`} className="justify-self-end">
+                        Ver
+                      </LinkAcao>
+                    )}
+                  </LinhaGrade>
+                );
+              })}
+            </CartaoGrade>
           ))}
         </div>
       )}

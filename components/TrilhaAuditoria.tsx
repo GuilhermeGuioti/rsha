@@ -1,9 +1,13 @@
 import { TipoEvento } from "../generated/prisma/enums";
 import { formatarDataHora, formatarHoras, ROTULO_EVENTO } from "../lib/formato";
-import { classeCartao } from "./Cartao";
+import { Cartao } from "./Cartao";
+import { classeTituloSecao } from "./CabecalhoAdmin";
+import { Destaque } from "./Destaque";
 import { IconeRelogio } from "./Icones";
+import { Marcador, type Forma } from "./Pill";
+import { SeloIcone } from "./SeloIcone";
 
-type Evento = {
+export type EventoTrilha = {
   id: number;
   tipo: TipoEvento;
   ocorridoEm: Date;
@@ -12,26 +16,27 @@ type Evento = {
 };
 
 // Só o visual mora aqui; o rótulo vem de lib/formato para não divergir do PDF.
-const APARENCIA_EVENTO: Record<TipoEvento, { cor: string; marcador: string; forma: string }> = {
+// `marcador` é o círculo em volta da forma; a cor dele (text-*) pinta a forma.
+const APARENCIA_EVENTO: Record<TipoEvento, { cor: string; marcador: string; forma: Forma }> = {
   CRIACAO: {
     cor: "text-tinta",
-    marcador: "border-borda bg-superficie",
-    forma: "h-2.5 w-2.5 rounded-full border-2 border-estado-rascunho",
+    marcador: "border-borda bg-superficie text-estado-rascunho",
+    forma: "circulo-vazado",
   },
   SUBMISSAO: {
     cor: "text-estado-aguardando",
-    marcador: "border-estado-aguardando-borda bg-estado-aguardando-suave",
-    forma: "h-2.5 w-2.5 rounded-[2px] bg-estado-aguardando",
+    marcador: "border-estado-aguardando-borda bg-estado-aguardando-suave text-estado-aguardando",
+    forma: "quadrado",
   },
   DEVOLUCAO: {
     cor: "text-estado-devolvido",
-    marcador: "border-estado-devolvido-borda bg-estado-devolvido-suave",
-    forma: "h-2.5 w-3 bg-estado-devolvido [clip-path:polygon(50%_0,100%_100%,0_100%)]",
+    marcador: "border-estado-devolvido-borda bg-estado-devolvido-suave text-estado-devolvido",
+    forma: "triangulo",
   },
   APROVACAO: {
     cor: "text-estado-aprovado",
-    marcador: "border-estado-aprovado-borda bg-estado-aprovado-suave",
-    forma: "h-2.5 w-2.5 rounded-full bg-estado-aprovado",
+    marcador: "border-estado-aprovado-borda bg-estado-aprovado-suave text-estado-aprovado",
+    forma: "circulo",
   },
 };
 
@@ -42,21 +47,18 @@ export function TrilhaAuditoria({
   eventos,
   cargaHorariaTotal,
 }: {
-  eventos: Evento[];
+  eventos: EventoTrilha[];
   cargaHorariaTotal: number;
 }) {
   const totalDevolucoes = eventos.filter((evento) => evento.tipo === TipoEvento.DEVOLUCAO).length;
 
   return (
-    <aside className={`p-6 ${classeCartao}`}>
+    <Cartao como="aside" className="p-6">
       <div className="flex items-center gap-3">
-        <span
-          aria-hidden
-          className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-azul-suave text-azul-interativo"
-        >
+        <SeloIcone>
           <IconeRelogio className="h-[22px] w-[22px]" />
-        </span>
-        <h2 className="text-lg font-bold tracking-tight">Trilha do documento</h2>
+        </SeloIcone>
+        <h2 className={classeTituloSecao}>Trilha do documento</h2>
       </div>
       <p className="mt-3 mb-6 text-[13px] leading-relaxed text-tinta-suave">
         Tudo o que aconteceu com este relatório, com autor e horário.
@@ -71,7 +73,7 @@ export function TrilhaAuditoria({
                   aria-hidden
                   className={`flex h-7 w-7 flex-none items-center justify-center rounded-full border ${aparencia.marcador}`}
                 >
-                  <span className={`flex-none ${aparencia.forma}`} />
+                  <Marcador forma={aparencia.forma} />
                 </span>
                 {indice < eventos.length - 1 && <span aria-hidden className="my-1 w-px flex-1 bg-borda" />}
               </div>
@@ -81,9 +83,9 @@ export function TrilhaAuditoria({
                   {evento.usuario.nome} · <span className="font-mono font-medium">{formatarDataHora(evento.ocorridoEm)}</span>
                 </div>
                 {evento.justificativa && (
-                  <p className="mt-2.5 rounded-xl border border-estado-devolvido-borda bg-estado-devolvido-suave px-3.5 py-3 text-[13px] leading-relaxed">
+                  <Destaque como="p" tom="devolvido" compacto className="mt-2.5 text-[13px] leading-relaxed">
                     <q>{evento.justificativa}</q>
-                  </p>
+                  </Destaque>
                 )}
               </div>
             </li>
@@ -101,6 +103,6 @@ export function TrilhaAuditoria({
           </>
         )}
       </p>
-    </aside>
+    </Cartao>
   );
 }

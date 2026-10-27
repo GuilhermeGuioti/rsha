@@ -2,6 +2,7 @@
 
 import { useId, useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { BotaoPrimario } from "../../../components/BotaoPrimario";
+import { Cartao } from "../../../components/Cartao";
 import { Campo, classeCampo } from "../../../components/Campo";
 import { MensagemErro } from "../../../components/MensagemErro";
 import { Pill } from "../../../components/Pill";
@@ -129,8 +130,7 @@ export function FormularioValidacao() {
 
       <div aria-live="polite">
         {resultado && documento && (
-          <section className="relative overflow-hidden rounded-2xl border border-borda bg-superficie px-5 pt-6 pb-4 shadow-cartao">
-            <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-estado-aprovado" />
+          <Cartao como="section" faixa="bg-estado-aprovado" className="px-5 pt-6 pb-4">
             <Pill cor="aprovado" forma="circulo">
               Documento autêntico
             </Pill>
@@ -156,12 +156,11 @@ export function FormularioValidacao() {
                 {formatarDataHora(documento.aprovadoEm)}
               </Linha>
             </dl>
-          </section>
+          </Cartao>
         )}
 
         {resultado && !documento && (
-          <section className="relative overflow-hidden rounded-2xl border border-borda bg-superficie px-5 pt-6 pb-5 shadow-cartao">
-            <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-estado-devolvido" />
+          <Cartao como="section" faixa="bg-estado-devolvido" className="px-5 pt-6 pb-5">
             <Pill cor="devolvido" forma="triangulo">
               Documento não reconhecido
             </Pill>
@@ -170,7 +169,7 @@ export function FormularioValidacao() {
               nenhum relatório aprovado no SRHA. Confira a digitação; se estiver igual ao impresso, o documento não é
               autêntico.
             </p>
-          </section>
+          </Cartao>
         )}
       </div>
     </div>

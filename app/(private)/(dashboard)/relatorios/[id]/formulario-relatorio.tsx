@@ -7,6 +7,7 @@ import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
 import { Campo, classeCampo, classeCampoSelect } from "../../../../../components/Campo";
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
+import { classeTituloSecao } from "../../../../../components/CabecalhoAdmin";
 import { IconeMais, IconeRemover } from "../../../../../components/Icones";
 import { MensagemErro } from "../../../../../components/MensagemErro";
 import { formatarHoras, ROTULO_DIA_SEMANA } from "../../../../../lib/formato";
@@ -28,6 +29,10 @@ type Tipo = { id: number; descricao: string };
 type Rascunho = { chave: number; tipoAtividadeId: string; horas: string; diaSemana: string; horario: string; descricao: string };
 
 let proximaChave = 0;
+
+// Bloco de cada item, igual em leitura e em edição — só a última coluna (o
+// botão de remover) muda.
+const classeItem = "grid grid-cols-1 gap-3.5 rounded-2xl border border-borda bg-superficie-sutil p-4 sm:p-5";
 
 function paraRascunho(item: LinhaItem): Rascunho {
   return {
@@ -119,10 +124,7 @@ export function FormularioRelatorio({
       <section className="flex flex-col gap-3">
         <CabecalhoItens quantidade={itensIniciais.length} />
         {itensIniciais.map((item, indice) => (
-          <div
-            key={indice}
-            className="grid grid-cols-1 gap-3.5 rounded-2xl border border-borda bg-superficie-sutil p-4 sm:grid-cols-[1.1fr_.8fr_.9fr_.6fr] sm:p-5"
-          >
+          <div key={indice} className={`${classeItem} sm:grid-cols-[1.1fr_.8fr_.9fr_.6fr]`}>
             <ValorLido rotulo="Tipo de atividade">
               {tipos.find((tipo) => tipo.id === item.tipoAtividadeId)?.descricao ?? "—"}
             </ValorLido>
@@ -152,7 +154,7 @@ export function FormularioRelatorio({
       {itens.map((item) => (
         <div
           key={item.chave}
-          className="grid grid-cols-1 gap-3.5 rounded-2xl border border-borda bg-superficie-sutil p-4 sm:grid-cols-[1.1fr_.8fr_.9fr_.6fr_auto] sm:p-5"
+          className={`${classeItem} sm:grid-cols-[1.1fr_.8fr_.9fr_.6fr_auto]`}
         >
           <Campo rotulo="Tipo de atividade" htmlFor={`${idBase}-tipo-${item.chave}`}>
             <select
@@ -268,7 +270,7 @@ export function FormularioRelatorio({
 function CabecalhoItens({ quantidade }: { quantidade: number }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <h2 className="text-lg font-bold tracking-tight">Itens de atividade</h2>
+      <h2 className={classeTituloSecao}>Itens de atividade</h2>
       <span className="rounded-full bg-papel px-2.5 py-1 text-[13px] font-semibold text-tinta-suave">
         {quantidade === 1 ? "1 item" : `${quantidade} itens`}
       </span>

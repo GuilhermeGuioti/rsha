@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { IconeFechar } from "./Icones";
+import { Sobretitulo } from "./Sobretitulo";
 
 type ModalProps = {
   aberto: boolean;
@@ -36,7 +37,7 @@ export function Modal({ aberto, eyebrow, titulo, descricao, onFechar, children, 
     >
       <div className="flex items-start justify-between gap-5 px-6 pt-6 pb-5">
         <div className="min-w-0">
-          <p className="text-xs font-semibold tracking-[0.12em] text-azul-interativo uppercase">{eyebrow}</p>
+          <Sobretitulo>{eyebrow}</Sobretitulo>
           <h2 className="mt-2 text-[22px] font-extrabold tracking-tight">{titulo}</h2>
           {descricao && (
             <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-tinta-suave">{descricao}</p>

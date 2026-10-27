@@ -1,17 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import type { SituacaoRelatorio } from "../../../../generated/prisma/client";
 import { CabecalhoAdmin } from "../../../../components/CabecalhoAdmin";
 import { CampoBusca } from "../../../../components/CampoBusca";
 import { AbasFiltro } from "../../../../components/AbasFiltro";
-import { classeCampoSelect } from "../../../../components/Campo";
+import { SeletorFiltro } from "../../../../components/SeletorFiltro";
 import { classeCartao } from "../../../../components/Cartao";
+import { CabecalhoGrade, CartaoGrade, LinhaGrade } from "../../../../components/Grade";
+import { Horas } from "../../../../components/Horas";
+import { LinkAcao, classeLinkAcao } from "../../../../components/LinkAcao";
 import { SituacaoPill } from "../../../../components/SituacaoPill";
 import { Pill } from "../../../../components/Pill";
 import { IconeChevron } from "../../../../components/Icones";
-import { formatarData, formatarHoras } from "../../../../lib/formato";
+import { formatarData } from "../../../../lib/formato";
 import { useBusca } from "../../../../lib/hooks/useBusca";
 
 export type LinhaArquivo = {
@@ -44,6 +46,8 @@ const ABAS_SITUACAO: { valor: AbaSituacao; rotulo: string }[] = [
   { valor: "DEVOLVIDO_PARA_AJUSTE", rotulo: "Devolvidos" },
   { valor: "APROVADO", rotulo: "Aprovados" },
 ];
+
+const COLUNAS = "grid-cols-[2fr_1.2fr_.7fr_1fr_130px]";
 
 type Selecao = { ano: number; semestre: number; cursoId: number };
 
@@ -219,22 +223,16 @@ export function ExploradorArquivo({
           valor={busca.valor}
           onChange={busca.definir}
         />
-        <label htmlFor="filtro-tipo-arquivo" className="sr-only">
-          Filtrar por tipo de atividade
-        </label>
-        <select
+        <SeletorFiltro
           id="filtro-tipo-arquivo"
-          value={tipoId}
-          onChange={(evento) => setTipoId(evento.target.value === "todos" ? "todos" : Number(evento.target.value))}
-          className={`${classeCampoSelect} shadow-cartao`}
-        >
-          <option value="todos">Todos os tipos de atividade</option>
-          {tipos.map((tipo) => (
-            <option key={tipo.id} value={tipo.id}>
-              {tipo.descricao}
-            </option>
-          ))}
-        </select>
+          rotuloAcessivel="Filtrar por tipo de atividade"
+          valor={tipoId}
+          onChange={(valor) => setTipoId(valor === "todos" ? "todos" : Number(valor))}
+          opcoes={[
+            { valor: "todos", rotulo: "Todos os tipos de atividade" },
+            ...tipos.map((tipo) => ({ valor: tipo.id, rotulo: tipo.descricao })),
+          ]}
+        />
         <AbasFiltro
           aba={aba}
           onMudar={setAba}
@@ -313,99 +311,81 @@ export function ExploradorArquivo({
           })}
         </nav>
 
-        <div className={`overflow-hidden ${classeCartao}`}>
-          <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-borda px-5 py-4">
-            <span className="text-lg font-bold tracking-tight">
-              {periodoAtual?.cursoNome} · {selecao.ano}/{selecao.semestre}
-            </span>
-            {periodoAtual && (
-              <span className="text-[13px] text-tinta-suave">
+        {/* Mesma saída da Tabela: em tela estreita a grade rola na
+            horizontal em vez de cortar "Abrir" e "PDF" (CLAUDE.md §
+            Interface, 360px). A frase de lista vazia fica fora da rolagem,
+            senão seria cortada em 360px. */}
+        <CartaoGrade
+          titulo={`${periodoAtual?.cursoNome} · ${selecao.ano}/${selecao.semestre}`}
+          detalhe={
+            periodoAtual && (
+              <>
                 {totalEntregues} de {grupoAtual.length} {grupoAtual.length === 1 ? "docente entregou" : "docentes entregaram"}
                 {" · "}
                 {agora > periodoAtual.encerramentoSubmissao ? (
                   <>
                     período encerrado em{" "}
-                    <span className="font-mono font-medium">
-                      {formatarData(periodoAtual.encerramentoSubmissao)}
-                    </span>
+                    <span className="font-mono font-medium">{formatarData(periodoAtual.encerramentoSubmissao)}</span>
                   </>
                 ) : (
                   "período em andamento"
                 )}
+              </>
+            )
+          }
+          classeLargura="min-w-[680px]"
+          rodape={
+            visiveis.length === 0 && (
+              <p className="px-5 py-10 text-center text-[15px] text-tinta-suave">
+                {grupoAtual.length === 0
+                  ? "Nenhum docente vinculado a este curso neste período."
+                  : "Nenhum docente encontrado com esses filtros."}
+              </p>
+            )
+          }
+        >
+          <CabecalhoGrade className={COLUNAS}>
+            <span>Docente</span>
+            <span>Estado final</span>
+            <span className="text-right">Horas</span>
+            <span>Aprovado em</span>
+            <span />
+          </CabecalhoGrade>
+
+          {visiveis.map((linha) => (
+            <LinhaGrade key={linha.vinculoId} className={COLUNAS}>
+              <span className="text-[15px] font-medium">{linha.docenteNome}</span>
+              {linha.situacao ? (
+                <SituacaoPill situacao={linha.situacao} />
+              ) : (
+                <Pill cor="neutro" forma="circulo-vazado">
+                  Não entregue
+                </Pill>
+              )}
+              <Horas valor={linha.horas} />
+              <span className="font-mono text-[13px] text-tinta-suave">
+                {linha.aprovadoEm ? formatarData(linha.aprovadoEm) : "—"}
               </span>
-            )}
-          </div>
-
-          {/* Mesma saída da Tabela: em tela estreita a grade rola na
-              horizontal em vez de cortar "Abrir" e "PDF" (CLAUDE.md §
-              Interface, 360px). O cabeçalho acima continua quebrando linha. */}
-          <div className="overflow-x-auto">
-            <div className="min-w-[680px]">
-              <div className="grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] gap-4 border-b border-borda bg-superficie-sutil px-5 py-3 text-[13px] font-semibold text-tinta-suave">
-                <span>Docente</span>
-                <span>Estado final</span>
-                <span className="text-right">Horas</span>
-                <span>Aprovado em</span>
-                <span />
-              </div>
-
-              {visiveis.map((linha, indice) => (
-                  <div
-                    key={linha.vinculoId}
-                    className={`grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] items-center gap-4 px-5 py-2.5 transition-colors hover:bg-superficie-sutil ${
-                      indice < visiveis.length - 1 ? "border-b border-borda/70" : ""
-                    }`}
+              <div className="flex items-center justify-end gap-1">
+                {linha.relatorioId && (
+                  <LinkAcao
+                    href={linha.podeAvaliar ? `/avaliacao/${linha.relatorioId}` : `/relatorios/${linha.relatorioId}`}
                   >
-                    <span className="text-[15px] font-medium">{linha.docenteNome}</span>
-                    {linha.situacao ? (
-                      <SituacaoPill situacao={linha.situacao} />
-                    ) : (
-                      <Pill cor="neutro" forma="circulo-vazado">
-                        Não entregue
-                      </Pill>
-                    )}
-                    <span className="text-right font-mono text-[15px] font-medium tabular-nums">
-                      {linha.horas !== null ? formatarHoras(linha.horas) : "—"}
-                    </span>
-                    <span className="font-mono text-[13px] text-tinta-suave">
-                      {linha.aprovadoEm ? formatarData(linha.aprovadoEm) : "—"}
-                    </span>
-                    <div className="flex items-center justify-end gap-1">
-                      {linha.relatorioId && (
-                        <Link
-                          href={linha.podeAvaliar ? `/avaliacao/${linha.relatorioId}` : `/relatorios/${linha.relatorioId}`}
-                          className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-[15px] font-semibold text-azul-interativo transition-colors hover:bg-azul-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
-                        >
-                          Abrir
-                        </Link>
-                      )}
-                      {/* Só relatório aprovado exporta (RF15) — é a única situação
-                          em que autoria e aprovação da trilha estão completas. */}
-                      {linha.relatorioId && linha.situacao === "APROVADO" && (
-                        <a
-                          href={`/api/relatorios/${linha.relatorioId}/pdf`}
-                          className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-[15px] font-semibold text-azul-interativo transition-colors hover:bg-azul-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
-                        >
-                          PDF
-                          <span className="sr-only"> do relatório de {linha.docenteNome}</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          {/* Fora da grade: dentro dela a frase ficaria cortada pela
-              rolagem horizontal em 360px. */}
-          {visiveis.length === 0 && (
-            <p className="px-5 py-10 text-center text-[15px] text-tinta-suave">
-              {grupoAtual.length === 0
-                ? "Nenhum docente vinculado a este curso neste período."
-                : "Nenhum docente encontrado com esses filtros."}
-            </p>
-          )}
-        </div>
+                    Abrir
+                  </LinkAcao>
+                )}
+                {/* Só relatório aprovado exporta (RF15) — é a única situação
+                    em que autoria e aprovação da trilha estão completas. */}
+                {linha.relatorioId && linha.situacao === "APROVADO" && (
+                  <a href={`/api/relatorios/${linha.relatorioId}/pdf`} className={classeLinkAcao}>
+                    PDF
+                    <span className="sr-only"> do relatório de {linha.docenteNome}</span>
+                  </a>
+                )}
+              </div>
+            </LinhaGrade>
+          ))}
+        </CartaoGrade>
       </div>
     </div>
   );

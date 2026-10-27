@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { acaoSair } from "../lib/auth/acoes";
 import { IconeSair } from "./Icones";
+import { LogoInstitucional } from "./MarcaInstitucional";
 import { Pill } from "./Pill";
 
 export type LinkNav = { href: string; rotulo: string };
@@ -35,12 +35,7 @@ export function Nav({
           aria-label="Ir para o início"
           className="flex items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
         >
-          <span
-            aria-hidden
-            className="flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-azul-borda bg-azul-suave"
-          >
-            <Image src="/logo-barao.png" alt="" width={28} height={28} className="h-7 w-7 object-contain" />
-          </span>
+          <LogoInstitucional tamanho="sm" />
           {/* <span className="whitespace-nowrap text-[15px] font-bold tracking-tight text-tinta">
             Horas Atividades
           </span> */}
@@ -76,12 +71,7 @@ export function Nav({
             <span className="text-[13px] font-semibold text-tinta">{nomeUsuario}</span>
             <span className="text-[13px] text-tinta-suave">{perfilRotulo}</span>
           </span>
-          <span
-            aria-hidden
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-azul-interativo text-base font-semibold text-white shadow-botao"
-          >
-            {inicial}
-          </span>
+          <Avatar inicial={inicial} className="h-10 w-10 shadow-botao" />
         </button>
 
         {/* Popover nativo: fecha com Esc e com clique fora, sem estado em
@@ -93,12 +83,7 @@ export function Nav({
           className="inset-auto top-[68px] right-4 m-0 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-borda bg-superficie p-0 text-tinta shadow-flutuante open:animate-surgir sm:right-6"
         >
           <div className="flex items-center gap-3 border-b border-borda px-4 py-4">
-            <span
-              aria-hidden
-              className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-azul-interativo text-base font-semibold text-white"
-            >
-              {inicial}
-            </span>
+            <Avatar inicial={inicial} className="h-11 w-11" />
             <div className="min-w-0">
               <p className="truncate text-[15px] font-semibold">{nomeUsuario}</p>
               <p className="truncate font-mono text-[13px] text-tinta-suave">{emailUsuario}</p>
@@ -119,5 +104,16 @@ export function Nav({
         </div>
       </div>
     </header>
+  );
+}
+
+function Avatar({ inicial, className }: { inicial: string; className: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`flex flex-none items-center justify-center rounded-full bg-azul-interativo text-base font-semibold text-white ${className}`}
+    >
+      {inicial}
+    </span>
   );
 }

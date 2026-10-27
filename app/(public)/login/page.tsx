@@ -1,7 +1,8 @@
-import Image from "next/image";
 import { classeBotaoPrimario } from "../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../components/BotaoSecundario";
 import { classeCampo } from "../../../components/Campo";
+import { CartaoPublico } from "../../../components/CartaoPublico";
+import { MarcaInstitucional } from "../../../components/MarcaInstitucional";
 import { MensagemErro } from "../../../components/MensagemErro";
 import { Pill } from "../../../components/Pill";
 import { acaoEntrar, acaoEntrarComEmail } from "./acoes";
@@ -19,14 +20,8 @@ export default async function LoginPage(props: PageProps<"/login">) {
         <div aria-hidden className="pointer-events-none absolute bottom-16 -left-16 h-60 w-60 rounded-full bg-white/[.05]" />
         <div aria-hidden className="pointer-events-none absolute -right-10 -bottom-12 h-44 w-44 rounded-full bg-acento/25" />
 
-        <div className="relative flex items-center gap-4">
-          <div className="flex h-16 w-16 flex-none items-center justify-center rounded-2xl bg-white p-2.5 shadow-flutuante">
-            <Image src="/logo-barao.png" alt="" width={48} height={48} className="h-full w-full object-contain" />
-          </div>
-          <div>
-            <p className="text-lg font-bold leading-tight">Centro Universitário Barão de Mauá</p>
-            <p className="mt-1 text-xs font-semibold tracking-[0.14em] text-white/80 uppercase">Horas Atividades</p>
-          </div>
+        <div className="relative">
+          <MarcaInstitucional tom="claro" tamanho="lg" />
         </div>
 
         {/* Sempre em três linhas: a caixa é medida em em (de 12em a 18em a
@@ -48,27 +43,17 @@ export default async function LoginPage(props: PageProps<"/login">) {
       </section>
 
       <section className="flex flex-1 flex-col items-center justify-center bg-papel px-4 py-10 sm:px-8">
-        <div className="mb-8 flex flex-col items-center gap-3 text-center lg:hidden">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-borda bg-superficie p-2.5 shadow-cartao">
-            <Image src="/logo-barao.png" alt="" width={48} height={48} className="h-full w-full object-contain" />
-          </div>
-          <p className="text-[15px] font-bold leading-snug">Centro Universitário Barão de Mauá</p>
-        </div>
-
-        <div className="w-full max-w-[540px] rounded-3xl bg-superficie px-6 py-8 shadow-flutuante sm:px-10 sm:py-10">
-          <p className="text-xs font-semibold tracking-[0.14em] text-azul-interativo uppercase">
-            SRHA · Acesso institucional
-          </p>
-          {/* Uma linha só a partir do sm: o cartão de 540px deixa 460px de
-              conteúdo, e o título pede 389px. */}
-          <h1 className="mt-3 text-[28px] font-extrabold leading-tight tracking-tight sm:whitespace-nowrap">
-            Relatório de Horas Atividades
-          </h1>
-          <p className="mt-2 text-[15px] leading-relaxed text-tinta-suave">
-            Entre com o e-mail{" "}
-            <span className="font-mono font-medium text-tinta">@baraodemaua.br</span>. Não
-            existe senha própria neste sistema.
-          </p>
+        <CartaoPublico
+          marcaSoNoCelular
+          sobretitulo="SRHA · Acesso institucional"
+          titulo="Relatório de Horas Atividades"
+          descricao={
+            <>
+              Entre com o e-mail <span className="font-mono font-medium text-tinta">@baraodemaua.br</span>. Não
+              existe senha própria neste sistema.
+            </>
+          }
+        >
 
           {erro && (
             <div className="mt-5">
@@ -107,7 +92,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
               <BotaoSecundario type="submit">Entrar</BotaoSecundario>
             </form>
           )}
-        </div>
+        </CartaoPublico>
       </section>
     </main>
   );

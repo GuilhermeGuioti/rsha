@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { classeSuperficie } from "./Cartao";
 import { IconeChevron } from "./Icones";
 
 // Fica no layout do (dashboard), que não remonta entre navegações — então a
@@ -43,7 +44,9 @@ export function BotaoVoltar({ inicio }: { inicio: string }) {
       onClick={voltar}
       className="group mb-4 inline-flex min-h-11 items-center gap-2.5 rounded-xl pr-3 text-[15px] font-semibold text-azul-interativo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-borda bg-superficie shadow-cartao transition-colors group-hover:border-azul-borda group-hover:bg-azul-suave">
+      <span
+        className={`flex h-10 w-10 items-center justify-center rounded-xl ${classeSuperficie} transition-colors group-hover:border-azul-borda group-hover:bg-azul-suave`}
+      >
         <IconeChevron className="h-4 w-4 rotate-180" />
       </span>
       Voltar

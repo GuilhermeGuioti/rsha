@@ -7,6 +7,8 @@ import { Modal } from "../../../../../components/Modal";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
 import { Campo, classeCampoSelect } from "../../../../../components/Campo";
+import { Destaque } from "../../../../../components/Destaque";
+import { SeletorFiltro } from "../../../../../components/SeletorFiltro";
 import { Tabela } from "../../../../../components/Tabela";
 import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
 import { CampoBusca } from "../../../../../components/CampoBusca";
@@ -136,13 +138,13 @@ export function ListaVinculos({
       />
 
       {periodos.length === 0 && (
-        <p className="rounded-2xl border border-estado-aguardando-borda bg-estado-aguardando-suave px-5 py-4 text-[15px] text-tinta">
+        <Destaque como="p" tom="aguardando" className="text-[15px] text-tinta">
           Nenhum período letivo cadastrado.{" "}
           <Link href="/admin/periodos" className="font-medium text-azul-interativo hover:underline">
             Cadastre um período
           </Link>{" "}
           antes de vincular docentes a cursos.
-        </p>
+        </Destaque>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
@@ -176,24 +178,16 @@ export function ListaVinculos({
                 valor={buscaDocentes.valor}
                 onChange={buscaDocentes.definir}
               />
-              <label htmlFor="filtro-periodo-docentes" className="sr-only">
-                Filtrar por período letivo
-              </label>
-              <select
+              <SeletorFiltro
                 id="filtro-periodo-docentes"
-                value={periodoFiltroId}
-                onChange={(evento) =>
-                  setPeriodoFiltroId(evento.target.value === "todos" ? "todos" : Number(evento.target.value))
-                }
-                className={`${classeCampoSelect} shadow-cartao`}
-              >
-                <option value="todos">Todos os períodos</option>
-                {periodos.map((periodo) => (
-                  <option key={periodo.id} value={periodo.id}>
-                    {periodo.rotulo}
-                  </option>
-                ))}
-              </select>
+                rotuloAcessivel="Filtrar por período letivo"
+                valor={periodoFiltroId}
+                onChange={(valor) => setPeriodoFiltroId(valor === "todos" ? "todos" : Number(valor))}
+                opcoes={[
+                  { valor: "todos", rotulo: "Todos os períodos" },
+                  ...periodos.map((periodo) => ({ valor: periodo.id, rotulo: periodo.rotulo })),
+                ]}
+              />
             </div>
 
             <Tabela<VinculoDocente>

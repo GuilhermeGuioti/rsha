@@ -1,12 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirAcessoAoRelatorio } from "../../../../../lib/auth/guards";
 import { prisma } from "../../../../../lib/db";
 import { SituacaoRelatorio } from "../../../../../generated/prisma/enums";
 import { codigoRelatorio, formatarDataHora } from "../../../../../lib/formato";
 import { SituacaoPill } from "../../../../../components/SituacaoPill";
-import { classeCartao } from "../../../../../components/Cartao";
-import { TrilhaAuditoria } from "../../../../../components/TrilhaAuditoria";
+import { TelaRelatorio } from "../../../../../components/TelaRelatorio";
 import { FormularioRelatorio } from "../../relatorios/[id]/formulario-relatorio";
 import { PainelDecisao } from "./painel-decisao";
 
@@ -40,65 +38,47 @@ export default async function AvaliacaoDetalhePage({ params }: { params: Promise
   const diasEsperando = Math.floor((agora.getTime() - relatorio.eventos[0].ocorridoEm.getTime()) / 86_400_000);
 
   return (
-    <div className="flex flex-col gap-5">
-      <nav aria-label="Você está em" className="flex flex-wrap items-center gap-2 text-[13px] text-tinta-suave">
-        <Link href="/avaliacao" className="font-semibold text-azul-interativo hover:underline">
-          Fila de avaliação
-        </Link>
-        <span aria-hidden>›</span>
-        <span>{relatorio.curso.nome}</span>
-        <span aria-hidden>›</span>
-        <span>{relatorio.docente.nome}</span>
-      </nav>
-
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[2fr_1fr]">
-        <div className="flex flex-col gap-5">
-          <div className={`flex flex-col gap-6 p-5 sm:p-7 ${classeCartao}`}>
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-borda pb-6">
-              <div>
-                <div className="font-mono text-xs font-medium tracking-[.1em] text-tinta-suave">
-                  {codigoRelatorio(relatorio.periodo.ano, relatorio.periodo.semestre, relatorio.id)}
-                </div>
-                <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-[28px]">{relatorio.docente.nome}</h1>
-                <p className="mt-1.5 text-[15px] text-tinta-suave">
-                  {relatorio.curso.nome} · {relatorio.periodo.semestre}º semestre de {relatorio.periodo.ano}
-                </p>
-              </div>
-              <div className="flex flex-col items-start gap-2.5 sm:items-end">
-                <SituacaoPill situacao={relatorio.situacao} />
-                {relatorio.situacao === SituacaoRelatorio.AGUARDANDO_AVALIACAO && (
-                  <p className="text-[13px] text-tinta-suave">
-                    esperando há{" "}
-                    <span className="font-mono font-medium text-tinta">
-                      {diasEsperando <= 0 ? "menos de 1 dia" : diasEsperando === 1 ? "1 dia" : `${diasEsperando} dias`}
-                    </span>
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <FormularioRelatorio
-              relatorioId={relatorio.id}
-              somenteLeitura
-              atualizadoEm={formatarDataHora(relatorio.atualizadoEm)}
-              tipos={tipos.map((tipo) => ({ id: tipo.id, descricao: tipo.descricao }))}
-              itensIniciais={relatorio.itens.map((item) => ({
-                tipoAtividadeId: item.tipoAtividadeId,
-                horas: item.horas.toNumber(),
-                diaSemana: item.diaSemana,
-                horario: item.horario,
-                descricao: item.descricao,
-              }))}
-            />
-          </div>
-
+    <TelaRelatorio
+      caminho={[
+        { rotulo: "Fila de avaliação", href: "/avaliacao" },
+        { rotulo: relatorio.curso.nome },
+        { rotulo: relatorio.docente.nome },
+      ]}
+      codigo={codigoRelatorio(relatorio.periodo.ano, relatorio.periodo.semestre, relatorio.id)}
+      titulo={relatorio.docente.nome}
+      subtitulo={`${relatorio.curso.nome} · ${relatorio.periodo.semestre}º semestre de ${relatorio.periodo.ano}`}
+      situacao={
+        <>
+          <SituacaoPill situacao={relatorio.situacao} />
           {relatorio.situacao === SituacaoRelatorio.AGUARDANDO_AVALIACAO && (
-            <PainelDecisao relatorioId={relatorio.id} />
+            <p className="text-[13px] text-tinta-suave">
+              esperando há{" "}
+              <span className="font-mono font-medium text-tinta">
+                {diasEsperando <= 0 ? "menos de 1 dia" : diasEsperando === 1 ? "1 dia" : `${diasEsperando} dias`}
+              </span>
+            </p>
           )}
-        </div>
-
-        <TrilhaAuditoria eventos={relatorio.eventos} cargaHorariaTotal={relatorio.cargaHorariaTotal.toNumber()} />
-      </div>
-    </div>
+        </>
+      }
+      eventos={relatorio.eventos}
+      cargaHorariaTotal={relatorio.cargaHorariaTotal.toNumber()}
+      depois={
+        relatorio.situacao === SituacaoRelatorio.AGUARDANDO_AVALIACAO && <PainelDecisao relatorioId={relatorio.id} />
+      }
+    >
+      <FormularioRelatorio
+        relatorioId={relatorio.id}
+        somenteLeitura
+        atualizadoEm={formatarDataHora(relatorio.atualizadoEm)}
+        tipos={tipos.map((tipo) => ({ id: tipo.id, descricao: tipo.descricao }))}
+        itensIniciais={relatorio.itens.map((item) => ({
+          tipoAtividadeId: item.tipoAtividadeId,
+          horas: item.horas.toNumber(),
+          diaSemana: item.diaSemana,
+          horario: item.horario,
+          descricao: item.descricao,
+        }))}
+      />
+    </TelaRelatorio>
   );
 }

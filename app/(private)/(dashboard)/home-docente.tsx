@@ -1,14 +1,17 @@
 import { prisma } from "../../../lib/db";
 import { obterUsuario } from "../../../lib/auth/guards";
 import { SituacaoRelatorio, TipoEvento } from "../../../generated/prisma/enums";
-import { codigoRelatorio, formatarData, formatarDataHora, formatarHoras } from "../../../lib/formato";
+import { codigoRelatorio, formatarData, formatarDataHora, formatarHoras, saudacao } from "../../../lib/formato";
 import { prazoDeEntrega } from "../../../lib/services/workflow";
 import { CabecalhoAdmin } from "../../../components/CabecalhoAdmin";
 import { AvisoVazio } from "../../../components/AvisoVazio";
 import { BotaoPrimario } from "../../../components/BotaoPrimario";
 import { Pill } from "../../../components/Pill";
 import { SituacaoPill, aparenciaSituacao } from "../../../components/SituacaoPill";
-import { classeCartao } from "../../../components/Cartao";
+import { Cartao } from "../../../components/Cartao";
+import { Destaque } from "../../../components/Destaque";
+import { RotuloCodigo } from "../../../components/RotuloCodigo";
+import { SeloIcone } from "../../../components/SeloIcone";
 import { IconeDocumento, IconeRelogio } from "../../../components/Icones";
 import { acaoAbrirRelatorio } from "./relatorios/acoes";
 
@@ -65,12 +68,10 @@ export async function HomeDocente({ usuarioId }: { usuarioId: number }) {
       ) >= agora,
   );
 
-  const saudacao = `Olá, ${usuario.nome.trim().split(/\s+/)[0]}`;
-
   if (!periodo && devolvidosPendentes.length === 0) {
     return (
       <div className="flex flex-col gap-6">
-        <CabecalhoAdmin titulo={saudacao} />
+        <CabecalhoAdmin titulo={saudacao(usuario.nome)} />
         <AvisoVazio>
           Nenhum período letivo está aberto para submissão no momento. Os relatórios já entregues ficam no
           Arquivo.
@@ -87,7 +88,7 @@ export async function HomeDocente({ usuarioId }: { usuarioId: number }) {
   return (
     <div className="flex flex-col gap-8">
       <CabecalhoAdmin
-        titulo={saudacao}
+        titulo={saudacao(usuario.nome)}
         subtitulo={
           <p className="text-[15px] text-tinta-suave">
             {periodo
@@ -166,19 +167,14 @@ export async function HomeDocente({ usuarioId }: { usuarioId: number }) {
 function PrazoEntrega({ encerramento, diasRestantes }: { encerramento: Date; diasRestantes: number }) {
   const urgente = diasRestantes < 7;
   return (
-    <div
-      className={`flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border px-4 py-3 ${
-        urgente ? "border-estado-aguardando-borda bg-estado-aguardando-suave" : "border-borda bg-superficie-sutil"
-      }`}
+    <Destaque
+      tom={urgente ? "aguardando" : "neutro"}
+      compacto
+      className="flex flex-wrap items-center gap-x-4 gap-y-2"
     >
-      <span
-        aria-hidden
-        className={`flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-superficie ${
-          urgente ? "text-estado-aguardando" : "text-azul-interativo"
-        }`}
-      >
+      <SeloIcone tom="branco" className={urgente ? "text-estado-aguardando" : "text-azul-interativo"}>
         <IconeRelogio className="h-[22px] w-[22px]" />
-      </span>
+      </SeloIcone>
       <div>
         <div className="text-[13px] font-semibold text-tinta-suave">Prazo de entrega</div>
         <div className="font-mono text-lg font-semibold tabular-nums">{formatarData(encerramento)}</div>
@@ -186,7 +182,7 @@ function PrazoEntrega({ encerramento, diasRestantes }: { encerramento: Date; dia
       <Pill cor={urgente ? "aguardando" : "neutro"} forma="quadrado">
         {diasRestantes <= 1 ? "último dia" : `faltam ${diasRestantes} dias`}
       </Pill>
-    </div>
+    </Destaque>
   );
 }
 
@@ -211,20 +207,16 @@ function CartaoRelatorio({
   const barra = relatorio ? aparenciaSituacao[relatorio.situacao].barra : "bg-borda";
 
   return (
-    <article className={`relative flex flex-col gap-5 overflow-hidden p-6 ${classeCartao}`}>
-      <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${barra}`} />
+    <Cartao como="article" faixa={barra} className="flex flex-col gap-5 p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
-          <span
-            aria-hidden
-            className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-azul-suave text-azul-interativo"
-          >
+          <SeloIcone tamanho="lg">
             <IconeDocumento className="h-6 w-6" />
-          </span>
+          </SeloIcone>
           <div className="min-w-0">
-            <div className="font-mono text-xs font-medium tracking-[.1em] text-tinta-suave">
+            <RotuloCodigo>
               {relatorio ? codigoRelatorio(periodo.ano, periodo.semestre, relatorio.id) : "SEM RELATÓRIO INICIADO"}
-            </div>
+            </RotuloCodigo>
             <h3 className="mt-1 text-xl font-bold tracking-tight">{cursoNome}</h3>
           </div>
         </div>
@@ -238,14 +230,14 @@ function CartaoRelatorio({
       </div>
 
       {devolucao && relatorio?.situacao === SituacaoRelatorio.DEVOLVIDO_PARA_AJUSTE ? (
-        <p className="rounded-xl border border-estado-devolvido-borda bg-estado-devolvido-suave px-4 py-3 text-[13px] leading-relaxed">
+        <Destaque como="p" tom="devolvido" compacto className="text-[13px] leading-relaxed">
           A coordenação pediu ajuste em {formatarData(devolucao.ocorridoEm)}: <q>{devolucao.justificativa}</q>{" "}
           Reenvie até{" "}
           <span className="font-mono font-medium">
             {formatarDataHora(prazoDeEntrega(relatorio.situacao, periodo.encerramentoSubmissao, devolucao.ocorridoEm))}
           </span>
           .
-        </p>
+        </Destaque>
       ) : (
         <p className="text-[13px] leading-relaxed text-tinta-suave">
           {relatorio
@@ -275,6 +267,6 @@ function CartaoRelatorio({
           </BotaoPrimario>
         </form>
       </div>
-    </article>
+    </Cartao>
   );
 }
