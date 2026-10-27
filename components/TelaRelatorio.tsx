@@ -1,4 +1,6 @@
 import { Fragment, type ReactNode } from "react";
+import { TipoEvento } from "../generated/prisma/enums";
+import { Carimbo } from "./Carimbo";
 import { Cartao } from "./Cartao";
 import { LinkTexto } from "./LinkTexto";
 import { classeTituloTela } from "./CabecalhoAdmin";
@@ -12,7 +14,8 @@ export type PassoCaminho = { rotulo: string; href?: string };
 // situação e, ao lado, a trilha de auditoria — coluna permanente, nunca
 // escondida atrás de aba (CLAUDE.md § Interface). No celular a trilha desce
 // para baixo do relatório. `depois` entra na coluna principal, abaixo do
-// cartão (o painel de decisão da avaliação).
+// cartão (o painel de decisão da avaliação). Aprovado, o cabeçalho troca
+// `situacao` pelo carimbo da aprovação, tirado da própria trilha.
 export function TelaRelatorio({
   caminho,
   codigo,
@@ -34,6 +37,8 @@ export function TelaRelatorio({
   depois?: ReactNode;
   children: ReactNode;
 }) {
+  const aprovacao = eventos.find((evento) => evento.tipo === TipoEvento.APROVACAO);
+
   return (
     <div className="flex flex-col gap-5">
       <nav aria-label="Você está em" className="flex flex-wrap items-center gap-2 text-[13px] text-tinta-suave">
@@ -60,7 +65,9 @@ export function TelaRelatorio({
                 <h1 className={`mt-2 ${classeTituloTela}`}>{titulo}</h1>
                 <p className="mt-1.5 text-[15px] text-tinta-suave">{subtitulo}</p>
               </div>
-              <div className="flex flex-col items-start gap-2.5 sm:items-end">{situacao}</div>
+              <div className="flex flex-col items-start gap-2.5 sm:items-end">
+                {aprovacao ? <Carimbo aprovadoEm={aprovacao.ocorridoEm} avaliador={aprovacao.usuario.nome} /> : situacao}
+              </div>
             </div>
             {children}
           </Cartao>
