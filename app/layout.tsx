@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Serif, IBM_Plex_Mono } from "next/font/google";
+import { Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
 });
 
-const plexSerif = IBM_Plex_Serif({
-  variable: "--font-plex-serif",
-  subsets: ["latin"],
-  weight: ["600"],
-});
-
+// Números continuam em Plex Mono: figuras tabulares de verdade, para as
+// colunas de horas alinharem por casa decimal (CLAUDE.md § Interface).
 const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   subsets: ["latin"],
@@ -27,10 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="pt-BR"
-      className={`${plexSans.variable} ${plexSerif.variable} ${plexMono.variable} h-full antialiased`}
-    >
+    <html lang="pt-BR" className={`${inter.variable} ${plexMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );

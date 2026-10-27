@@ -1,44 +1,106 @@
 @import "tailwindcss";
 
 :root {
-  --azul-institucional: #0086cc;
-  --azul-interativo: #00679e;
-  --acento: #00ba9c;
-  --papel: #f7f8fa;
+  /* Marca: o azul e o verde-água do logo da Barão de Mauá. */
+  --azul-institucional: #0086cc; /* decoração, ícone, gradiente — 4:1 sobre branco, não serve para texto */
+  --azul-interativo: #00679e; /* botão primário, link, foco — 6:1 sobre branco */
+  --azul-escuro: #004a73; /* hover do primário, começo do gradiente */
+  --azul-suave: #e8f3fa; /* fundo de selecionado, de ícone, do total */
+  --azul-borda: #b7dcf0;
+  --acento: #00ba9c; /* decoração */
+  --acento-forte: #00806b; /* verde-água em texto — 4,8:1 sobre branco */
+
+  --papel: #eef2f6;
   --superficie: #ffffff;
+  --superficie-sutil: #f6f8fb; /* cabeçalho de tabela, linha expandida, item do formulário */
   --tinta: #14181f;
   --tinta-suave: #5a6572;
-  --borda: #dde3ea;
+  --borda: #dfe5ec;
+  /* Contorno de campo: 3:1 sobre branco, o mínimo para identificar o
+     componente (WCAG 1.4.11). */
+  --borda-campo: #8e99a6;
 
   --estado-rascunho: #6b7683;
-  --estado-aguardando: #b26a00;
+  --estado-aguardando: #9a5b00; /* mais escuro que o do brief: o âmbar original não passava AA no selo */
   --estado-devolvido: #b3261e;
   --estado-aprovado: #1e7a46;
+
+  --estado-rascunho-suave: #f1f3f6;
+  --estado-aguardando-suave: #fff6e8;
+  --estado-aguardando-borda: #ecd3a6;
+  --estado-devolvido-suave: #fdf0ef;
+  --estado-devolvido-borda: #ebc6c2;
+  --estado-aprovado-suave: #e8f5ed;
+  --estado-aprovado-borda: #b5dcc4;
+
+  /* Painel da marca no login. Termina num azul que ainda dá 4,5:1 com
+     texto branco — o institucional puro não daria. */
+  --gradiente-marca: linear-gradient(155deg, var(--azul-escuro) 0%, var(--azul-interativo) 55%, #0077b6 100%);
 }
 
 @theme inline {
   --color-azul-institucional: var(--azul-institucional);
   --color-azul-interativo: var(--azul-interativo);
+  --color-azul-escuro: var(--azul-escuro);
+  --color-azul-suave: var(--azul-suave);
+  --color-azul-borda: var(--azul-borda);
   --color-acento: var(--acento);
+  --color-acento-forte: var(--acento-forte);
   --color-papel: var(--papel);
   --color-superficie: var(--superficie);
+  --color-superficie-sutil: var(--superficie-sutil);
   --color-tinta: var(--tinta);
   --color-tinta-suave: var(--tinta-suave);
   --color-borda: var(--borda);
+  --color-borda-campo: var(--borda-campo);
 
   --color-estado-rascunho: var(--estado-rascunho);
   --color-estado-aguardando: var(--estado-aguardando);
   --color-estado-devolvido: var(--estado-devolvido);
   --color-estado-aprovado: var(--estado-aprovado);
 
-  --font-sans: var(--font-plex-sans);
-  --font-serif: var(--font-plex-serif);
+  --color-estado-rascunho-suave: var(--estado-rascunho-suave);
+  --color-estado-aguardando-suave: var(--estado-aguardando-suave);
+  --color-estado-aguardando-borda: var(--estado-aguardando-borda);
+  --color-estado-devolvido-suave: var(--estado-devolvido-suave);
+  --color-estado-devolvido-borda: var(--estado-devolvido-borda);
+  --color-estado-aprovado-suave: var(--estado-aprovado-suave);
+  --color-estado-aprovado-borda: var(--estado-aprovado-borda);
+
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-plex-mono);
+}
+
+@theme {
+  /* Sombras levemente azuladas, como as do App do Dono: o cartão se
+     destaca do papel sem parecer flutuar. */
+  --shadow-cartao: 0 1px 2px rgb(16 42 67 / 0.04), 0 4px 20px rgb(0 103 158 / 0.06);
+  --shadow-cartao-elevado: 0 2px 4px rgb(16 42 67 / 0.05), 0 14px 36px rgb(0 103 158 / 0.14);
+  --shadow-botao: 0 4px 14px rgb(0 103 158 / 0.25);
+  --shadow-flutuante: 0 20px 60px rgb(16 42 67 / 0.16);
+
+  --animate-surgir: surgir 160ms ease-out;
+
+  @keyframes surgir {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+    }
+  }
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--borda-campo) transparent;
 }
 
 body {
   background: var(--papel);
   color: var(--tinta);
+}
+
+::selection {
+  background: var(--azul-borda);
 }
 
 button:not(:disabled) {
