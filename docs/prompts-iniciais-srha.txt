@@ -20,7 +20,7 @@ Estrutura da pasta:
     ├── CLAUDE.md
     ├── docker-compose.yml
     └── docs/
-        ├── rsha-docreq.pdf
+        ├── srha-docreq.pdf
         ├── SRHA-especificacao-desenvolvimento.md
         ├── SRHA-brief-design.md
         └── layout/          <- seu frontend pronto

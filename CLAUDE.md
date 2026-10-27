@@ -181,7 +181,7 @@ Schema completo em `docs/SRHA-especificacao-desenvolvimento.md` §4. Copie de l�
 - **Inativar, nunca excluir** curso, usuário ou tipo de atividade já referenciado.
 - **Tipos de atividade são lista fixa**, gravada pela migration `tipos_atividade_fixos` —
   sem tela de cadastro nem importação (decisão de 2026-10-26; diverge do RF03 do
-  `docs/rsha-docreq.pdf`, que previa cadastrar, alterar e inativar). Mudar a lista é
+  `docs/srha-docreq.pdf`, que previa cadastrar, alterar e inativar). Mudar a lista é
   migration nova; tipo retirado é inativado, não excluído. O item guarda só o
   `tipoAtividadeId` — não copie o nome para o item.
 - **Vínculo docente-curso com relatório não pode ser removido.** Arquivo e painel partem
@@ -227,7 +227,7 @@ Cada função, dentro de **uma transação**:
   próximo ativo assume. O docente não escolhe destinatário.
 - **Autoaprovação permitida, de propósito.** Se o autor for o próprio coordenador do
   curso, ele mesmo é o avaliador — não existe mais avaliador alternativo (decisão
-  revisada; diverge do RF22 original do `docs/rsha-docreq.pdf`, que marcava a
+  revisada; diverge do RF22 original do `docs/srha-docreq.pdf`, que marcava a
   autoaprovação como proibida e "Essencial"). **Sem coordenador vinculado ao curso,
   bloqueie a submissão** com mensagem clara, em vez de deixar o relatório órfão. O mesmo
   vale quando nenhum coordenador do curso está ativo.
@@ -467,7 +467,7 @@ anos do RNF09.
 
 ## Interface
 
-**O layout já existe em `docs/rsha-layout/` (`SRHA Telas.dc.html`). Use-o.** Não redesenhe, não invente componente
+**O layout já existe em `docs/srha-layout/` (`SRHA Telas.dc.html`). Use-o.** Não redesenhe, não invente componente
 novo quando já houver equivalente, não troque paleta nem tipografia. Se faltar algo,
 pergunte antes de criar.
 
@@ -498,7 +498,7 @@ menos o início do perfil — `components/BotaoVoltar.tsx`, desenhado no layout.
 pelo histórico só quando a tela anterior é do próprio sistema; página aberta direto
 vai para a tela-mãe.
 
-Brief completo em `docs/rsha-layout/uploads/SRHA-brief-design.md`. O que não pode ser violado:
+Brief completo em `docs/srha-layout/uploads/SRHA-brief-design.md`. O que não pode ser violado:
 
 - Responsivo real até **360px** — o fluxo inteiro precisa funcionar no celular
 - Alvos de toque de no mínimo **44px**
@@ -537,7 +537,7 @@ não buraco.
 **Fora da versão inicial** (decisões de 2026-10-22 — não implemente):
 
 - **Notificações por e-mail (RF13)** — aviso de relatório recebido para avaliação,
-  devolvido, aprovado e de prazo perto do fim. O RF13 do `docs/rsha-docreq.pdf` é
+  devolvido, aprovado e de prazo perto do fim. O RF13 do `docs/srha-docreq.pdf` é
   "Desejável".
 - **Expiração de sessão por inatividade** (parte do RNF07) — fica o padrão do Auth.js,
   30 dias sem uso. Diverge do RNF07, marcado "Essencial"; o resto dele (canal cifrado,

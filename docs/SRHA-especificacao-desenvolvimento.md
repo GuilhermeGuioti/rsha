@@ -253,7 +253,7 @@ Nunca altere `situacao` fora dessas funções.
 ### Regras do workflow
 
 - **Roteamento automático.** Ao submeter, o avaliador é o primeiro coordenador **ativo** vinculado ao curso do relatório. Coordenador inativado sai da fila e o próximo ativo assume. O docente não escolhe destinatário.
-- **Autoaprovação permitida.** Se o autor for o próprio coordenador do curso, ele mesmo é o avaliador — não existe avaliador alternativo. **Decisão revisada em 2026-08-31: diverge do RF22 original do `rsha-docreq.pdf`**, que descrevia a autoaprovação como proibida (requisito marcado "Essencial") e previa o campo `avaliadorAlternativo` em `Curso`. Sem coordenador ativo vinculado ao curso, bloqueie a submissão com mensagem clara em vez de deixar o relatório órfão.
+- **Autoaprovação permitida.** Se o autor for o próprio coordenador do curso, ele mesmo é o avaliador — não existe avaliador alternativo. **Decisão revisada em 2026-08-31: diverge do RF22 original do `srha-docreq.pdf`**, que descrevia a autoaprovação como proibida (requisito marcado "Essencial") e previa o campo `avaliadorAlternativo` em `Curso`. Sem coordenador ativo vinculado ao curso, bloqueie a submissão com mensagem clara em vez de deixar o relatório órfão.
 - **Submissão exige ao menos um item** (RF05), validado no servidor.
 - **Rascunho é visível só ao autor e à secretaria** (RF07). A coordenação enxerga o relatório a partir da submissão; qualquer coordenador do curso lê, só o avaliador aprova ou devolve.
 - **Devolução exige justificativa** não vazia.
@@ -309,7 +309,7 @@ Do item 1 ao 7 você tem o fluxo principal fechado de ponta a ponta. O que vier 
 
 **Fora da versão inicial** (decisões de 2026-10-22):
 
-- **Notificações por e-mail (RF13).** O RF13 do `rsha-docreq.pdf` é "Desejável". Nenhum envio de e-mail nem lembrete de prazo nesta versão.
+- **Notificações por e-mail (RF13).** O RF13 do `srha-docreq.pdf` é "Desejável". Nenhum envio de e-mail nem lembrete de prazo nesta versão.
 - **Expiração de sessão por inatividade** (parte do RNF07). Fica o padrão do Auth.js, 30 dias sem uso. Diverge do RNF07, marcado "Essencial"; o resto dele (canal cifrado, acesso por perfil, LGPD) continua valendo.
 - **Reuso do relatório do período anterior (RF20).** O RF20 é "Desejável". O docente preenche cada período do zero.
 
