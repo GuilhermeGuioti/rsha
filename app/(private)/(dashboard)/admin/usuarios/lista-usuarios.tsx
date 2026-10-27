@@ -13,7 +13,7 @@ import { CabecalhoAdmin } from "../../../../../components/CabecalhoAdmin";
 import { CampoBusca } from "../../../../../components/CampoBusca";
 import { AbasFiltro } from "../../../../../components/AbasFiltro";
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
-import { IconeEditar } from "../../../../../components/Icones";
+import { IconeChevron, IconeEditar } from "../../../../../components/Icones";
 import { CampoCheckbox } from "../../../../../components/CampoCheckbox";
 import { MensagemErro } from "../../../../../components/MensagemErro";
 import { ImportadorPlanilha } from "../../../../../components/ImportadorPlanilha";
@@ -175,14 +175,11 @@ export function ListaUsuarios({ usuarios }: { usuarios: UsuarioLinha[] }) {
                   onClick={() => alternarExpandido(usuario.id)}
                   aria-expanded={aberto}
                   aria-controls={`detalhes-usuario-${usuario.id}`}
-                  className="flex items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+                  className="-ml-2 flex min-h-11 items-center gap-2 rounded-lg px-2 text-left font-medium transition-colors hover:bg-papel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
                 >
-                  <span
-                    aria-hidden
-                    className={`text-xs text-tinta-suave transition-transform ${aberto ? "rotate-90" : ""}`}
-                  >
-                    ▸
-                  </span>
+                  <IconeChevron
+                    className={`h-3.5 w-3.5 flex-none text-tinta-suave transition-transform ${aberto ? "rotate-90" : ""}`}
+                  />
                   {usuario.nome}
                 </button>
               );
@@ -207,11 +204,11 @@ export function ListaUsuarios({ usuarios }: { usuarios: UsuarioLinha[] }) {
         linhaExtra={(usuario) => {
           if (!expandidos.has(usuario.id)) return null;
           return (
-            <tr id={`detalhes-usuario-${usuario.id}`} className="border-b border-[#f0f3f6] bg-papel last:border-0">
-              <td colSpan={COLUNAS} className="px-4 py-3">
+            <tr id={`detalhes-usuario-${usuario.id}`} className="border-b border-borda/70 bg-superficie-sutil last:border-0">
+              <td colSpan={COLUNAS} className="px-4 py-4 pl-12">
                 <div className="flex flex-wrap gap-x-10 gap-y-3 text-[15px]">
                   <div>
-                    <div className="text-[13px] font-medium text-tinta-suave">Perfil</div>
+                    <div className="text-[13px] font-semibold text-tinta-suave">Perfil</div>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {usuario.perfis.length === 0 && <span className="text-tinta-suave">—</span>}
                       {usuario.perfis.map((perfil) => (
@@ -222,7 +219,7 @@ export function ListaUsuarios({ usuarios }: { usuarios: UsuarioLinha[] }) {
                     </div>
                   </div>
                   <div>
-                    <div className="text-[13px] font-medium text-tinta-suave">Cursos</div>
+                    <div className="text-[13px] font-semibold text-tinta-suave">Cursos</div>
                     {usuario.cursos.length === 0 ? (
                       <div className="mt-1.5 text-tinta-suave">—</div>
                     ) : (

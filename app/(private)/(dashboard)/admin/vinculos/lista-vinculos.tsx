@@ -136,7 +136,7 @@ export function ListaVinculos({
       />
 
       {periodos.length === 0 && (
-        <p className="rounded-md border border-borda bg-superficie px-4 py-3 text-[15px] text-tinta-suave">
+        <p className="rounded-2xl border border-estado-aguardando-borda bg-estado-aguardando-suave px-5 py-4 text-[15px] text-tinta">
           Nenhum período letivo cadastrado.{" "}
           <Link href="/admin/periodos" className="font-medium text-azul-interativo hover:underline">
             Cadastre um período
@@ -185,7 +185,7 @@ export function ListaVinculos({
                 onChange={(evento) =>
                   setPeriodoFiltroId(evento.target.value === "todos" ? "todos" : Number(evento.target.value))
                 }
-                className={`${classeCampoSelect} min-h-10`}
+                className={`${classeCampoSelect} shadow-cartao`}
               >
                 <option value="todos">Todos os períodos</option>
                 {periodos.map((periodo) => (

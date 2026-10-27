@@ -135,7 +135,7 @@ export function ListaPeriodos({ periodos }: { periodos: PeriodoLinha[] }) {
         colunas={[
           {
             cabecalho: "Período",
-            classeCelula: "font-serif font-semibold",
+            classeCelula: "font-mono font-semibold tabular-nums",
             render: (periodo) => `${periodo.ano}/${periodo.semestre}`,
           },
           {
