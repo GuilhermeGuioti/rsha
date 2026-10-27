@@ -2,13 +2,14 @@ import Link from "next/link";
 import type { ComponentType } from "react";
 import { obterUsuario } from "../../../lib/auth/guards";
 import { CabecalhoAdmin, classeTituloSecao } from "../../../components/CabecalhoAdmin";
-import { classeCartao } from "../../../components/Cartao";
+import { Cartao } from "../../../components/Cartao";
 import { SeloIcone } from "../../../components/SeloIcone";
 import { saudacao } from "../../../lib/formato";
 import {
   IconeAcompanhamento,
   IconeArquivo,
   IconeCalendario,
+  IconeChevron,
   IconeCursos,
   IconeUsuarios,
   IconeValidar,
@@ -61,7 +62,8 @@ const CONSULTAS: Atalho[] = [
 ];
 
 // Tela de partida da secretaria: não tem lista pra rolar, só os atalhos —
-// cartões grandes, como os módulos do App do Dono.
+// um índice por grupo, lado a lado, em vez de um mosaico de cartões: a
+// secretaria escolhe pelo nome e pela descrição, não pelo ícone.
 export async function HomeSecretaria({ usuarioId }: { usuarioId: number }) {
   const usuario = await obterUsuario(usuarioId);
 
@@ -71,36 +73,48 @@ export async function HomeSecretaria({ usuarioId }: { usuarioId: number }) {
         titulo={saudacao(usuario.nome)}
         subtitulo={<p className="text-[15px] text-tinta-suave">Cadastros e consultas da secretaria acadêmica.</p>}
       />
-      <GrupoAtalhos titulo="Cadastros" atalhos={CADASTROS} />
-      <GrupoAtalhos titulo="Consultas" atalhos={CONSULTAS} />
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+        <GrupoAtalhos titulo="Cadastros" descricao="O que a secretaria mantém a cada semestre." atalhos={CADASTROS} />
+        <GrupoAtalhos titulo="Consultas" descricao="Situação das entregas e documentos já aprovados." atalhos={CONSULTAS} />
+      </div>
     </div>
   );
 }
 
-function GrupoAtalhos({ titulo, atalhos }: { titulo: string; atalhos: Atalho[] }) {
+function GrupoAtalhos({ titulo, descricao, atalhos }: { titulo: string; descricao: string; atalhos: Atalho[] }) {
   return (
-    <section className="flex flex-col gap-4">
-      <CabecalhoAdmin nivel={2} titulo={titulo} />
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {atalhos.map(({ href, titulo: rotulo, descricao, Icone }) => (
-          <Link
-            key={href}
-            href={href}
-            className={`group flex min-h-[168px] flex-col gap-5 p-6 transition-[translate,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-azul-interativo hover:shadow-cartao-elevado focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo focus-visible:ring-offset-2 ${classeCartao}`}
-          >
-            <SeloIcone
-              tamanho="xl"
-              className="transition-colors group-hover:bg-azul-interativo group-hover:text-white"
-            >
-              <Icone className="h-7 w-7" />
-            </SeloIcone>
-            <span className="flex flex-col gap-1.5">
-              <span className={classeTituloSecao}>{rotulo}</span>
-              <span className="text-[13px] leading-relaxed text-tinta-suave">{descricao}</span>
-            </span>
-          </Link>
-        ))}
+    <Cartao como="section" className="overflow-hidden">
+      <div className="border-b border-borda px-5 py-4 sm:px-6">
+        <h2 className={classeTituloSecao}>{titulo}</h2>
+        <p className="mt-0.5 text-[13px] text-tinta-suave">{descricao}</p>
       </div>
-    </section>
+      <ul className="divide-y divide-borda">
+        {atalhos.map(({ href, titulo: rotulo, descricao: detalhe, Icone }) => (
+          <li key={href}>
+            {/* O fio verde-água à esquerda marca a linha sob o mouse ou o
+                foco, como o sublinhado da página atual na barra. */}
+            <Link
+              href={href}
+              className="group relative flex min-h-[76px] items-center gap-4 px-5 py-4 transition-colors hover:bg-superficie-sutil focus-visible:bg-superficie-sutil focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-azul-interativo sm:px-6"
+            >
+              <span
+                aria-hidden
+                className="absolute inset-y-0 left-0 w-[3px] bg-acento-forte opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+              />
+              <SeloIcone className="transition-colors group-hover:bg-azul-interativo group-hover:text-white">
+                <Icone className="h-[22px] w-[22px]" />
+              </SeloIcone>
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-[15px] font-semibold text-tinta transition-colors group-hover:text-azul-interativo">
+                  {rotulo}
+                </span>
+                <span className="text-[13px] leading-relaxed text-tinta-suave">{detalhe}</span>
+              </span>
+              <IconeChevron className="h-5 w-5 flex-none text-tinta-suave transition-[translate,color] group-hover:translate-x-0.5 group-hover:text-azul-interativo" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Cartao>
   );
 }
