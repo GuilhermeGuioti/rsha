@@ -2,7 +2,6 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Pill } from "../../../../../components/Pill";
 import { Modal } from "../../../../../components/Modal";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
@@ -13,6 +12,11 @@ import { AbasFiltro } from "../../../../../components/AbasFiltro";
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
 import { IconeEditar } from "../../../../../components/Icones";
 import { MensagemErro } from "../../../../../components/MensagemErro";
+import {
+  SituacaoPeriodoPill,
+  situacaoPeriodo,
+  type ChaveSituacaoPeriodo,
+} from "../../../../../components/SituacaoPeriodo";
 import { formatarDataHora } from "../../../../../lib/formato";
 import { acaoCriarPeriodo, acaoAtualizarPeriodo } from "./acoes";
 
@@ -31,17 +35,6 @@ function paraCampoData(iso: string): string {
   return `${data.getFullYear()}-${pad(data.getMonth() + 1)}-${pad(data.getDate())}T${pad(data.getHours())}:${pad(data.getMinutes())}`;
 }
 
-type SituacaoPeriodo = "AGENDADO" | "ABERTO" | "ENCERRADO";
-
-function situacaoPeriodo(
-  periodo: PeriodoLinha,
-): { chave: SituacaoPeriodo; rotulo: string; cor: "aprovado" | "neutro" | "interativo" } {
-  const agora = new Date();
-  if (agora < new Date(periodo.aberturaSubmissao)) return { chave: "AGENDADO", rotulo: "Agendado", cor: "interativo" };
-  if (agora > new Date(periodo.encerramentoSubmissao)) return { chave: "ENCERRADO", rotulo: "Encerrado", cor: "neutro" };
-  return { chave: "ABERTO", rotulo: "Aberto", cor: "aprovado" };
-}
-
 export function ListaPeriodos({ periodos }: { periodos: PeriodoLinha[] }) {
   const router = useRouter();
   const [modalAberto, setModalAberto] = useState(false);
@@ -52,11 +45,11 @@ export function ListaPeriodos({ periodos }: { periodos: PeriodoLinha[] }) {
   const [encerramento, setEncerramento] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, startTransition] = useTransition();
-  const [aba, setAba] = useState<SituacaoPeriodo | "TODOS">("TODOS");
+  const [aba, setAba] = useState<ChaveSituacaoPeriodo | "TODOS">("TODOS");
 
-  const visiveis = periodos.filter((periodo) => aba === "TODOS" || situacaoPeriodo(periodo).chave === aba);
-  const contagem = (chave: SituacaoPeriodo) =>
-    periodos.filter((periodo) => situacaoPeriodo(periodo).chave === chave).length;
+  const visiveis = periodos.filter((periodo) => aba === "TODOS" || situacaoPeriodo(periodo) === aba);
+  const contagem = (chave: ChaveSituacaoPeriodo) =>
+    periodos.filter((periodo) => situacaoPeriodo(periodo) === chave).length;
 
   function abrirNovo() {
     setPeriodoEmEdicao(null);
@@ -150,10 +143,7 @@ export function ListaPeriodos({ periodos }: { periodos: PeriodoLinha[] }) {
           },
           {
             cabecalho: "Situação",
-            render: (periodo) => {
-              const situacao = situacaoPeriodo(periodo);
-              return <Pill cor={situacao.cor}>{situacao.rotulo}</Pill>;
-            },
+            render: (periodo) => <SituacaoPeriodoPill periodo={periodo} />,
           },
           {
             cabecalho: "",
