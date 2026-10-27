@@ -470,6 +470,26 @@ anos do RNF09.
 novo quando já houver equivalente, não troque paleta nem tipografia. Se faltar algo,
 pergunte antes de criar.
 
+**Acabamento revisado a pedido (decisão de 2026-10-26)**, tendo como referência o painel
+web do App do Dono. A estrutura do mockup continua valendo (telas, fluxo, o que aparece
+em cada uma); mudou o acabamento, e ele diverge do `docs/` nestes pontos:
+
+- **Tipografia:** Inter na interface e nos títulos, no lugar de IBM Plex Sans e Serif.
+  Números continuam em IBM Plex Mono com figuras tabulares. O PDF não mudou e segue com
+  as fontes Plex de `lib/pdf/fontes`.
+- **Paleta:** continua sendo o azul e o verde-água do logo, mas os tokens que valem são os
+  de `app/globals.css`, não os do brief. O `--azul-institucional` (#0086cc) dá 4:1 sobre
+  branco e não serve para texto: texto, link e botão primário usam o `--azul-interativo`.
+  O `--estado-aguardando` foi escurecido para #9a5b00, porque o âmbar do brief não
+  passava AA no selo.
+- **Superfícies:** barra superior branca, com o menu da conta em popover nativo
+  (`components/Nav.tsx`); cabeçalho de cada tela em cartão (`CabecalhoAdmin`, nível 1);
+  todo bloco de conteúdo é cartão (`components/Cartao.tsx`, ou `classeCartao` quando o
+  elemento é `<Link>`, `<nav>` ou tabela); estado vazio de tela inteira em
+  `components/AvisoVazio.tsx`.
+
+Paleta e tipografia são estas daqui em diante. Não troque de novo sem pedido.
+
 Fora do mockup, a pedido (2026-10-26): a tela pública **`/validar`** (§Carimbo de
 autenticidade), montada com os componentes existentes no visual da `/login`, e o
 **botão "Voltar" em toda tela do `(dashboard)`**
