@@ -27,6 +27,8 @@ export function Nav({
 
   return (
     <header className="w-full flex-none border-b border-borda bg-superficie">
+      {/* Fio nas duas cores do logo: a assinatura da barra em todas as telas. */}
+      <div aria-hidden className="h-[3px] [background-image:var(--faixa-marca)]" />
       {/* No celular os links descem para uma segunda linha rolável; do md
           para cima ficam entre o logo e a conta. */}
       <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2.5 sm:px-6">
@@ -49,9 +51,9 @@ export function Nav({
                 key={link.href}
                 href={link.href}
                 aria-current={estaAtivo ? "page" : undefined}
-                className={`flex min-h-11 items-center whitespace-nowrap rounded-lg px-3.5 text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo ${
+                className={`relative flex min-h-11 items-center whitespace-nowrap rounded-lg px-3.5 text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo ${
                   estaAtivo
-                    ? "bg-azul-suave font-semibold text-azul-interativo"
+                    ? "font-semibold text-azul-interativo after:absolute after:inset-x-3.5 after:bottom-0.5 after:h-[3px] after:rounded-full after:bg-acento-forte"
                     : "font-medium text-tinta-suave hover:bg-papel hover:text-tinta"
                 }`}
               >
@@ -80,7 +82,7 @@ export function Nav({
         <div
           id={ID_MENU_CONTA}
           popover="auto"
-          className="inset-auto top-[68px] right-4 m-0 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-borda bg-superficie p-0 text-tinta shadow-flutuante open:animate-surgir sm:right-6"
+          className="inset-auto top-[71px] right-4 m-0 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-borda bg-superficie p-0 text-tinta shadow-flutuante open:animate-surgir sm:right-6"
         >
           <div className="flex items-center gap-3 border-b border-borda px-4 py-4">
             <Avatar inicial={inicial} className="h-11 w-11" />

@@ -36,6 +36,10 @@
   /* Painel da marca no login. Termina num azul que ainda dá 4,5:1 com
      texto branco — o institucional puro não daria. */
   --gradiente-marca: linear-gradient(155deg, var(--azul-escuro) 0%, var(--azul-interativo) 55%, #0077b6 100%);
+  /* Fio do topo da barra: o azul e o verde-água do logo, lado a lado e sem
+     degradê. Decoração — o estado da página atual vai no sublinhado em
+     --acento-forte, que passa dos 3:1 sobre branco. */
+  --faixa-marca: linear-gradient(90deg, var(--azul-institucional) 0 72%, var(--acento) 72% 100%);
 }
 
 @theme inline {
