@@ -16,7 +16,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SRHA — Relatório de Horas Atividades",
+  title: "SRHA - Horas Atividades",
   description: "Sistema de Relatório de Horas Atividades",
 };
 

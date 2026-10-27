@@ -3,7 +3,7 @@ import { CartaoPublico } from "../../../components/CartaoPublico";
 import { FormularioValidacao } from "./formulario-validacao";
 
 export const metadata: Metadata = {
-  title: "Validar documento — SRHA",
+  title: "Validar documento - SRHA",
 };
 
 // Pública, sem guard: ver acoes.ts.
