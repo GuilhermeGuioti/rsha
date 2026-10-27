@@ -7,6 +7,7 @@ import { CabecalhoAdmin } from "../../../../components/CabecalhoAdmin";
 import { CampoBusca } from "../../../../components/CampoBusca";
 import { AbasFiltro } from "../../../../components/AbasFiltro";
 import { classeCampoSelect } from "../../../../components/Campo";
+import { classeCartao } from "../../../../components/Cartao";
 import { SituacaoPill } from "../../../../components/SituacaoPill";
 import { Pill } from "../../../../components/Pill";
 import { IconeChevron } from "../../../../components/Icones";
@@ -225,7 +226,7 @@ export function ExploradorArquivo({
           id="filtro-tipo-arquivo"
           value={tipoId}
           onChange={(evento) => setTipoId(evento.target.value === "todos" ? "todos" : Number(evento.target.value))}
-          className={`${classeCampoSelect} min-h-10`}
+          className={`${classeCampoSelect} shadow-cartao`}
         >
           <option value="todos">Todos os tipos de atividade</option>
           {tipos.map((tipo) => (
@@ -241,19 +242,19 @@ export function ExploradorArquivo({
         />
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[300px_1fr]">
-        <nav aria-label="Navegação do arquivo" className="overflow-hidden rounded-md border border-borda bg-superficie">
-          <div className="border-b border-borda px-4 py-3 text-[13px] font-medium text-tinta-suave">Períodos</div>
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[300px_1fr]">
+        <nav aria-label="Navegação do arquivo" className={`overflow-hidden p-2 ${classeCartao}`}>
+          <div className="px-3 pt-2 pb-2.5 text-[13px] font-semibold text-tinta-suave">Períodos</div>
           {arvore.map((noAno) => {
             const anoAberto = anosAbertos.has(noAno.ano);
             return (
-              <div key={noAno.ano} className="border-t border-[#f0f3f6] first:border-t-0">
+              <div key={noAno.ano}>
                 <button
                   type="button"
                   onClick={() => alternarAno(noAno.ano)}
                   aria-expanded={anoAberto}
-                  className={`flex min-h-11 w-full items-center gap-2 px-4 py-2.5 text-left text-[15px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-azul-interativo ${
-                    noAno.ano === selecao.ano ? "bg-[#e9f6fc] font-medium text-azul-interativo" : "text-tinta-suave"
+                  className={`flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-azul-interativo ${
+                    noAno.ano === selecao.ano ? "font-bold text-tinta" : "font-medium text-tinta-suave hover:bg-papel"
                   }`}
                 >
                   <IconeChevron
@@ -276,8 +277,8 @@ export function ExploradorArquivo({
                           type="button"
                           onClick={() => alternarSemestre(noAno.ano, noSemestre.semestre)}
                           aria-expanded={semestreAberto}
-                          className={`flex min-h-11 w-full items-center gap-2 border-t border-[#f0f3f6] py-2.5 pl-8 pr-4 text-left text-[15px] text-tinta-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-azul-interativo ${
-                            semestreSelecionado ? "bg-superficie font-medium text-tinta" : ""
+                          className={`flex min-h-11 w-full items-center gap-2 rounded-lg py-2.5 pr-3 pl-7 text-left text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-azul-interativo ${
+                            semestreSelecionado ? "font-semibold text-tinta" : "text-tinta-suave hover:bg-papel"
                           }`}
                         >
                           <IconeChevron
@@ -293,8 +294,11 @@ export function ExploradorArquivo({
                                 key={curso.cursoId}
                                 type="button"
                                 onClick={() => selecionarCurso(noAno.ano, noSemestre.semestre, curso.cursoId)}
-                                className={`flex min-h-11 w-full items-center border-t border-[#f0f3f6] py-2.5 pl-12 pr-4 text-left text-[15px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-azul-interativo ${
-                                  cursoSelecionado ? "bg-[#e9f6fc] font-medium text-azul-interativo" : "text-tinta-suave"
+                                aria-current={cursoSelecionado ? "true" : undefined}
+                                className={`relative flex min-h-11 w-full items-center rounded-lg py-2.5 pr-3 pl-12 text-left text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-azul-interativo ${
+                                  cursoSelecionado
+                                    ? "bg-azul-suave font-semibold text-azul-interativo before:absolute before:top-2.5 before:bottom-2.5 before:left-8 before:w-[3px] before:rounded-full before:bg-azul-interativo"
+                                    : "text-tinta-suave hover:bg-papel hover:text-tinta"
                                 }`}
                               >
                                 {curso.cursoNome}
@@ -309,9 +313,9 @@ export function ExploradorArquivo({
           })}
         </nav>
 
-        <div className="overflow-hidden rounded-md border border-borda bg-superficie">
+        <div className={`overflow-hidden ${classeCartao}`}>
           <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-borda px-5 py-4">
-            <span className="font-serif text-lg font-semibold text-azul-interativo">
+            <span className="text-lg font-bold tracking-tight">
               {periodoAtual?.cursoNome} · {selecao.ano}/{selecao.semestre}
             </span>
             {periodoAtual && (
@@ -337,7 +341,7 @@ export function ExploradorArquivo({
               Interface, 360px). O cabeçalho acima continua quebrando linha. */}
           <div className="overflow-x-auto">
             <div className="min-w-[680px]">
-              <div className="grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] gap-4 border-b border-borda px-5 py-2.5 text-[13px] font-medium text-tinta-suave">
+              <div className="grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] gap-4 border-b border-borda bg-superficie-sutil px-5 py-3 text-[13px] font-semibold text-tinta-suave">
                 <span>Docente</span>
                 <span>Estado final</span>
                 <span className="text-right">Horas</span>
@@ -348,11 +352,11 @@ export function ExploradorArquivo({
               {visiveis.map((linha, indice) => (
                   <div
                     key={linha.vinculoId}
-                    className={`grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] items-center gap-4 px-5 py-3.5 ${
-                      indice < visiveis.length - 1 ? "border-b border-borda" : ""
+                    className={`grid grid-cols-[2fr_1.2fr_.7fr_1fr_130px] items-center gap-4 px-5 py-2.5 transition-colors hover:bg-superficie-sutil ${
+                      indice < visiveis.length - 1 ? "border-b border-borda/70" : ""
                     }`}
                   >
-                    <span className="text-[15px]">{linha.docenteNome}</span>
+                    <span className="text-[15px] font-medium">{linha.docenteNome}</span>
                     {linha.situacao ? (
                       <SituacaoPill situacao={linha.situacao} />
                     ) : (
@@ -366,11 +370,11 @@ export function ExploradorArquivo({
                     <span className="font-mono text-[13px] text-tinta-suave">
                       {linha.aprovadoEm ? formatarData(linha.aprovadoEm) : "—"}
                     </span>
-                    <div className="flex items-center justify-end gap-4">
+                    <div className="flex items-center justify-end gap-1">
                       {linha.relatorioId && (
                         <Link
                           href={linha.podeAvaliar ? `/avaliacao/${linha.relatorioId}` : `/relatorios/${linha.relatorioId}`}
-                          className="inline-flex min-h-11 items-center text-[15px] text-azul-interativo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+                          className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-[15px] font-semibold text-azul-interativo transition-colors hover:bg-azul-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
                         >
                           Abrir
                         </Link>
@@ -380,7 +384,7 @@ export function ExploradorArquivo({
                       {linha.relatorioId && linha.situacao === "APROVADO" && (
                         <a
                           href={`/api/relatorios/${linha.relatorioId}/pdf`}
-                          className="inline-flex min-h-11 items-center text-[15px] text-azul-interativo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+                          className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-[15px] font-semibold text-azul-interativo transition-colors hover:bg-azul-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
                         >
                           PDF
                           <span className="sr-only"> do relatório de {linha.docenteNome}</span>
@@ -395,7 +399,7 @@ export function ExploradorArquivo({
           {/* Fora da grade: dentro dela a frase ficaria cortada pela
               rolagem horizontal em 360px. */}
           {visiveis.length === 0 && (
-            <p className="px-5 py-8 text-center text-[15px] text-tinta-suave">
+            <p className="px-5 py-10 text-center text-[15px] text-tinta-suave">
               {grupoAtual.length === 0
                 ? "Nenhum docente vinculado a este curso neste período."
                 : "Nenhum docente encontrado com esses filtros."}

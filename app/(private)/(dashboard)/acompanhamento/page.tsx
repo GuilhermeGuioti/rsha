@@ -2,6 +2,7 @@ import { exigirSessaoPagina, obterPerfis } from "../../../../lib/auth/guards";
 import { prisma } from "../../../../lib/db";
 import { Perfil, SituacaoRelatorio } from "../../../../generated/prisma/enums";
 import { estaComODocente, resolverAvaliadorId } from "../../../../lib/services/workflow";
+import { AvisoVazio } from "../../../../components/AvisoVazio";
 import {
   PainelAcompanhamento,
   type DocenteAcompanhamento,
@@ -24,7 +25,7 @@ export default async function AcompanhamentoPage() {
   });
 
   if (periodos.length === 0) {
-    return <p className="text-[15px] text-tinta-suave">Nenhum período letivo cadastrado ainda.</p>;
+    return <AvisoVazio>Nenhum período letivo cadastrado ainda.</AvisoVazio>;
   }
 
   // Secretaria acompanha todos os cursos; coordenador só os que coordena —
@@ -40,9 +41,9 @@ export default async function AcompanhamentoPage() {
     cursoIds = vinculosCoordenador.map((vinculo) => vinculo.cursoId);
     if (cursoIds.length === 0) {
       return (
-        <p className="text-[15px] text-tinta-suave">
+        <AvisoVazio>
           Você ainda não coordena nenhum curso. Procure a secretaria acadêmica.
-        </p>
+        </AvisoVazio>
       );
     }
   }
@@ -73,7 +74,7 @@ export default async function AcompanhamentoPage() {
   ]);
 
   if (vinculos.length === 0) {
-    return <p className="text-[15px] text-tinta-suave">Nenhum vínculo docente-curso cadastrado ainda.</p>;
+    return <AvisoVazio>Nenhum vínculo docente-curso cadastrado ainda.</AvisoVazio>;
   }
 
   // O modal, ao abrir um relatório, leva ao mesmo destino que /arquivo já

@@ -2,6 +2,7 @@ import { exigirSessaoPagina, obterPerfis } from "../../../../lib/auth/guards";
 import { prisma } from "../../../../lib/db";
 import { Perfil, SituacaoRelatorio, TipoEvento } from "../../../../generated/prisma/enums";
 import { estaComODocente, resolverAvaliadorId } from "../../../../lib/services/workflow";
+import { AvisoVazio } from "../../../../components/AvisoVazio";
 import { ExploradorArquivo, type LinhaArquivo } from "./explorador-arquivo";
 
 export default async function ArquivoPage() {
@@ -32,9 +33,9 @@ export default async function ArquivoPage() {
 
     if (cursoIds.length === 0) {
       return (
-        <p className="text-[15px] text-tinta-suave">
+        <AvisoVazio>
           Você ainda não está vinculado a nenhum curso. Procure a secretaria acadêmica.
-        </p>
+        </AvisoVazio>
       );
     }
   }
@@ -77,7 +78,7 @@ export default async function ArquivoPage() {
     : vinculos;
 
   if (vinculosVisiveis.length === 0) {
-    return <p className="text-[15px] text-tinta-suave">Nenhuma turma cadastrada ainda.</p>;
+    return <AvisoVazio>Nenhuma turma cadastrada ainda.</AvisoVazio>;
   }
 
   const relatorioPorChave = new Map(

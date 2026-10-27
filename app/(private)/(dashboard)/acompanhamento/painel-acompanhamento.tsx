@@ -41,7 +41,7 @@ type ChaveSegmento = "naoIniciados" | "rascunho" | "aguardando" | "devolvido" | 
 // cor nunca é o único portador de estado (ver CLAUDE.md § Interface): cada
 // segmento também tem coluna própria com número e rótulo por extenso.
 const SEGMENTOS: { chave: ChaveSegmento; rotulo: string; corBarra: string; corTexto: string }[] = [
-  { chave: "naoIniciados", rotulo: "Não iniciados", corBarra: "bg-[#edeff3]", corTexto: "text-tinta-suave" },
+  { chave: "naoIniciados", rotulo: "Não iniciados", corBarra: "bg-borda", corTexto: "text-tinta-suave" },
   { chave: "rascunho", rotulo: "Em elaboração", corBarra: "bg-estado-rascunho", corTexto: "text-estado-rascunho" },
   { chave: "aguardando", rotulo: "Aguardando", corBarra: "bg-estado-aguardando", corTexto: "text-estado-aguardando" },
   { chave: "devolvido", rotulo: "Devolvidos", corBarra: "bg-estado-devolvido", corTexto: "text-estado-devolvido" },
@@ -62,7 +62,7 @@ function BarraProporcao({ linha }: { linha: LinhaAcompanhamento }) {
       aria-label={SEGMENTOS.map(
         (segmento) => `${linha[segmento.chave].length} ${segmento.rotulo.toLowerCase()}`,
       ).join(", ")}
-      className="flex h-3 w-full max-w-[180px] overflow-hidden rounded-sm border border-borda"
+      className="flex h-2.5 w-full max-w-[180px] overflow-hidden rounded-full bg-papel"
     >
       {SEGMENTOS.map((segmento) => {
         const valor = linha[segmento.chave].length;
@@ -132,7 +132,7 @@ export function PainelAcompanhamento({ grupos, podeExtrair }: { grupos: GrupoPer
               docente.relatorioId ? (
                 <Link
                   href={docente.podeAvaliar ? `/avaliacao/${docente.relatorioId}` : `/relatorios/${docente.relatorioId}`}
-                  className="inline-flex min-h-11 items-center text-azul-interativo hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+                  className="inline-flex min-h-11 items-center rounded-lg px-3 font-semibold text-azul-interativo transition-colors hover:bg-azul-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
                 >
                   Abrir
                 </Link>
@@ -145,7 +145,7 @@ export function PainelAcompanhamento({ grupos, podeExtrair }: { grupos: GrupoPer
   const colunasTabela: ColunaTabela<LinhaAcompanhamento>[] = [
     {
       cabecalho: "Curso",
-      render: (linha) => <span className="font-serif text-[15px] font-semibold">{linha.cursoNome}</span>,
+      render: (linha) => <span className="text-[15px] font-semibold">{linha.cursoNome}</span>,
     },
     ...SEGMENTOS.map((segmento) => ({
       cabecalho: segmento.rotulo,
@@ -153,7 +153,7 @@ export function PainelAcompanhamento({ grupos, podeExtrair }: { grupos: GrupoPer
         <button
           type="button"
           onClick={() => abrirModal(linha, segmento)}
-          className={`inline-flex min-h-11 items-center font-mono text-lg font-semibold underline decoration-2 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo ${segmento.corTexto}`}
+          className={`-ml-2.5 inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-2.5 font-mono text-lg font-semibold underline decoration-2 underline-offset-4 transition-colors hover:bg-papel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo ${segmento.corTexto}`}
         >
           {linha[segmento.chave].length}
         </button>
@@ -181,7 +181,7 @@ export function PainelAcompanhamento({ grupos, podeExtrair }: { grupos: GrupoPer
               id="filtro-periodo-acompanhamento"
               value={periodoLetivoId}
               onChange={(evento) => mudarPeriodo(Number(evento.target.value))}
-              className={`${classeCampoSelect} min-h-10`}
+              className={classeCampoSelect}
             >
               {grupos.map((grupo) => (
                 <option key={grupo.periodoLetivoId} value={grupo.periodoLetivoId}>
@@ -211,7 +211,7 @@ export function PainelAcompanhamento({ grupos, podeExtrair }: { grupos: GrupoPer
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-tinta-suave">
         {SEGMENTOS.map((segmento) => (
           <span key={segmento.chave} className="inline-flex items-center gap-1.5">
-            <span aria-hidden className={`h-2.5 w-2.5 flex-none border border-borda ${segmento.corBarra}`} />
+            <span aria-hidden className={`h-2.5 w-2.5 flex-none rounded-full ring-1 ring-black/10 ring-inset ${segmento.corBarra}`} />
             {segmento.rotulo}
           </span>
         ))}
