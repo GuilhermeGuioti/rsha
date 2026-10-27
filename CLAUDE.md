@@ -493,12 +493,13 @@ em cada uma); mudou o acabamento, e ele diverge do `docs/` nestes pontos:
   com fio azul + verde-água no topo (`--faixa-marca`) e página atual sublinhada em
   `--acento-forte`; relatório aprovado com carimbo no cabeçalho
   (`components/Carimbo.tsx`, sem o código de autenticidade, que fica só no papel);
-  início da secretaria com três indicadores no topo (cursos ativos, usuários ativos e o
-  período letivo com a situação e o prazo) e atalhos em cartão com o ícone ao lado do
-  título, em vez dos módulos de ícone grande. Os indicadores são pedido expresso e
-  divergem do brief ("nada de dashboard com cartões de métrica") só nessa tela; a
-  situação do período sai de `components/SituacaoPeriodo.tsx`, a mesma da lista de
-  períodos.
+  início da secretaria no layout de referência que o usuário enviou: saudação solta
+  sobre o papel (só nessa tela o cabeçalho não é cartão), três indicadores (cursos
+  ativos, usuários ativos e o período letivo com a situação e as datas) e Cadastros e
+  Consultas lado a lado, cada grupo num cartão com as telas em linhas. Os indicadores
+  são pedido expresso e divergem do brief ("nada de dashboard com cartões de métrica")
+  só nessa tela; a situação do período sai de `components/SituacaoPeriodo.tsx`, a
+  mesma da lista de períodos.
 
 Paleta e tipografia são estas daqui em diante. Não troque de novo sem pedido.
 
