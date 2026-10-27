@@ -14,7 +14,7 @@ import { acaoValidarDocumento, type ResultadoValidacao } from "./acoes";
 function Linha({ rotulo, mono, children }: { rotulo: string; mono?: boolean; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:items-baseline sm:gap-4">
-      <dt className="text-[13px] font-medium text-tinta-suave sm:w-36 sm:flex-none">{rotulo}</dt>
+      <dt className="text-[13px] font-semibold text-tinta-suave sm:w-36 sm:flex-none">{rotulo}</dt>
       <dd className={`text-[15px] text-tinta ${mono ? "font-mono font-medium tabular-nums" : ""}`}>{children}</dd>
     </div>
   );
@@ -83,7 +83,7 @@ export function FormularioValidacao() {
     <div className="mt-8 flex flex-col gap-6">
       <form onSubmit={validar} noValidate className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
-          <span className="text-[13px] font-medium text-tinta-suave">PDF do relatório</span>
+          <span className="text-[13px] font-semibold text-tinta-suave">PDF do relatório</span>
           <SeletorArquivo
             rotulo="Selecionar PDF"
             accept=".pdf,application/pdf"
@@ -92,7 +92,7 @@ export function FormularioValidacao() {
           />
         </div>
 
-        <div className="flex items-center gap-3 text-[13px] font-medium text-tinta-suave">
+        <div className="flex items-center gap-3 text-[13px] font-semibold text-tinta-suave">
           <span aria-hidden className="h-px flex-1 bg-borda" />
           ou
           <span aria-hidden className="h-px flex-1 bg-borda" />
@@ -129,7 +129,8 @@ export function FormularioValidacao() {
 
       <div aria-live="polite">
         {resultado && documento && (
-          <section className="rounded-md border border-borda border-t-4 border-t-estado-aprovado px-5 py-4">
+          <section className="relative overflow-hidden rounded-2xl border border-borda bg-superficie px-5 pt-6 pb-4 shadow-cartao">
+            <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-estado-aprovado" />
             <Pill cor="aprovado" forma="circulo">
               Documento autêntico
             </Pill>
@@ -159,7 +160,8 @@ export function FormularioValidacao() {
         )}
 
         {resultado && !documento && (
-          <section className="rounded-md border border-borda border-t-4 border-t-estado-devolvido px-5 py-4">
+          <section className="relative overflow-hidden rounded-2xl border border-borda bg-superficie px-5 pt-6 pb-5 shadow-cartao">
+            <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-estado-devolvido" />
             <Pill cor="devolvido" forma="triangulo">
               Documento não reconhecido
             </Pill>
