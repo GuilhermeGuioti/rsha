@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ComponentType } from "react";
 import { obterUsuario } from "../../../lib/auth/guards";
 import { CabecalhoAdmin, classeTituloSecao } from "../../../components/CabecalhoAdmin";
-import { Cartao } from "../../../components/Cartao";
+import { classeCartao } from "../../../components/Cartao";
 import { SeloIcone } from "../../../components/SeloIcone";
 import { saudacao } from "../../../lib/formato";
 import {
@@ -16,26 +16,43 @@ import {
   IconeVinculos,
 } from "../../../components/Icones";
 
-type Atalho = { href: string; titulo: string; descricao: string; Icone: ComponentType<{ className?: string }> };
+// `tarefas` é o que a tela de destino deixa fazer, para a secretaria achar o
+// atalho pelo trabalho que tem em mãos e não só pelo nome da tela.
+type Atalho = {
+  href: string;
+  titulo: string;
+  descricao: string;
+  tarefas: string[];
+  Icone: ComponentType<{ className?: string }>;
+};
 
 const CADASTROS: Atalho[] = [
-  { href: "/admin/cursos", titulo: "Cursos", descricao: "Cadastro de cursos.", Icone: IconeCursos },
+  {
+    href: "/admin/cursos",
+    titulo: "Cursos",
+    descricao: "Cada curso gera um relatório por docente e por semestre.",
+    tarefas: ["Cadastrar e editar cursos", "Importar de planilha", "Inativar sem perder o histórico"],
+    Icone: IconeCursos,
+  },
   {
     href: "/admin/usuarios",
     titulo: "Usuários",
     descricao: "Pessoas com acesso ao sistema e seus perfis.",
+    tarefas: ["Cadastrar pelo e-mail institucional", "Importar de planilha", "Dar o perfil de secretaria ou inativar"],
     Icone: IconeUsuarios,
   },
   {
     href: "/admin/vinculos",
     titulo: "Vínculos",
     descricao: "Quem dá aula e quem coordena em cada curso.",
+    tarefas: ["Docentes por curso, a cada período", "Coordenadores por curso", "Importar de planilha"],
     Icone: IconeVinculos,
   },
   {
     href: "/admin/periodos",
     titulo: "Períodos letivos",
     descricao: "Prazos de submissão de cada semestre.",
+    tarefas: ["Cadastrar o semestre", "Definir abertura e encerramento da entrega", "Ajustar um prazo já cadastrado"],
     Icone: IconeCalendario,
   },
 ];
@@ -45,25 +62,27 @@ const CONSULTAS: Atalho[] = [
     href: "/acompanhamento",
     titulo: "Acompanhamento",
     descricao: "Situação de entrega por curso no período corrente.",
+    tarefas: ["Ver quem ainda não iniciou", "Contar as entregas por situação", "Extrair a planilha do período"],
     Icone: IconeAcompanhamento,
   },
   {
     href: "/arquivo",
     titulo: "Arquivo",
     descricao: "Relatórios aprovados, por ano, semestre e curso.",
+    tarefas: ["Filtrar por ano, semestre e curso", "Abrir o relatório e a trilha", "Baixar o PDF do aprovado"],
     Icone: IconeArquivo,
   },
   {
     href: "/validar",
     titulo: "Validar documento",
     descricao: "Confira se um relatório impresso foi emitido pelo SRHA.",
+    tarefas: ["Anexar o PDF recebido", "Ou digitar o código de autenticidade", "Comparar com o resumo oficial"],
     Icone: IconeValidar,
   },
 ];
 
 // Tela de partida da secretaria: não tem lista pra rolar, só os atalhos —
-// um índice por grupo, lado a lado, em vez de um mosaico de cartões: a
-// secretaria escolhe pelo nome e pela descrição, não pelo ícone.
+// cartões largos, com o que cada tela deixa fazer, ocupando a largura toda.
 export async function HomeSecretaria({ usuarioId }: { usuarioId: number }) {
   const usuario = await obterUsuario(usuarioId);
 
@@ -73,48 +92,61 @@ export async function HomeSecretaria({ usuarioId }: { usuarioId: number }) {
         titulo={saudacao(usuario.nome)}
         subtitulo={<p className="text-[15px] text-tinta-suave">Cadastros e consultas da secretaria acadêmica.</p>}
       />
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-        <GrupoAtalhos titulo="Cadastros" descricao="O que a secretaria mantém a cada semestre." atalhos={CADASTROS} />
-        <GrupoAtalhos titulo="Consultas" descricao="Situação das entregas e documentos já aprovados." atalhos={CONSULTAS} />
-      </div>
+      <GrupoAtalhos titulo="Cadastros" atalhos={CADASTROS} colunas="sm:grid-cols-2 2xl:grid-cols-4" />
+      <GrupoAtalhos titulo="Consultas" atalhos={CONSULTAS} colunas="sm:grid-cols-2 lg:grid-cols-3" />
     </div>
   );
 }
 
-function GrupoAtalhos({ titulo, descricao, atalhos }: { titulo: string; descricao: string; atalhos: Atalho[] }) {
+function GrupoAtalhos({ titulo, atalhos, colunas }: { titulo: string; atalhos: Atalho[]; colunas: string }) {
   return (
-    <Cartao como="section" className="overflow-hidden">
-      <div className="border-b border-borda px-5 py-4 sm:px-6">
-        <h2 className={classeTituloSecao}>{titulo}</h2>
-        <p className="mt-0.5 text-[13px] text-tinta-suave">{descricao}</p>
+    <section className="flex flex-col gap-4">
+      <CabecalhoAdmin nivel={2} titulo={titulo} />
+      <div className={`grid grid-cols-1 gap-5 ${colunas}`}>
+        {atalhos.map((atalho) => (
+          <CartaoAtalho key={atalho.href} atalho={atalho} />
+        ))}
       </div>
-      <ul className="divide-y divide-borda">
-        {atalhos.map(({ href, titulo: rotulo, descricao: detalhe, Icone }) => (
-          <li key={href}>
-            {/* O fio verde-água à esquerda marca a linha sob o mouse ou o
-                foco, como o sublinhado da página atual na barra. */}
-            <Link
-              href={href}
-              className="group relative flex min-h-[76px] items-center gap-4 px-5 py-4 transition-colors hover:bg-superficie-sutil focus-visible:bg-superficie-sutil focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-azul-interativo sm:px-6"
-            >
-              <span
-                aria-hidden
-                className="absolute inset-y-0 left-0 w-[3px] bg-acento-forte opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-              />
-              <SeloIcone className="transition-colors group-hover:bg-azul-interativo group-hover:text-white">
-                <Icone className="h-[22px] w-[22px]" />
-              </SeloIcone>
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-[15px] font-semibold text-tinta transition-colors group-hover:text-azul-interativo">
-                  {rotulo}
-                </span>
-                <span className="text-[13px] leading-relaxed text-tinta-suave">{detalhe}</span>
-              </span>
-              <IconeChevron className="h-5 w-5 flex-none text-tinta-suave transition-[translate,color] group-hover:translate-x-0.5 group-hover:text-azul-interativo" />
+    </section>
+  );
+}
+
+// O link é só o título — o nome acessível fica curto —, esticado por um
+// ::after sobre o cartão inteiro, então qualquer ponto dele leva à tela. O
+// anel de foco vai no cartão, via has-[:focus-visible].
+function CartaoAtalho({ atalho: { href, titulo, descricao, tarefas, Icone } }: { atalho: Atalho }) {
+  return (
+    <article
+      className={`group relative flex flex-col transition-[box-shadow,border-color] duration-300 hover:border-azul-interativo hover:shadow-cartao-elevado has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-azul-interativo has-[:focus-visible]:ring-offset-2 ${classeCartao}`}
+    >
+      <div className="flex items-start gap-4 p-6 pb-5">
+        <SeloIcone tamanho="lg" className="transition-colors group-hover:bg-azul-interativo group-hover:text-white">
+          <Icone className="h-6 w-6" />
+        </SeloIcone>
+        <div className="flex min-w-0 flex-col gap-1">
+          <h3 className={classeTituloSecao}>
+            <Link href={href} className="after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none">
+              {titulo}
             </Link>
+          </h3>
+          <p className="text-[13px] leading-relaxed text-tinta-suave">{descricao}</p>
+        </div>
+      </div>
+      <ul className="flex flex-1 flex-col gap-2 border-t border-borda px-6 py-4">
+        {tarefas.map((tarefa) => (
+          <li key={tarefa} className="flex items-baseline gap-2.5 text-[13px] text-tinta">
+            <span aria-hidden className="h-0.5 w-3 flex-none translate-y-[-3px] rounded-full bg-acento-forte" />
+            {tarefa}
           </li>
         ))}
       </ul>
-    </Cartao>
+      <div
+        aria-hidden
+        className="flex min-h-12 items-center justify-between rounded-b-2xl border-t border-borda bg-superficie-sutil px-6 text-[13px] font-semibold text-azul-interativo"
+      >
+        Abrir
+        <IconeChevron className="h-4 w-4 transition-[translate] group-hover:translate-x-0.5" />
+      </div>
+    </article>
   );
 }

@@ -493,7 +493,8 @@ em cada uma); mudou o acabamento, e ele diverge do `docs/` nestes pontos:
   com fio azul + verde-água no topo (`--faixa-marca`) e página atual sublinhada em
   `--acento-forte`; relatório aprovado com carimbo no cabeçalho
   (`components/Carimbo.tsx`, sem o código de autenticidade, que fica só no papel);
-  início da secretaria como índice em lista por grupo, não mosaico de cartões.
+  início da secretaria em cartões largos, com ícone ao lado do título e a lista do
+  que cada tela deixa fazer, em vez dos módulos de ícone grande.
 
 Paleta e tipografia são estas daqui em diante. Não troque de novo sem pedido.
 
