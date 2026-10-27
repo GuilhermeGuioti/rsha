@@ -30,13 +30,13 @@ export function Tabela<T>({
   return (
     <TabelaAdmin minWidthPx={minWidthPx} layoutFixo={layoutFixo}>
       <thead>
-        <tr className="border-b border-borda text-[13px] text-tinta-suave">
+        <tr className="border-b border-borda bg-superficie-sutil text-[13px] text-tinta-suave">
           {colunas.map((coluna, indice) => (
             <th
               key={indice}
               scope="col"
               style={coluna.largura ? { width: coluna.largura } : undefined}
-              className={`px-4 py-2.5 font-medium ${coluna.alinhado === "direita" ? "text-right" : ""}`}
+              className={`px-4 py-3 font-semibold ${coluna.alinhado === "direita" ? "text-right" : ""}`}
             >
               {coluna.cabecalho}
             </th>
@@ -47,7 +47,7 @@ export function Tabela<T>({
         {linhas.length === 0 && <LinhaVazia colSpan={colunas.length}>{vazio}</LinhaVazia>}
         {linhas.map((linha) => (
           <Fragment key={chave(linha)}>
-            <tr className="border-b border-[#f0f3f6] last:border-0">
+            <tr className="border-b border-borda/70 transition-colors last:border-0 hover:bg-superficie-sutil">
               {colunas.map((coluna, indice) => (
                 <td
                   key={indice}

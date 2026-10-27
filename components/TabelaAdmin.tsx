@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { classeCartao } from "./Cartao";
 
 export function TabelaAdmin({
   minWidthPx,
@@ -10,7 +11,7 @@ export function TabelaAdmin({
   children: ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto rounded-md border border-borda bg-superficie">
+    <div className={`overflow-x-auto ${classeCartao}`}>
       <table
         className="w-full border-collapse text-left text-[15px]"
         style={{ minWidth: minWidthPx, tableLayout: layoutFixo ? "fixed" : undefined }}

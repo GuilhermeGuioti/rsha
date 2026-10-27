@@ -148,10 +148,10 @@ export function ImportadorPlanilha({
       >
         <form id={idFormulario} onSubmit={importar} className="flex flex-col gap-6">
           <section className="flex flex-col gap-3">
-            <h3 className="text-[15px] font-medium text-tinta">1. Baixe o modelo e preencha uma linha por cadastro</h3>
-            <ul className="divide-y divide-borda rounded-md border border-borda">
+            <h3 className="text-[15px] font-semibold text-tinta">1. Baixe o modelo e preencha uma linha por cadastro</h3>
+            <ul className="divide-y divide-borda overflow-hidden rounded-xl border border-borda bg-superficie-sutil">
               {modelo.colunas.map((coluna) => (
-                <li key={coluna.chave} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-3 py-2">
+                <li key={coluna.chave} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-3.5 py-2.5">
                   <span className="text-[15px] font-medium text-tinta">
                     {coluna.rotulo}
                     <span className="font-normal text-tinta-suave">
@@ -169,7 +169,7 @@ export function ImportadorPlanilha({
           </section>
 
           <section className="flex flex-col gap-3">
-            <h3 className="text-[15px] font-medium text-tinta">2. Envie a planilha preenchida</h3>
+            <h3 className="text-[15px] font-semibold text-tinta">2. Envie a planilha preenchida</h3>
             <p className="text-[15px] leading-relaxed text-tinta-suave">
               Se alguma linha tiver erro, nada é importado — a lista mostra o que corrigir.
             </p>
@@ -197,7 +197,7 @@ export function ImportadorPlanilha({
               <ul
                 tabIndex={0}
                 aria-label="Linhas com erro"
-                className="max-h-60 overflow-y-auto rounded-md border border-borda px-3 py-2 text-[15px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+                className="max-h-60 overflow-y-auto rounded-xl border border-borda px-3.5 py-2 text-[15px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
               >
                 {resultado.erros.map((erroLinha, indice) => (
                   <li key={indice} className="py-1">

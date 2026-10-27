@@ -12,13 +12,13 @@ export function CampoCheckbox({
   className?: string;
 }) {
   return (
-    <label htmlFor={id} className={`flex items-center gap-2.5 ${className ?? ""}`}>
+    <label htmlFor={id} className={`flex min-h-11 items-center gap-3 ${className ?? ""}`}>
       <input
         id={id}
         type="checkbox"
         checked={checked}
         onChange={(evento) => onChange(evento.target.checked)}
-        className="h-5 w-5 rounded border-borda focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+        className="h-5 w-5 rounded accent-azul-interativo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo focus-visible:ring-offset-2"
       />
       <span className="text-[15px]">{rotulo}</span>
     </label>

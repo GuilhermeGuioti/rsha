@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 // Exportada para link de download (<a href>), que tem que parecer botão mas
 // não pode ser <button> — o arquivo vem de uma rota GET, não de Server Action.
 export const classeBotaoSecundario =
-  "flex min-h-11 items-center rounded-md border border-[#92cde9] bg-superficie px-4 text-[15px] font-medium text-azul-interativo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo disabled:cursor-not-allowed disabled:opacity-60";
+  "flex min-h-11 items-center justify-center gap-2 rounded-lg border border-azul-borda bg-superficie px-5 text-[15px] font-semibold text-azul-interativo transition-colors hover:border-azul-interativo hover:bg-azul-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
 export function BotaoSecundario({
   children,
