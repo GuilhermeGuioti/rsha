@@ -5,7 +5,7 @@ import { CartaoPublico } from "../../../components/CartaoPublico";
 import { MarcaInstitucional } from "../../../components/MarcaInstitucional";
 import { LinkTexto } from "../../../components/LinkTexto";
 import { MensagemErro } from "../../../components/MensagemErro";
-import { Pill } from "../../../components/Pill";
+import { Marcador, Pill, type Forma } from "../../../components/Pill";
 import { acaoEntrar, acaoEntrarComEmail } from "./acoes";
 
 export default async function LoginPage(props: PageProps<"/login">) {
@@ -14,12 +14,10 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
   return (
     <main className="flex flex-1">
-      {/* Painel da marca, como o do App do Dono. Só aparece do lg para cima —
-          abaixo disso ele espremeria o cartão; a marca vai para o topo dele. */}
+      {/* Painel da marca. Só aparece do lg para cima — abaixo disso ele
+          espremeria o cartão; a marca vai para o topo dele. */}
       <section className="relative hidden w-[45%] flex-col justify-between overflow-hidden p-12 text-white [background-image:var(--gradiente-marca)] lg:flex">
-        <div aria-hidden className="pointer-events-none absolute -top-20 -right-20 h-80 w-80 rounded-full bg-white/[.06]" />
-        <div aria-hidden className="pointer-events-none absolute bottom-16 -left-16 h-60 w-60 rounded-full bg-white/[.05]" />
-        <div aria-hidden className="pointer-events-none absolute -right-10 -bottom-12 h-44 w-44 rounded-full bg-acento/25" />
+        <TrilhaDecorativa />
 
         <div className="relative">
           <MarcaInstitucional tom="claro" tamanho="lg" />
@@ -30,11 +28,11 @@ export default async function LoginPage(props: PageProps<"/login">) {
             menos o p-12 —, então a quebra não muda de uma tela para outra. */}
         <div className="relative">
           <p className="max-w-[14em] text-[clamp(26px,calc((45vw-96px)/14),44px)] font-bold leading-[1.2] tracking-tight">
-            As horas atividades do semestre, declaradas e avaliadas em um só lugar.
+            Do rascunho à aprovação, cada passo do relatório fica registrado.
           </p>
           <div className="mt-5 h-1 w-12 rounded-full bg-acento" />
           <p className="mt-5 max-w-md text-base leading-relaxed text-white/85">
-            Cada curso tem seu relatório, cada decisão fica registrada com autor e horário.
+            Cada curso tem seu relatório; cada envio, devolução e aprovação leva autor e horário.
           </p>
         </div>
 
@@ -104,5 +102,32 @@ export default async function LoginPage(props: PageProps<"/login">) {
         </CartaoPublico>
       </section>
     </main>
+  );
+}
+
+// O caminho de um relatório — criado, enviado, devolvido, aprovado —, com os
+// marcadores de forma de cada situação, descendo pela margem direita do
+// painel. Mora no p-12 da direita, que a frase nunca ocupa (a fonte dela é
+// medida pela largura menos o padding), então não esbarra no texto.
+const PASSOS_TRILHA: Forma[] = ["circulo-vazado", "quadrado", "triangulo", "circulo"];
+
+function TrilhaDecorativa() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-y-0 right-1 flex w-10 flex-col items-center justify-around py-16">
+      <span className="absolute inset-y-0 left-1/2 border-l-2 border-dashed border-white/15" />
+      {PASSOS_TRILHA.map((forma, indice) => {
+        const ultimo = indice === PASSOS_TRILHA.length - 1;
+        return (
+          <span
+            key={forma}
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+              ultimo ? "border-acento bg-acento text-white" : "border-white/25 bg-azul-escuro/60 text-white/70"
+            }`}
+          >
+            <Marcador forma={forma} className="scale-125" />
+          </span>
+        );
+      })}
+    </div>
   );
 }
