@@ -11,6 +11,7 @@ import {
   IconeCalendario,
   IconeCursos,
   IconeUsuarios,
+  IconeValidar,
   IconeVinculos,
 } from "../../../components/Icones";
 
@@ -50,6 +51,12 @@ const CONSULTAS: Atalho[] = [
     titulo: "Arquivo",
     descricao: "Relatórios aprovados, por ano, semestre e curso.",
     Icone: IconeArquivo,
+  },
+  {
+    href: "/validar",
+    titulo: "Validar documento",
+    descricao: "Confira se um relatório impresso foi emitido pelo SRHA.",
+    Icone: IconeValidar,
   },
 ];
 

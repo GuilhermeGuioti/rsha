@@ -1,6 +1,6 @@
 import { Fragment, type ReactNode } from "react";
-import Link from "next/link";
 import { Cartao } from "./Cartao";
+import { LinkTexto } from "./LinkTexto";
 import { classeTituloTela } from "./CabecalhoAdmin";
 import { RotuloCodigo } from "./RotuloCodigo";
 import { TrilhaAuditoria, type EventoTrilha } from "./TrilhaAuditoria";
@@ -41,9 +41,7 @@ export function TelaRelatorio({
           <Fragment key={indice}>
             {indice > 0 && <span aria-hidden>›</span>}
             {passo.href ? (
-              <Link href={passo.href} className="font-semibold text-azul-interativo hover:underline">
-                {passo.rotulo}
-              </Link>
+              <LinkTexto href={passo.href}>{passo.rotulo}</LinkTexto>
             ) : (
               <span>{passo.rotulo}</span>
             )}

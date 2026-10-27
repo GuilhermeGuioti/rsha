@@ -3,6 +3,7 @@ import { BotaoSecundario } from "../../../components/BotaoSecundario";
 import { classeCampo } from "../../../components/Campo";
 import { CartaoPublico } from "../../../components/CartaoPublico";
 import { MarcaInstitucional } from "../../../components/MarcaInstitucional";
+import { LinkTexto } from "../../../components/LinkTexto";
 import { MensagemErro } from "../../../components/MensagemErro";
 import { Pill } from "../../../components/Pill";
 import { acaoEntrar, acaoEntrarComEmail } from "./acoes";
@@ -77,6 +78,14 @@ export default async function LoginPage(props: PageProps<"/login">) {
           </div>
 
           <p className="mt-6 text-[13px] text-tinta-suave">Sem acesso? Procure a coordenação do seu curso.</p>
+          {/* Para quem recebeu o papel e não tem conta no sistema. A linha
+              tem 44px de altura para o link ser alvo de toque inteiro. */}
+          <p className="flex min-h-11 flex-wrap items-center gap-x-1.5 text-[13px] text-tinta-suave">
+            Recebeu um relatório impresso?
+            <LinkTexto href="/validar" className="inline-flex min-h-11 items-center">
+              Validar documento
+            </LinkTexto>
+          </p>
 
           {process.env.NODE_ENV === "development" && (
             <form

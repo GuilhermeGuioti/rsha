@@ -353,7 +353,8 @@ Decisão de 2026-10-26, fora do `docs/`. Todo PDF de relatório aprovado sai com
 nos metadados do arquivo (campo Keywords, prefixo `SRHA-AUTENTICIDADE:`). Em `/validar`,
 pública e sem login, quem recebeu o papel anexa o PDF ou digita o código. Se o código for
 válido, a tela mostra o resumo oficial: docente, curso, período, total de horas e
-aprovação — sem e-mail, itens nem trilha (LGPD).
+aprovação — sem e-mail, itens nem trilha (LGPD). Há atalho para ela no `/login` (para
+quem não tem conta) e no início da secretaria (decisão de 2026-10-27).
 
 - **O código é HMAC-SHA256**, com chave que só o servidor conhece (`lib/services/autenticidade.ts`).
   Nada é gravado: conferir é recalcular e comparar. Mesmo código a cada download.

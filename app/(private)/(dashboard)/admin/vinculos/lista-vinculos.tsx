@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { LinkTexto } from "../../../../../components/LinkTexto";
 import { Modal } from "../../../../../components/Modal";
 import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
@@ -140,9 +140,7 @@ export function ListaVinculos({
       {periodos.length === 0 && (
         <Destaque como="p" tom="aguardando" className="text-[15px] text-tinta">
           Nenhum período letivo cadastrado.{" "}
-          <Link href="/admin/periodos" className="font-medium text-azul-interativo hover:underline">
-            Cadastre um período
-          </Link>{" "}
+          <LinkTexto href="/admin/periodos">Cadastre um período</LinkTexto>{" "}
           antes de vincular docentes a cursos.
         </Destaque>
       )}
