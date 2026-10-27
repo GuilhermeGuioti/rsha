@@ -491,8 +491,7 @@ em cada uma); mudou o acabamento, e ele diverge do `docs/` nestes pontos:
 - **Identidade própria (2026-10-27):** o que era cópia direta do App do Dono deu lugar
   a elementos do SRHA, sem mexer em paleta, tipografia nem estrutura. Barra superior
   com fio azul + verde-água no topo (`--faixa-marca`) e página atual sublinhada em
-  `--acento-forte`; painel do login com a trilha dos quatro marcadores de situação no
-  lugar dos círculos, e frase própria; relatório aprovado com carimbo no cabeçalho
+  `--acento-forte`; relatório aprovado com carimbo no cabeçalho
   (`components/Carimbo.tsx`, sem o código de autenticidade, que fica só no papel);
   início da secretaria como índice em lista por grupo, não mosaico de cartões.
 
