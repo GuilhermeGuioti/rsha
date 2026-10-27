@@ -5,6 +5,7 @@ import { prisma } from "../../../../../lib/db";
 import { SituacaoRelatorio } from "../../../../../generated/prisma/enums";
 import { codigoRelatorio, formatarDataHora } from "../../../../../lib/formato";
 import { SituacaoPill } from "../../../../../components/SituacaoPill";
+import { classeCartao } from "../../../../../components/Cartao";
 import { TrilhaAuditoria } from "../../../../../components/TrilhaAuditoria";
 import { FormularioRelatorio } from "../../relatorios/[id]/formulario-relatorio";
 import { PainelDecisao } from "./painel-decisao";
@@ -40,8 +41,8 @@ export default async function AvaliacaoDetalhePage({ params }: { params: Promise
 
   return (
     <div className="flex flex-col gap-5">
-      <nav className="flex items-center gap-2 text-[13px] text-tinta-suave">
-        <Link href="/avaliacao" className="text-azul-interativo">
+      <nav aria-label="Você está em" className="flex flex-wrap items-center gap-2 text-[13px] text-tinta-suave">
+        <Link href="/avaliacao" className="font-semibold text-azul-interativo hover:underline">
           Fila de avaliação
         </Link>
         <span aria-hidden>›</span>
@@ -50,25 +51,23 @@ export default async function AvaliacaoDetalhePage({ params }: { params: Promise
         <span>{relatorio.docente.nome}</span>
       </nav>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[2fr_1fr]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[2fr_1fr]">
         <div className="flex flex-col gap-5">
-          <div className="flex flex-col gap-5 rounded-md border border-borda bg-superficie p-6">
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-borda pb-5">
+          <div className={`flex flex-col gap-6 p-5 sm:p-7 ${classeCartao}`}>
+            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-borda pb-6">
               <div>
                 <div className="font-mono text-xs font-medium tracking-[.1em] text-tinta-suave">
                   {codigoRelatorio(relatorio.periodo.ano, relatorio.periodo.semestre, relatorio.id)}
                 </div>
-                <h1 className="mt-2 font-serif text-2xl font-semibold text-azul-interativo">
-                  {relatorio.docente.nome}
-                </h1>
+                <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-[28px]">{relatorio.docente.nome}</h1>
                 <p className="mt-1.5 text-[15px] text-tinta-suave">
                   {relatorio.curso.nome} · {relatorio.periodo.semestre}º semestre de {relatorio.periodo.ano}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="flex flex-col items-start gap-2.5 sm:items-end">
                 <SituacaoPill situacao={relatorio.situacao} />
                 {relatorio.situacao === SituacaoRelatorio.AGUARDANDO_AVALIACAO && (
-                  <p className="mt-2.5 text-[13px] text-tinta-suave">
+                  <p className="text-[13px] text-tinta-suave">
                     esperando há{" "}
                     <span className="font-mono font-medium text-tinta">
                       {diasEsperando <= 0 ? "menos de 1 dia" : diasEsperando === 1 ? "1 dia" : `${diasEsperando} dias`}

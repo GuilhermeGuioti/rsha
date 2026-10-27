@@ -7,6 +7,8 @@ import { CampoBusca } from "../../../../components/CampoBusca";
 import { AbasFiltro } from "../../../../components/AbasFiltro";
 import { SituacaoPill } from "../../../../components/SituacaoPill";
 import { classeCampoSelect } from "../../../../components/Campo";
+import { classeCartao } from "../../../../components/Cartao";
+import { AvisoVazio } from "../../../../components/AvisoVazio";
 import { formatarData, formatarHoras } from "../../../../lib/formato";
 import { useBusca } from "../../../../lib/hooks/useBusca";
 import type { SituacaoRelatorio } from "../../../../generated/prisma/client";
@@ -121,7 +123,7 @@ export function ListaAvaliacao({
           id="filtro-periodo-avaliacao"
           value={periodoId}
           onChange={(evento) => setPeriodoId(Number(evento.target.value))}
-          className={`${classeCampoSelect} min-h-10`}
+          className={`${classeCampoSelect} shadow-cartao`}
         >
           {periodos.map((periodo) => (
             <option key={periodo.id} value={periodo.id}>
@@ -137,68 +139,73 @@ export function ListaAvaliacao({
       </div>
 
       {grupos.length === 0 ? (
-        <p className="rounded-md border border-borda bg-superficie px-5 py-8 text-center text-[15px] text-tinta-suave">
+        <AvisoVazio>
           {busca.normalizado
             ? "Nenhum relatório encontrado."
             : `Nenhum relatório ${ABAS.find((item) => item.valor === aba)!.rotulo.toLowerCase()} nesse período.`}
-        </p>
+        </AvisoVazio>
       ) : (
-        // Mesma saída da Tabela: em tela estreita a grade rola na horizontal
-        // em vez de cortar a coluna "Avaliar" (CLAUDE.md § Interface, 360px).
-        <div className="overflow-x-auto rounded-md border border-borda bg-superficie">
+        // Um cartão por curso. Mesma saída da Tabela: em tela estreita a grade
+        // rola na horizontal em vez de cortar a coluna "Avaliar" (CLAUDE.md §
+        // Interface, 360px).
+        <div className="flex flex-col gap-5">
           {grupos.map((grupo) => (
-            <div key={grupo.cursoNome} className="min-w-[640px]">
-              <div className="flex items-baseline gap-2.5 border-b border-[#b7dff3] bg-[#e9f6fc] px-5 py-3">
-                <span className="font-serif text-[15px] font-semibold text-azul-interativo">{grupo.cursoNome}</span>
-                <span className="text-[13px] text-tinta-suave">
-                  {grupo.itens.length} {grupo.itens.length === 1 ? "relatório" : "relatórios"} ·{" "}
-                  {grupo.totalDocentesNoCurso} {grupo.totalDocentesNoCurso === 1 ? "docente" : "docentes"} no curso
-                </span>
-              </div>
-              <div className="grid grid-cols-[2fr_1.1fr_.8fr_1fr_100px] gap-4 border-b border-borda px-5 py-2.5 text-[13px] font-medium text-tinta-suave">
-                <span>Docente</span>
-                <span>Estado</span>
-                <span className="text-right">Horas</span>
-                <span>{aba === "AGUARDANDO_AVALIACAO" ? "Esperando" : aba === "DEVOLVIDO_PARA_AJUSTE" ? "Situação" : "Aprovado em"}</span>
-                <span />
-              </div>
-              {grupo.itens.map((item, indice) => {
-                const dias = diasDesde(item.desde);
-                return (
-                  <div
-                    key={item.id}
-                    className={`grid grid-cols-[2fr_1.1fr_.8fr_1fr_100px] items-center gap-4 px-5 py-3.5 ${
-                      indice < grupo.itens.length - 1 ? "border-b border-borda" : ""
-                    }`}
-                  >
-                    <span className="text-[15px]">{item.docenteNome}</span>
-                    <SituacaoPill situacao={item.situacao} />
-                    <span className="text-right font-mono text-[15px] font-medium tabular-nums">
-                      {formatarHoras(item.horas)}
-                    </span>
-                    {aba === "AGUARDANDO_AVALIACAO" && (
-                      <span className={`font-mono text-[15px] font-medium ${corUrgencia(dias)}`}>
-                        {dias <= 0 ? "hoje" : dias === 1 ? "1 dia" : `${dias} dias`}
-                      </span>
-                    )}
-                    {aba === "DEVOLVIDO_PARA_AJUSTE" && <span className="text-[13px] text-tinta-suave">Com o docente</span>}
-                    {aba === "APROVADO" && (
-                      <span className="font-mono text-[13px] text-tinta-suave">
-                        {formatarData(item.desde)}
-                      </span>
-                    )}
-                    <Link
-                      href={`/avaliacao/${item.id}`}
-                      className={`text-right text-[15px] text-azul-interativo hover:underline ${
-                        aba === "AGUARDANDO_AVALIACAO" ? "font-medium" : "font-normal"
+            <section key={grupo.cursoNome} className={`overflow-x-auto ${classeCartao}`}>
+              <div className="min-w-[640px]">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-borda px-5 py-4">
+                  <h2 className="text-[17px] font-bold tracking-tight text-tinta">{grupo.cursoNome}</h2>
+                  <span className="text-[13px] text-tinta-suave">
+                    {grupo.itens.length} {grupo.itens.length === 1 ? "relatório" : "relatórios"} ·{" "}
+                    {grupo.totalDocentesNoCurso} {grupo.totalDocentesNoCurso === 1 ? "docente" : "docentes"} no curso
+                  </span>
+                </div>
+                <div className="grid grid-cols-[2fr_1.1fr_.8fr_1fr_100px] gap-4 border-b border-borda bg-superficie-sutil px-5 py-3 text-[13px] font-semibold text-tinta-suave">
+                  <span>Docente</span>
+                  <span>Estado</span>
+                  <span className="text-right">Horas</span>
+                  <span>{aba === "AGUARDANDO_AVALIACAO" ? "Esperando" : aba === "DEVOLVIDO_PARA_AJUSTE" ? "Situação" : "Aprovado em"}</span>
+                  <span />
+                </div>
+                {grupo.itens.map((item, indice) => {
+                  const dias = diasDesde(item.desde);
+                  return (
+                    <div
+                      key={item.id}
+                      className={`grid grid-cols-[2fr_1.1fr_.8fr_1fr_100px] items-center gap-4 px-5 py-3 transition-colors hover:bg-superficie-sutil ${
+                        indice < grupo.itens.length - 1 ? "border-b border-borda/70" : ""
                       }`}
                     >
-                      {aba === "AGUARDANDO_AVALIACAO" ? "Avaliar" : "Ver"}
-                    </Link>
-                  </div>
-                );
-              })}
-            </div>
+                      <span className="text-[15px] font-medium">{item.docenteNome}</span>
+                      <SituacaoPill situacao={item.situacao} />
+                      <span className="text-right font-mono text-[15px] font-medium tabular-nums">
+                        {formatarHoras(item.horas)}
+                      </span>
+                      {aba === "AGUARDANDO_AVALIACAO" && (
+                        <span className={`font-mono text-[15px] font-medium ${corUrgencia(dias)}`}>
+                          {dias <= 0 ? "hoje" : dias === 1 ? "1 dia" : `${dias} dias`}
+                        </span>
+                      )}
+                      {aba === "DEVOLVIDO_PARA_AJUSTE" && <span className="text-[13px] text-tinta-suave">Com o docente</span>}
+                      {aba === "APROVADO" && (
+                        <span className="font-mono text-[13px] text-tinta-suave">
+                          {formatarData(item.desde)}
+                        </span>
+                      )}
+                      <Link
+                        href={`/avaliacao/${item.id}`}
+                        className={`ml-auto inline-flex min-h-11 items-center justify-center rounded-lg px-3.5 text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo ${
+                          aba === "AGUARDANDO_AVALIACAO"
+                            ? "bg-azul-interativo font-semibold text-white shadow-botao hover:bg-azul-escuro"
+                            : "font-semibold text-azul-interativo hover:bg-azul-suave"
+                        }`}
+                      >
+                        {aba === "AGUARDANDO_AVALIACAO" ? "Avaliar" : "Ver"}
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           ))}
         </div>
       )}

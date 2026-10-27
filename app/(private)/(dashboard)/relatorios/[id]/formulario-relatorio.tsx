@@ -7,7 +7,7 @@ import { BotaoPrimario } from "../../../../../components/BotaoPrimario";
 import { BotaoSecundario } from "../../../../../components/BotaoSecundario";
 import { Campo, classeCampo, classeCampoSelect } from "../../../../../components/Campo";
 import { AcaoTabela } from "../../../../../components/AcaoTabela";
-import { IconeRemover } from "../../../../../components/Icones";
+import { IconeMais, IconeRemover } from "../../../../../components/Icones";
 import { MensagemErro } from "../../../../../components/MensagemErro";
 import { formatarHoras, ROTULO_DIA_SEMANA } from "../../../../../lib/formato";
 import { acaoSalvarItens, acaoSubmeter } from "../acoes";
@@ -119,7 +119,10 @@ export function FormularioRelatorio({
       <section className="flex flex-col gap-3">
         <CabecalhoItens quantidade={itensIniciais.length} />
         {itensIniciais.map((item, indice) => (
-          <div key={indice} className="grid gap-3.5 rounded-md border border-borda p-4 sm:grid-cols-[1.1fr_.8fr_.9fr_.6fr]">
+          <div
+            key={indice}
+            className="grid grid-cols-1 gap-3.5 rounded-2xl border border-borda bg-superficie-sutil p-4 sm:grid-cols-[1.1fr_.8fr_.9fr_.6fr] sm:p-5"
+          >
             <ValorLido rotulo="Tipo de atividade">
               {tipos.find((tipo) => tipo.id === item.tipoAtividadeId)?.descricao ?? "—"}
             </ValorLido>
@@ -149,7 +152,7 @@ export function FormularioRelatorio({
       {itens.map((item) => (
         <div
           key={item.chave}
-          className="grid gap-3.5 rounded-md border border-borda p-4 sm:grid-cols-[1.1fr_.8fr_.9fr_.6fr_auto]"
+          className="grid grid-cols-1 gap-3.5 rounded-2xl border border-borda bg-superficie-sutil p-4 sm:grid-cols-[1.1fr_.8fr_.9fr_.6fr_auto] sm:p-5"
         >
           <Campo rotulo="Tipo de atividade" htmlFor={`${idBase}-tipo-${item.chave}`}>
             <select
@@ -231,20 +234,21 @@ export function FormularioRelatorio({
       <button
         type="button"
         onClick={adicionarLinha}
-        className="min-h-11 w-full rounded-md border border-dashed border-[#92cde9] bg-superficie px-4 text-[15px] font-medium text-azul-interativo hover:bg-[#e9f6fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-azul-borda bg-superficie px-4 text-[15px] font-semibold text-azul-interativo transition-colors hover:border-azul-interativo hover:bg-azul-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-azul-interativo"
       >
-        + Adicionar item de atividade
+        <IconeMais className="h-[18px] w-[18px]" />
+        Adicionar item de atividade
       </button>
 
       <TotalHoras total={total} />
 
       {erro && <MensagemErro>{erro}</MensagemErro>}
 
-      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-borda pt-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-borda pt-6">
         <span className="text-[13px] text-tinta-suave">
           Última alteração às <span className="font-mono font-medium">{atualizadoEm}</span>
         </span>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <BotaoSecundario type="submit" disabled={pendente} onClick={() => (vaiEnviar.current = false)}>
             {pendente ? "Salvando…" : "Salvar rascunho"}
           </BotaoSecundario>
@@ -264,8 +268,8 @@ export function FormularioRelatorio({
 function CabecalhoItens({ quantidade }: { quantidade: number }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <h2 className="font-serif text-lg font-semibold">Itens de atividade</h2>
-      <span className="text-[13px] text-tinta-suave">
+      <h2 className="text-lg font-bold tracking-tight">Itens de atividade</h2>
+      <span className="rounded-full bg-papel px-2.5 py-1 text-[13px] font-semibold text-tinta-suave">
         {quantidade === 1 ? "1 item" : `${quantidade} itens`}
       </span>
     </div>
@@ -274,10 +278,10 @@ function CabecalhoItens({ quantidade }: { quantidade: number }) {
 
 function TotalHoras({ total }: { total: number }) {
   return (
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-4 rounded-md border border-[#b7dff3] bg-[#e9f6fc] px-5 py-4">
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-azul-borda bg-azul-suave px-5 py-5 sm:px-6">
       <div>
-        <div className="text-[15px] font-medium text-azul-interativo">Total de horas atividades</div>
-        <div className="mt-1.5 text-[13px] text-tinta-suave">Atualiza a cada alteração nos itens</div>
+        <div className="text-[15px] font-bold text-azul-interativo">Total de horas atividades</div>
+        <div className="mt-1 text-[13px] text-tinta-suave">Atualiza a cada alteração nos itens</div>
       </div>
       <div className="font-mono text-5xl font-semibold tabular-nums text-azul-interativo">
         {formatarHoras(total)}
@@ -299,9 +303,9 @@ function ValorLido({
 }) {
   return (
     <div className={`flex flex-col gap-1.5 ${className ?? ""}`}>
-      <span className="text-[13px] font-medium text-tinta-suave">{rotulo}</span>
+      <span className="text-[13px] font-semibold text-tinta-suave">{rotulo}</span>
       <span
-        className={`flex min-h-11 items-center whitespace-pre-line rounded-md border border-borda px-3 py-2.5 text-[15px] ${mono ? "font-mono font-medium tabular-nums" : ""}`}
+        className={`flex min-h-11 items-center whitespace-pre-line rounded-lg border border-borda bg-superficie px-3 py-2.5 text-[15px] ${mono ? "font-mono font-medium tabular-nums" : ""}`}
       >
         {children}
       </span>

@@ -2,6 +2,7 @@ import { exigirSessaoPagina, obterPerfis } from "../../../../lib/auth/guards";
 import { prisma } from "../../../../lib/db";
 import { Perfil, SituacaoRelatorio } from "../../../../generated/prisma/enums";
 import { resolverAvaliadorId } from "../../../../lib/services/workflow";
+import { AvisoVazio } from "../../../../components/AvisoVazio";
 import { ListaAvaliacao, type ItemFila } from "./lista-avaliacao";
 
 export default async function AvaliacaoPage() {
@@ -16,7 +17,7 @@ export default async function AvaliacaoPage() {
   });
 
   if (periodos.length === 0) {
-    return <p className="text-[15px] text-tinta-suave">Nenhum período letivo cadastrado ainda.</p>;
+    return <AvisoVazio>Nenhum período letivo cadastrado ainda.</AvisoVazio>;
   }
 
   // O avaliador é o coordenador do curso, independente de quem é o autor
